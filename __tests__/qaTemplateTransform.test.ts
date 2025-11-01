@@ -7,12 +7,18 @@ import {
   AnswerParameterFormatType,
   AnswerType,
   QuestionAnswerTemplateType,
-} from "../src/questionanswertemplates";
-import { nthMonthOfTheYear } from "../src/months";
-import { nthLetterOfTheAlphabet } from "../src/nthLetterOfTheAlphabet";
-import { BoxPlaceholder } from "../src/replaceBoxPlaceholderWithLatex";
+} from "../src/questions/questionanswertemplates";
+import {
+  plusMinusOperatorIntegerTemplateFactory,
+  plusOperator,
+} from "../src/questions/singlequestionfactories/plusMinusOperatorIntegerTemplateFactory";
+import { subtractPenceFromPoundsTemplateFactory } from "../src/questions/singlequestionfactories/subtractPenceFromPoundsTemplateFactory";
+import { dividePoundIntegerToPenceTemplateFactory } from "../src/questions/singlequestionfactories/dividePoundIntegerToPenceTemplateFactory";
+import { numeratorsOfFactory } from "../src/questions/multiplequestionsfactories/numeratorsOfFactory";
+import { nthMonthOfTheYear } from "../src/templatetransform/calculationfunctions/nthMonthOfTheYear";
+import { nthLetterOfTheAlphabet } from "../src/templatetransform/calculationfunctions/nthLetterOfTheAlphabet";
 
-jest.mock("../src/replaceBoxPlaceholderWithLatex", () => ({
+jest.mock("../src/templatetransform/replaceBoxPlaceholderWithLatex", () => ({
   replaceBoxPlaceholderWithLatex: (input: string) => {
     return input + "_boxreplaced";
   },
@@ -23,7 +29,9 @@ import {
   QuestionAnswerType,
   SingleQuestionAnswer,
   transformTemplate,
-} from "../src/transformtemplate";
+} from "../src/templatetransform/transformtemplate";
+import { createSuffix } from "../src/questions/helpers/prefixsuffix";
+import { BoxPlaceholder } from "../src/questions/boxplaceholder";
 
 describe("QA Template Transform", () => {
   const expectQuestion = (question: string, expected: string) => {
@@ -39,22 +47,11 @@ describe("QA Template Transform", () => {
 
   describe("single question templates", () => {
     describe("Singular Input Template", () => {
-      const questionAnswerTemplate: SingularInputAnswerQATemplate = {
-        id: "Section 1, Test 1, Question 1",
-        type: QuestionAnswerTemplateType.SingularInput,
-        question: `{1} + {2} + {3}`,
-        answer: {
-          input: {
-            type: AnswerType.Integer,
-          },
-          answerReplacement: "{1} + {2} + {3}",
-        },
-        parameters: [
-          { type: QuestionAnswerParameterType.Number, testValue: "6" },
-          { type: QuestionAnswerParameterType.Number, testValue: "4" },
-          { type: QuestionAnswerParameterType.Number, testValue: "8" },
-        ],
-      };
+      const questionAnswerTemplate = plusMinusOperatorIntegerTemplateFactory(
+        "Section 1, Test 1, Question 1",
+        [plusOperator(6), plusOperator(4)],
+        8
+      );
 
       const transformDemoQA = () =>
         transformSingleInputQA(questionAnswerTemplate, ["5", "3", "2"]);
@@ -131,7 +128,7 @@ describe("QA Template Transform", () => {
 
       it("should replace question parameters, replacing box", () => {
         const questionAnswer = transformDemoQA();
-        expectSqaQuestion(questionAnswer, "5 + 3 + 2");
+        expectSqaQuestion(questionAnswer, "5 + 3 + 2 =");
       });
 
       it("should calculate answer with mathjs by default", () => {
@@ -543,6 +540,35 @@ describe("QA Template Transform", () => {
           ["6", "chocolate truffle", "box", "20"],
           "Six chocolate truffles are taken from a box of 20. How many are left?",
           "14"
+        );
+      });
+
+      it("should subtract pence from pounds", () => {
+        const questionAnswerTemplate = subtractPenceFromPoundsTemplateFactory(
+          "Section 1, Test 4, A 1",
+          25,
+          1
+        );
+
+        expectTransformSingleInputQA(
+          questionAnswerTemplate,
+          ["25", "1"],
+          "Subtract 25p from £1.",
+          "75"
+        );
+      });
+
+      it("should divide pounds integer to pence", () => {
+        const questionAnswerTemplate = dividePoundIntegerToPenceTemplateFactory(
+          "Section 1, Test 10, B10",
+          2,
+          10
+        );
+        expectTransformSingleInputQA(
+          questionAnswerTemplate,
+          ["2", "10"],
+          "Divide £2.00 by 10.",
+          "20"
         );
       });
     });
@@ -967,6 +993,92 @@ describe("QA Template Transform", () => {
       expectSqaQuestion(questionAnswerB, "What coin is given in change");
       expect(questionAnswerA.answerInputs[0].answer).toBe("8");
       expect(questionAnswerB.answerInputs[0].answer).toBe("2");
+    });
+
+    test("Section 2, Test 7, B 10 - numerator parameters of common", () => {
+      const questionAnswerTemplate: MultipleQuestionsQATemplate = {
+        id: "Section 2, Test 7, B 10",
+        type: QuestionAnswerTemplateType.MultipleQuestions,
+        questionHeader: "Find",
+        commonParameters: [
+          {
+            type: QuestionAnswerParameterType.Number,
+            testValue: "18", // of this,
+            placeholder: 1,
+          },
+        ],
+        questionAnswers: [
+          {
+            id: "Part A",
+            type: QuestionAnswerTemplateType.SingularInput,
+            question: "{2}/3 of {1}p and",
+            parameters: [
+              {
+                type: QuestionAnswerParameterType.Numerator,
+                testValue: "1",
+                placeholder: 2,
+              },
+            ],
+            answer: {
+              input: {
+                type: AnswerType.Integer,
+                suffix: "p",
+              },
+              answerReplacement: "{1} / 3 * {2}",
+            },
+            isTextQuestion: true,
+          },
+          {
+            id: "Part B",
+            type: QuestionAnswerTemplateType.SingularInput,
+            question: "{3}/3 of {1}p",
+            parameters: [
+              {
+                type: QuestionAnswerParameterType.Numerator,
+                testValue: "2",
+                placeholder: 3,
+              },
+            ],
+            answer: {
+              input: {
+                type: AnswerType.Integer,
+                suffix: "p",
+              },
+              answerReplacement: "{1} / 3 * {3}",
+            },
+            isTextQuestion: true,
+          },
+        ],
+      };
+
+      doTest(questionAnswerTemplate);
+      doTest(
+        numeratorsOfFactory(
+          "Section 2, Test 7, B 10",
+          18,
+          1,
+          2,
+          createSuffix("p"),
+          "Find",
+          " and"
+        )
+      );
+
+      function doTest(template: MultipleQuestionsQATemplate) {
+        const multipleQuestionAnswer = transformMultipleQuestionsWithParams(
+          template,
+          ["18", "1", "2"]
+        );
+
+        const questionAnswerA = multipleQuestionAnswer
+          .questionAnswers[0] as SingleQuestionAnswer;
+        const questionAnswerB = multipleQuestionAnswer
+          .questionAnswers[1] as SingleQuestionAnswer;
+        expectSqaQuestion(questionAnswerA, "1/3 of 18p and");
+        expectSqaQuestion(questionAnswerB, "2/3 of 18p");
+        expect(questionAnswerA.answerInputs[0].answer).toBe("6");
+        expect(questionAnswerB.answerInputs[0].answer).toBe("12");
+      }
     });
   });
 });

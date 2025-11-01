@@ -9,9 +9,10 @@ import {
   type QuestionAnswerParameter,
   type QuestionAnswerTemplate,
   type SingularInputAnswerQATemplate,
-} from "./questionanswertemplates";
+} from "../questions/questionanswertemplates";
 import { replaceBoxPlaceholderWithLatex } from "./replaceBoxPlaceholderWithLatex";
 import { parameterTransformers } from "./parameterTransformers";
+import { upperCaseFirstLetter } from "../helpers/upperCaseFirstLetter";
 
 export type AnswerInputSolution = AnswerInput & {
   answer: string;
@@ -249,8 +250,4 @@ function convertFractionForMathjs(fraction: string): string {
     return `${improperNumerator}/${denominator}`;
   }
   return fraction;
-}
-
-function upperCaseFirstLetter(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1);
 }

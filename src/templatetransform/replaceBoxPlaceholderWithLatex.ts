@@ -1,4 +1,5 @@
-export const BoxPlaceholder = "{?}";
+import { BoxPlaceholder } from "../questions/boxplaceholder";
+
 let boxBorderColour = "black";
 let boxBackgroundColour = "pink";
 export function setBoxColours(border: string, background: string) {

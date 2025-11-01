@@ -1,5 +1,3 @@
-import { BoxPlaceholder } from "./replaceBoxPlaceholderWithLatex";
-
 // parameters type is for the UI.
 export enum QuestionAnswerParameterType {
   Number = 1,
@@ -9,6 +7,7 @@ export enum QuestionAnswerParameterType {
   AlphabetPosition,
   Denominator,
   AmPm,
+  Numerator,
 }
 
 export enum QuestionParameterFormatType {
@@ -120,43 +119,3 @@ type SingleQuestionQATemplate =
 export type QuestionAnswerTemplate =
   | SingleQuestionQATemplate
   | MultipleQuestionsQATemplate;
-
-const section1Test1A1: SingularInputAnswerQATemplate = {
-  id: "Section 1, Test 1, A 1",
-  question: `{1} + {2} + {3} = ${BoxPlaceholder}`,
-  type: QuestionAnswerTemplateType.SingularInput,
-  answer: {
-    input: {
-      type: AnswerType.Integer,
-    },
-    answerReplacement: "{1} + {2} + {3}",
-  },
-  parameters: [
-    { type: QuestionAnswerParameterType.Number, testValue: "6" },
-    { type: QuestionAnswerParameterType.Number, testValue: "4" },
-    { type: QuestionAnswerParameterType.Number, testValue: "8" },
-  ],
-};
-
-const section1Test1B1: SingularInputAnswerQATemplate = {
-  id: "Section 1, Test 1, B 1",
-  question: "Add {1}, {2} and {3}",
-  type: QuestionAnswerTemplateType.SingularInput,
-  isTextQuestion: true,
-  answer: {
-    input: {
-      type: AnswerType.Integer,
-    },
-    answerReplacement: "{1} + {2} + {3}",
-  },
-  parameters: [
-    { type: QuestionAnswerParameterType.Number, testValue: "5" },
-    { type: QuestionAnswerParameterType.Number, testValue: "4" },
-    { type: QuestionAnswerParameterType.Number, testValue: "9" },
-  ],
-};
-
-export const questionAnswerTemplates: QuestionAnswerTemplate[] = [
-  section1Test1A1,
-  section1Test1B1,
-];

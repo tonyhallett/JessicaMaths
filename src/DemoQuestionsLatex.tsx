@@ -1,17 +1,20 @@
 import {
-  questionAnswerTemplates,
   QuestionAnswerTemplateType,
   type QuestionAnswerTemplate,
-} from "./questionanswertemplates";
+} from "./questions/questionanswertemplates";
+import { bookTests } from "./questions/booktests/booktest";
 import Latex from "react-latex";
 
 import {
   transformTemplate,
   type SingleQuestionAnswer,
-} from "./transformtemplate";
+} from "./templatetransform/transformtemplate";
 import { Fragment } from "react/jsx-runtime";
 
 export const DemoQuestionsLatex = () => {
+  const questionAnswerTemplates = bookTests
+    .flatMap((bt) => bt)
+    .flatMap((x) => x.partA.concat(x.partB).concat(x.partC));
   return questionAnswerTemplates.map((qaTemplate, index) => (
     <Fragment key={index}>
       <DemoQuestionLatex template={qaTemplate} />

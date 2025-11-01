@@ -1,4 +1,4 @@
-import { QuestionParameterFormatType } from "./questionanswertemplates";
+import { QuestionParameterFormatType } from "../questions/questionanswertemplates";
 import { toWordsOrdinal, toWords } from "number-to-words";
 
 export const parameterTransformers: Map<

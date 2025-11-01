@@ -1,7 +1,4 @@
-import {
-  replaceBoxPlaceholderWithLatex,
-  setBoxColours,
-} from "../src/replaceBoxPlaceholderWithLatex";
+import { replaceBoxPlaceholderWithLatex } from "../src/templatetransform/replaceBoxPlaceholderWithLatex";
 
 describe("replaceBoxPlaceholderWithLatex", () => {
   it("should not replace regular question marks", () => {
