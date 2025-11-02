@@ -14,9 +14,10 @@ import { replaceBoxPlaceholderWithLatex } from "./replaceBoxPlaceholderWithLatex
 import { parameterTransformers } from "./parameterTransformers";
 import { upperCaseFirstLetter } from "../helpers/upperCaseFirstLetter";
 
-export type AnswerInputSolution = AnswerInput & {
+export type Answer = {
   answer: string;
 };
+export type AnswerInputSolution = AnswerInput & Answer;
 
 export enum QuestionAnswerType {
   Single = 1,
