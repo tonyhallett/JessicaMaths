@@ -9,7 +9,7 @@ import {
 } from "../questionanswertemplates";
 import { bookTests } from "./booktesttemplates";
 
-type BookTest = {
+export type BookTest = {
   partA: QuestionAnswer[];
   partB: QuestionAnswer[];
   partC: QuestionAnswer[];

@@ -2,9 +2,10 @@ import type {
   Answer,
   AnswerInputSolution,
   QuestionAnswerType,
-} from "./templatetransform/transformtemplate";
+} from "../../templatetransform/transformtemplate";
 
-type TestSittingBase<T> = {
+type BookTestSittingBase<T> = {
+  book: number;
   section: number;
   test: number;
   id?: string; // when create this create the store at the same time
@@ -14,24 +15,24 @@ type TestSittingBase<T> = {
   partC: T[];
 };
 
-type TestSitting = TestSittingBase<TestSittingQuestionAnswer>;
+export type BookTestSitting = BookTestSittingBase<TestSittingQuestionAnswer>;
 
 type TestSittingSingleQuestionAnswerBase<TAnswerInputs> = {
   questionNumber: number; // only necessary whilst do not have all questions templated
   question: string;
   type: QuestionAnswerType.Single;
-  answerInputs: TAnswerInputs;
+  answerInputs: TAnswerInputs[];
 };
 
-type TestSittingSingleQuestionAnswer =
+export type TestSittingSingleQuestionAnswer =
   TestSittingSingleQuestionAnswerBase<TestSittingAnswerInput>;
 
-type TestSettingInput = {
+export type TestSettingInput = {
   input?: string;
   attempts?: string[];
 };
 
-type TestSittingAnswerInput = AnswerInputSolution & TestSettingInput;
+export type TestSittingAnswerInput = AnswerInputSolution & TestSettingInput;
 
 type TestSittingMultipleQuestionAnswerBase<TQuestionAnswers> = {
   questionNumber: number; // only necessary whilst do not have all questions completed
@@ -40,30 +41,31 @@ type TestSittingMultipleQuestionAnswerBase<TQuestionAnswers> = {
   questionAnswers: TQuestionAnswers;
 };
 
-type TestSittingMultipleQuestionAnswer = TestSittingMultipleQuestionAnswerBase<
-  TestSittingSingleQuestionAnswer[]
->;
+export type TestSittingMultipleQuestionAnswer =
+  TestSittingMultipleQuestionAnswerBase<TestSittingSingleQuestionAnswer[]>;
 
-type TestSittingQuestionAnswer =
+export type TestSittingQuestionAnswer =
   | TestSittingSingleQuestionAnswer
   | TestSittingMultipleQuestionAnswer;
 
-enum AnswerStatus {
+export enum AnswerStatus {
   Correct,
   Incorrect,
   Unanswered,
 }
 
-type TestSittingStoreSingleQuestionAnswer = TestSittingSingleQuestionAnswerBase<
-  TestSettingInput & Answer
-> & { answerStatus: AnswerStatus };
-type TestSittingStoreMultipleQuestionAnswer =
+export type TestSittingStoreSingleQuestionAnswer =
+  TestSittingSingleQuestionAnswerBase<TestSettingInput & Answer> & {
+    answerStatus: AnswerStatus;
+  };
+export type TestSittingStoreMultipleQuestionAnswer =
   TestSittingMultipleQuestionAnswerBase<TestSittingStoreSingleQuestionAnswer>;
-type TestSittingStoreQuestionAnswer =
+export type TestSittingStoreQuestionAnswer =
   | TestSittingStoreSingleQuestionAnswer
   | TestSittingStoreMultipleQuestionAnswer;
-type TestSittingStore = TestSittingBase<TestSittingStoreQuestionAnswer> & {
-  complete: boolean;
-  startedAt: number;
-  updatedAt: number;
-};
+export type BookTestSittingStore =
+  BookTestSittingBase<TestSittingStoreQuestionAnswer> & {
+    complete: boolean;
+    startedAt: number;
+    updatedAt: number;
+  };
