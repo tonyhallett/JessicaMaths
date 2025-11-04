@@ -44,8 +44,8 @@ export const DivideBy: OperateWord = {
 
 export const wordOperateTemplateFactory = (
   id: string,
-  questionFirst: number,
-  questionSecond: number,
+  parameter1: number, // for division, subtraction this is the answer
+  parameter2: number, // for division this is the divisor, for subtraction this is the subtrahend
   operateWord: OperateWord,
   suffix = ""
 ): SingularInputAnswerQATemplate => {
@@ -55,26 +55,48 @@ export const wordOperateTemplateFactory = (
   if (suffix !== "") {
     answerInput.suffix = suffix;
   }
+  let answerReplacement: string;
+  switch (operateWord.operationType) {
+    case divide:
+      answerReplacement = `{1}`;
+      break;
+    case minus:
+      answerReplacement = `{1}`;
+      break;
+    default:
+      answerReplacement = `{1} ${operateWord.operationType} {2}`;
+  }
+  let operandA = parameter1;
+  let operandB = parameter2;
+  switch (operateWord.operationType) {
+    case divide:
+      operandA = parameter1 * parameter2;
+      break;
+    case minus:
+      operandA = parameter2;
+      operandB = parameter1 + parameter2;
+      break;
+  }
+
+  const question = `${operateWord.firstWord} ${operandA}${suffix} ${operateWord.secondWord} ${operandB}${suffix}.`;
+
   const template: SingularInputAnswerQATemplate = {
     id,
-    question: `${operateWord.firstWord} ${questionFirst}${suffix} ${operateWord.secondWord} ${questionSecond}${suffix}.`,
+    question,
     type: QuestionAnswerTemplateType.SingularInput,
     isTextQuestion: true,
     answer: {
       input: answerInput,
-      answerReplacement:
-        operateWord.operationType === "-"
-          ? `{2} ${operateWord.operationType} {1}`
-          : `{1} ${operateWord.operationType} {2}`,
+      answerReplacement,
     },
     parameters: [
       {
         type: QuestionAnswerParameterType.Number,
-        testValue: questionFirst.toString(),
+        testValue: parameter1.toString(),
       },
       {
         type: QuestionAnswerParameterType.Number,
-        testValue: questionSecond.toString(),
+        testValue: parameter2.toString(),
       },
     ],
   };

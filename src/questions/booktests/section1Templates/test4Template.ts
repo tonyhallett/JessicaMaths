@@ -4,7 +4,7 @@ import {
   minusOperator,
 } from "../../singlequestionfactories/plusMinusOperatorIntegerTemplateFactory";
 import { penceSuffix } from "../../suffixes";
-import type { BookTestTemplate } from "../types";
+import type { BookTestTemplate } from "../booktesttemplates";
 
 export const section1Test4: BookTestTemplate = {
   partA: [

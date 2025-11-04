@@ -8,7 +8,7 @@ import {
   MultiplyBy,
 } from "../../singlequestionfactories/wordOperateTemplateFactory";
 import { penceSuffix } from "../../suffixes";
-import type { BookTestTemplate } from "../types";
+import type { BookTestTemplate } from "../booktesttemplates";
 
 export const section1Test5: BookTestTemplate = {
   partA: [

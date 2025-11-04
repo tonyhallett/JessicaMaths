@@ -14,6 +14,13 @@ import {
 } from "../src/questions/singlequestionfactories/plusMinusOperatorIntegerTemplateFactory";
 import { subtractPenceFromPoundsTemplateFactory } from "../src/questions/singlequestionfactories/subtractPenceFromPoundsTemplateFactory";
 import { dividePoundIntegerToPenceTemplateFactory } from "../src/questions/singlequestionfactories/dividePoundIntegerToPenceTemplateFactory";
+import {
+  wordOperateTemplateFactory,
+  DivideBy,
+  SubtractFrom,
+  MultiplyBy,
+  IncreaseBy,
+} from "../src/questions/singlequestionfactories/wordOperateTemplateFactory";
 import { numeratorsOfFactory } from "../src/questions/multiplequestionsfactories/numeratorsOfFactory";
 import { nthMonthOfTheYear } from "../src/templatetransform/calculationfunctions/nthMonthOfTheYear";
 import { nthLetterOfTheAlphabet } from "../src/templatetransform/calculationfunctions/nthLetterOfTheAlphabet";
@@ -569,6 +576,70 @@ describe("QA Template Transform", () => {
           ["2", "10"],
           "Divide £2.00 by 10.",
           "20"
+        );
+      });
+
+      it("should word operate division with answer and divisor params", () => {
+        const parameter1Answer = 6;
+        const parameter2Divisor = 3;
+        const qaTemplate = wordOperateTemplateFactory(
+          "Section 1, Test 2, B2",
+          parameter1Answer,
+          parameter2Divisor,
+          DivideBy
+        );
+        expectTransformSingleInputQA(
+          qaTemplate,
+          [parameter1Answer.toString(), parameter2Divisor.toString()],
+          "Divide 18 by 3.",
+          "6"
+        );
+      });
+
+      it("should word operate subtraction with answer and subtrahend", () => {
+        const parameter1Answer = 197;
+        const parameter2Subtractor = 5;
+        const qaTemplate = wordOperateTemplateFactory(
+          "Section 1, Test 12, B8",
+          parameter1Answer,
+          parameter2Subtractor,
+          SubtractFrom
+        );
+        expectTransformSingleInputQA(
+          qaTemplate,
+          [parameter1Answer.toString(), parameter2Subtractor.toString()],
+          "Subtract 5 from 202.",
+          "197"
+        );
+      });
+
+      it("should word operate multiplication", () => {
+        const qaTemplate = wordOperateTemplateFactory(
+          "Section 1, Test 2, B1",
+          5,
+          3,
+          MultiplyBy
+        );
+        expectTransformSingleInputQA(
+          qaTemplate,
+          ["5", "3"],
+          "Multiply 5 by 3.",
+          "15"
+        );
+      });
+
+      it("should word operate addition", () => {
+        const qaTemplate = wordOperateTemplateFactory(
+          "Section 1, Test 1, B5",
+          5,
+          3,
+          IncreaseBy
+        );
+        expectTransformSingleInputQA(
+          qaTemplate,
+          ["5", "3"],
+          "Increase 5 by 3.",
+          "8"
         );
       });
     });

@@ -7,7 +7,7 @@ import {
   wordOperateTemplateFactory,
   MultiplyBy,
 } from "../../singlequestionfactories/wordOperateTemplateFactory";
-import type { BookTestTemplate } from "../types";
+import type { BookTestTemplate } from "../booktesttemplates";
 
 export const section1Test7: BookTestTemplate = {
   partA: [

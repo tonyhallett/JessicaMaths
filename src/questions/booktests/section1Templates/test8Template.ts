@@ -6,7 +6,7 @@ import {
   wordOperateTemplateFactory,
   IncreaseBy,
 } from "../../singlequestionfactories/wordOperateTemplateFactory";
-import type { BookTestTemplate } from "../types";
+import type { BookTestTemplate } from "../booktesttemplates";
 
 export const section1Test8: BookTestTemplate = {
   partA: [

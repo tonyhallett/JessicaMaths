@@ -10,7 +10,7 @@ import {
   SubtractFrom,
 } from "../../singlequestionfactories/wordOperateTemplateFactory";
 import { penceSuffix } from "../../suffixes";
-import type { BookTestTemplate } from "../types";
+import type { BookTestTemplate } from "../booktesttemplates";
 
 export const section1Test2: BookTestTemplate = {
   partA: [
@@ -31,12 +31,12 @@ export const section1Test2: BookTestTemplate = {
   ],
   partB: [
     wordOperateTemplateFactory("Section 1, Test 2, B1", 4, 8, MultiplyBy),
-    wordOperateTemplateFactory("Section 1, Test 2, B2", 18, 3, DivideBy),
+    wordOperateTemplateFactory("Section 1, Test 2, B2", 6, 3, DivideBy),
     // todo
     wordOperateTemplateFactory(
       "Section 1, Test 2, B7",
+      9,
       16,
-      25,
       SubtractFrom,
       penceSuffix
     ),

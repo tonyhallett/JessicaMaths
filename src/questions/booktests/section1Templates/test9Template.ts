@@ -2,7 +2,7 @@ import {
   plusMinusOperatorIntegerTemplateFactory,
   plusOperator,
 } from "../../singlequestionfactories/plusMinusOperatorIntegerTemplateFactory";
-import type { BookTestTemplate } from "../types";
+import type { BookTestTemplate } from "../booktesttemplates";
 
 export const section1Test9: BookTestTemplate = {
   partA: [
