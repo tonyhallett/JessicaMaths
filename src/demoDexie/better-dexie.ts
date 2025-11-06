@@ -58,22 +58,46 @@ export type UpdateKeyPathValue<T, PATH> = PATH extends `${infer R}.${infer S}`
   : void;
 
 export interface WhereClause<T, Key extends KeysOf<T>, TKey = IndexableType> {
-  above(key: ValuesOfKey<T, Key>): Collection<T, TKey>;
-  aboveOrEqual(key: ValuesOfKey<T, Key>): Collection<T, TKey>;
-  anyOf(keys: ReadonlyArray<IndexableType>): Collection<T, TKey>;
-  anyOf(...keys: Array<IndexableType>): Collection<T, TKey>;
-  anyOfIgnoreCase(keys: ValuesOfKey<T, Key>): Collection<T, TKey>;
-  anyOfIgnoreCase(...keys: string[]): Collection<T, TKey>;
-  below(key: ValuesOfKey<T, Key>): Collection<T, TKey>;
+  above(value: ValuesOfKey<T, Key>): Collection<T, TKey>;
+  aboveOrEqual(value: ValuesOfKey<T, Key>): Collection<T, TKey>;
+  below(value: ValuesOfKey<T, Key>): Collection<T, TKey>;
   belowOrEqual(key: ValuesOfKey<T, Key>): Collection<T, TKey>;
+  equals(value: ValuesOfKey<T, Key>): Collection<T, TKey>;
+  // https://dexie.org/docs/WhereClause/WhereClause.anyOf()
+  // why does this not use ValuesOfKey?
+  anyOf(values: ReadonlyArray<IndexableType>): Collection<T, TKey>;
+  anyOf(...values: Array<IndexableType>): Collection<T, TKey>;
+  notEqual(value: ValuesOfKey<T, Key>): Collection<T, TKey>;
+  noneOf(values: ReadonlyArray<ValuesOfKey<T, Key>>): Collection<T, TKey>;
+
+  //https://dexie.org/docs/WhereClause/WhereClause.anyOfIgnoreCase()
+  // this is incorrect as should be string values
+  // so should type this to be never dependent upon Key
+  anyOfIgnoreCase(values: ValuesOfKey<T, Key>): Collection<T, TKey>;
+  anyOfIgnoreCase(...values: string[]): Collection<T, TKey>;
+  // https://dexie.org/docs/WhereClause/WhereClause.equalsIgnoreCase()
+  // this is incorrect as should be string values
+  // should type this to be never dependent upon Key
+  equalsIgnoreCase(value: ValuesOfKey<T, Key>): Collection<T, TKey>;
+  // https://dexie.org/docs/WhereClause/WhereClause.startsWith()
+  // should type this to be never dependent upon Key
+
+  startsWith(prefix: string): Collection<T, TKey>;
+  startsWithAnyOf(prefixes: string[]): Collection<T, TKey>;
+  startsWithAnyOf(...prefixes: string[]): Collection<T, TKey>;
+  startsWithIgnoreCase(prefix: string): Collection<T, TKey>;
+  startsWithAnyOfIgnoreCase(prefixes: string[]): Collection<T, TKey>;
+  startsWithAnyOfIgnoreCase(...prefixes: string[]): Collection<T, TKey>;
+
+  // https://dexie.org/docs/WhereClause/WhereClause.between()
   between(
     lower: ValuesOfKey<T, Key>,
     upper: ValuesOfKey<T, Key>,
     includeLower?: boolean,
     includeUpper?: boolean
   ): Collection<T, TKey>;
-  equals(key: ValuesOfKey<T, Key>): Collection<T, TKey>;
-  equalsIgnoreCase(key: ValuesOfKey<T, Key>): Collection<T, TKey>;
+
+  // https://dexie.org/docs/WhereClause/WhereClause.inAnyRange()
   inAnyRange(
     ranges: ReadonlyArray<[ValuesOfKey<T, Key>, ValuesOfKey<T, Key>]>,
     options?: {
@@ -81,14 +105,6 @@ export interface WhereClause<T, Key extends KeysOf<T>, TKey = IndexableType> {
       includeUppers?: boolean;
     }
   ): Collection<T, TKey>;
-  startsWith(key: string): Collection<T, TKey>;
-  startsWithAnyOf(prefixes: string[]): Collection<T, TKey>;
-  startsWithAnyOf(...prefixes: string[]): Collection<T, TKey>;
-  startsWithIgnoreCase(key: string): Collection<T, TKey>;
-  startsWithAnyOfIgnoreCase(prefixes: string[]): Collection<T, TKey>;
-  startsWithAnyOfIgnoreCase(...prefixes: string[]): Collection<T, TKey>;
-  noneOf(keys: ReadonlyArray<ValuesOfKey<T, Key>>): Collection<T, TKey>;
-  notEqual(key: ValuesOfKey<T, Key>): Collection<T, TKey>;
 }
 
 export interface Collection<T = any, TKey = IndexableType> {

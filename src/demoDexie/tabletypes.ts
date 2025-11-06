@@ -7,14 +7,18 @@ import type {
   TableHooks,
   TableSchema,
 } from "dexie";
-import type { TableConfig } from "./tableBuilder";
+import type { DexieIndices, TableConfig } from "./tableBuilder";
 import type { Collection, KeysOf, WhereClause } from "./better-dexie";
 
 type AllowedIndexFields<S extends TableConfig<any, any, any, any>> =
   S["indices"][number];
 
 //export interface TableBase<T = any, TKey = any, TInsertType = T> {
-export interface TableBase<T = any, TKey = any> {
+export interface TableBase<
+  T = any,
+  TKey = any,
+  TIndices extends DexieIndices<T> = any
+> {
   db: Dexie;
   name: string;
   schema: TableSchema;
@@ -32,6 +36,7 @@ export interface TableBase<T = any, TKey = any> {
 
   where(equalityCriterias: Partial<T>): Collection<T, TKey>;
   where<K extends KeysOf<T>>(index: K): WhereClause<T, K, TKey>;
+  //where(index: TIndices): WhereClause<T, K, TKey>;
 
   filter(fn: (obj: T) => boolean): Collection<T, TKey>;
 

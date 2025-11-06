@@ -107,6 +107,8 @@ export const DemoDexie = () => {
             console.log("equals item:", item);
           });
 
+        //db.data.where("stringValue").equals(10);
+
         await db.data
           .where("stringValue")
           .startsWithAnyOfIgnoreCase(["W", "d"])
