@@ -18,24 +18,28 @@ const db = dexieFactoryWithBuilder(1, {
   notInTx: tableBuilder<{ id: number }>().primaryKey("id").build(),
 });
 
-db.on("populate", () => {
-  db.data.add({ id: 1, numberValue: 42, stringValue: "Hello" });
-  db.data.add({ id: 2, numberValue: 7, stringValue: "World" });
-  db.data.add({ id: 3, numberValue: 13, stringValue: "Dexie" });
+// typed transaction
+db.on("populate", (tx) => {
+  tx.data.add({ id: 1, numberValue: 42, stringValue: "Hello" });
+  tx.data.add({ id: 2, numberValue: 7, stringValue: "World" });
+  tx.data.add({ id: 3, numberValue: 13, stringValue: "Dexie" });
 });
 
+// typed transaction
 db.transaction("rw", db.data, db.other, (tx) => {
   const dataTable = tx.data;
   const otherTable = tx.other;
   //const notInTxTable = tx.notInTx; error
 });
 
+// typed transaction
 db.transaction("rw", db.data, "other", (tx) => {
   const dataTable = tx.data;
   const otherTable = tx.other;
   //const notInTxTable = tx.notInTx; error
 });
 
+// typed transaction
 db.transaction("rw", [db.data, "other"], (tx) => {
   const dataTable = tx.data;
   const otherTable = tx.other;

@@ -1,5 +1,12 @@
 import type {
+  DbEvents,
   Dexie,
+  DexieCloseEvent,
+  DexieEvent,
+  DexieEventSet,
+  DexieOnReadyEvent,
+  DexiePopulateEvent,
+  DexieVersionChangeEvent,
   PromiseExtended,
   Transaction,
   TransactionMode,
@@ -46,7 +53,39 @@ type TransactionWithTables<
   >;
 };
 
-type DexieWithoutTransactions = Omit<Dexie, "transaction">;
+type DexieWithoutTransactions = Omit<Dexie, "transaction" | "on">;
+
+type TypedOn<TConfig extends Record<string, TableConfig<any, any, any, any>>> =
+  {
+    on: DexieEventSet & // DbEventFns with typed transaction for 'populate' event
+    {
+      (
+        eventName: "populate",
+        subscriber: (trans: Transaction & DBTables<TConfig>) => any
+      ): void;
+      (
+        eventName: "blocked",
+        subscriber: (event: IDBVersionChangeEvent) => any
+      ): void;
+      (
+        eventName: "versionchange",
+        subscriber: (event: IDBVersionChangeEvent) => any
+      ): void;
+      (eventName: "close", subscriber: (event: Event) => any): void;
+
+      // from DbEvents
+      (
+        eventName: "ready",
+        subscriber: (vipDb: Dexie) => any,
+        bSticky?: boolean
+      ): void;
+      ready: DexieOnReadyEvent;
+      populate: DexiePopulateEvent; // this is old style.
+      blocked: DexieEvent;
+      versionchange: DexieVersionChangeEvent;
+      close: DexieCloseEvent;
+    };
+  };
 
 // todo - suppport table array, table, table array args
 type TypedTransaction<
@@ -72,4 +111,4 @@ type TypedTransaction<
 };
 export type DexieTypedTransaction<
   TConfig extends Record<string, TableConfig<any, any, any, any>>
-> = DexieWithoutTransactions & TypedTransaction<TConfig>;
+> = DexieWithoutTransactions & TypedTransaction<TConfig> & TypedOn<TConfig>;
