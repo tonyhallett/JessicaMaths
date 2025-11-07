@@ -14,6 +14,8 @@ const db = dexieFactoryWithBuilder(1, {
     .index("stringValue")
     .index("numberValue")
     .build(),
+  other: tableBuilder<{ id: number }>().primaryKey("id").build(),
+  notInTx: tableBuilder<{ id: number }>().primaryKey("id").build(),
 });
 
 db.on("populate", () => {
@@ -21,6 +23,26 @@ db.on("populate", () => {
   db.data.add({ id: 2, numberValue: 7, stringValue: "World" });
   db.data.add({ id: 3, numberValue: 13, stringValue: "Dexie" });
 });
+
+db.transaction("rw", db.data, db.other, (tx) => {
+  const dataTable = tx.data;
+  const otherTable = tx.other;
+  //const notInTxTable = tx.notInTx; error
+});
+
+db.transaction("rw", db.data, "other", (tx) => {
+  const dataTable = tx.data;
+  const otherTable = tx.other;
+  //const notInTxTable = tx.notInTx; error
+});
+
+db.transaction("rw", [db.data, "other"], (tx) => {
+  const dataTable = tx.data;
+  const otherTable = tx.other;
+  //const notInTxTable = tx.notInTx; error
+});
+
+// todo - support db.transaction("rw", [db.data, "other"],"else", (tx) => {
 
 export const DemoDexie = () => {
   return (

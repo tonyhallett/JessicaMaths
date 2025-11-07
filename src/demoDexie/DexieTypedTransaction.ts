@@ -47,9 +47,12 @@ type TransactionWithTables<
 };
 
 type DexieWithoutTransactions = Omit<Dexie, "transaction">;
+
+// todo - suppport table array, table, table array args
 type TypedTransaction<
   TConfig extends Record<string, TableConfig<any, any, any, any>>
 > = {
+  // Array form: transaction(mode, [tables], scope)
   transaction<U, TTables extends readonly TableArg<DBTables<TConfig>>[]>(
     mode: TransactionMode,
     tables: TTables,
@@ -57,8 +60,16 @@ type TypedTransaction<
       trans: TransactionWithTables<TConfig, TTables>
     ) => PromiseLike<U> | U
   ): PromiseExtended<U>;
-};
 
+  // Rest parameters form: transaction(mode, table1, table2, ..., scope)
+  transaction<U, TTables extends readonly TableArg<DBTables<TConfig>>[]>(
+    mode: TransactionMode,
+    ...tablesAndScope: [
+      ...TTables,
+      (trans: TransactionWithTables<TConfig, TTables>) => PromiseLike<U> | U
+    ]
+  ): PromiseExtended<U>;
+};
 export type DexieTypedTransaction<
   TConfig extends Record<string, TableConfig<any, any, any, any>>
 > = DexieWithoutTransactions & TypedTransaction<TConfig>;
