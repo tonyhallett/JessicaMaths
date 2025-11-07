@@ -15,12 +15,13 @@ type AllowedIndexFields<S extends TableConfig<any, any, any, any>> =
 
 //export interface TableBase<T = any, TKey = any, TInsertType = T> {
 export interface TableBase<
+  TName extends string = string,
   T = any,
   TKey = any,
   TIndices extends DexieIndices<T> = any
 > {
   db: Dexie;
-  name: string;
+  name: TName;
   schema: TableSchema;
   hook: TableHooks<T, TKey>;
   core: DBCoreTable;
@@ -113,30 +114,41 @@ export interface TableBase<
   // bulkDelete(keys: TKey[]): PromiseExtended<void>;
 }
 
-type KeyPathTable<T, TKey, TIndices> = TableBase<T, TKey> & {
+type KeyPathTable<
+  TName extends string,
+  T,
+  TKey,
+  TIndices extends DexieIndices<T>
+> = TableBase<TName, T, TKey, TIndices> & {
   get(key: TKey): PromiseExtended<T | undefined>;
   add(item: T): PromiseExtended<TKey>;
   // index methods to use TIndices for parameter type
 };
-type KeyPathAutoIncrementTable<T> = {};
-type HiddenTable<T> = {};
-type HiddenAutoIncrementTable<T> = {};
+type KeyPathAutoIncrementTable<TName extends string, T> = TableBase<
+  TName,
+  T
+> & {};
+type HiddenTable<TName extends string, T> = TableBase<TName, T> & {};
+type HiddenAutoIncrementTable<TName extends string, T> = TableBase<
+  TName,
+  T
+> & {};
 
 export type DBTables<
   TConfig extends Record<string, TableConfig<any, any, any, any>>
 > = {
-  [K in keyof TConfig]: TConfig[K] extends TableConfig<
+  [K in keyof TConfig & string]: TConfig[K] extends TableConfig<
     infer TRow,
     infer PK,
     infer Auto,
-    infer Indices
+    any
   >
     ? PK extends never
       ? Auto extends true
-        ? HiddenAutoIncrementTable<TRow>
-        : HiddenTable<TRow>
+        ? HiddenAutoIncrementTable<K, TRow>
+        : HiddenTable<K, TRow>
       : Auto extends true
-      ? KeyPathAutoIncrementTable<TRow>
-      : KeyPathTable<TRow, PK, AllowedIndexFields<TConfig[K]>>
+      ? KeyPathAutoIncrementTable<K, TRow>
+      : KeyPathTable<K, TRow, PK, AllowedIndexFields<TConfig[K]>>
     : never;
 };

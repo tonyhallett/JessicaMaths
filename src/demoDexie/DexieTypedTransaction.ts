@@ -1,0 +1,64 @@
+import type {
+  Dexie,
+  PromiseExtended,
+  Transaction,
+  TransactionMode,
+} from "dexie";
+import type { TableConfig } from "./tableBuilder";
+import type { DBTables } from "./tabletypes";
+
+// Helper: the union of allowed argument shapes (either a table name key or a table instance)
+type TableArg<TTablesMap extends Record<string, any>> =
+  | (keyof TTablesMap & string)
+  | TTablesMap[keyof TTablesMap];
+
+// Extract the literal name for a single TableArg:
+// - If it's a table object with 'name' literal -> use that literal
+// - Otherwise if it's a string literal key -> use it
+type NameOfArg<TTablesMap extends Record<string, any>, A> = A extends {
+  name: infer N extends string;
+}
+  ? N
+  : A extends keyof TTablesMap
+  ? A
+  : never;
+
+// Get the union of names present in the TTables array/tuple
+type TableNamesFromArgs<
+  TTablesMap extends Record<string, any>,
+  TTables extends readonly TableArg<TTablesMap>[]
+> = NameOfArg<TTablesMap, TTables[number]>;
+
+// Map a table name (key) to the proper table instance from the DB mapping
+type TableInstanceForName<
+  TTablesMap extends Record<string, any>,
+  Name extends string
+> = Name extends keyof TTablesMap ? TTablesMap[Name] : never;
+
+// The result: TransactionWithTables exposes only the named tables from the DBTables mapping
+type TransactionWithTables<
+  TConfig extends Record<string, TableConfig<any, any, any, any>>,
+  TTables extends readonly TableArg<DBTables<TConfig>>[]
+> = Omit<Transaction, "table"> & {
+  [N in TableNamesFromArgs<DBTables<TConfig>, TTables>]: TableInstanceForName<
+    DBTables<TConfig>,
+    N
+  >;
+};
+
+type DexieWithoutTransactions = Omit<Dexie, "transaction">;
+type TypedTransaction<
+  TConfig extends Record<string, TableConfig<any, any, any, any>>
+> = {
+  transaction<U, TTables extends readonly TableArg<DBTables<TConfig>>[]>(
+    mode: TransactionMode,
+    tables: TTables,
+    scope: (
+      trans: TransactionWithTables<TConfig, TTables>
+    ) => PromiseLike<U> | U
+  ): PromiseExtended<U>;
+};
+
+export type DexieTypedTransaction<
+  TConfig extends Record<string, TableConfig<any, any, any, any>>
+> = DexieWithoutTransactions & TypedTransaction<TConfig>;
