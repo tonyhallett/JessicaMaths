@@ -8,7 +8,12 @@ import type {
   TableSchema,
 } from "dexie";
 import type { DexieIndices, TableConfig } from "./tableBuilder";
-import type { Collection, KeysOf, WhereClause } from "./better-dexie";
+import type {
+  Collection,
+  KeysOf,
+  UpdateKeyPathValue,
+  WhereClause,
+} from "./better-dexie";
 
 type AllowedIndexFields<S extends TableConfig<any, any, any, any>> =
   S["indices"][number];
@@ -120,7 +125,7 @@ type KeyPathTable<
   TKey,
   TIndices extends DexieIndices<T>
 > = TableBase<TName, T, TKey, TIndices> & {
-  get(key: TKey): PromiseExtended<T | undefined>;
+  get(key: UpdateKeyPathValue<T, TKey>): PromiseExtended<T | undefined>;
   add(item: T): PromiseExtended<TKey>;
   // index methods to use TIndices for parameter type
 };

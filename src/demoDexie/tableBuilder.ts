@@ -1,3 +1,5 @@
+import type { UpdateKeyPathValue } from "./better-dexie";
+
 export interface TableConfig<
   T,
   PK extends DexieIndex<T>,
@@ -14,7 +16,13 @@ export type DexieIndices<T> = DexieIndex<T>[];
 
 // ---------- Helpers ----------
 type StringKey<T> = keyof T & string;
-type AllowedKeyLeaf = string | number | Date | ArrayBuffer;
+type AllowedKeyLeaf =
+  | string
+  | number
+  | Date
+  | ArrayBuffer
+  | ArrayBufferView
+  | DataView;
 type IsAllowedLeaf<T> = [T] extends [AllowedKeyLeaf] ? true : false;
 type IsArray<T> = T extends readonly (infer E)[] ? true : false;
 type ArrayElement<T> = T extends readonly (infer E)[] ? E : never;
@@ -30,65 +38,126 @@ type WithSuffix<
 type WithTypeSpecificPropertyPaths<
   TPossiblePrefix extends string,
   TKey extends string,
-  TProperties extends readonly string[]
-> = TProperties[number] extends infer P
-  ? P extends string
-    ? WithSuffix<TPossiblePrefix, `${TKey}.${P}`>
+  TProperties extends readonly string[],
+  TAllowTypeSpecificProperties extends boolean
+> = TAllowTypeSpecificProperties extends true
+  ? TProperties[number] extends infer P
+    ? P extends string
+      ? WithSuffix<TPossiblePrefix, `${TKey}.${P}`>
+      : never
     : never
   : never;
 
 type WithKeyAndTypeSpecificPropertyPaths<
   TPossiblePrefix extends string,
   TKey extends string,
-  TProperties extends readonly string[]
+  TProperties extends readonly string[],
+  TAllowTypeSpecificProperties extends boolean
 > =
-  | WithTypeSpecificPropertyPaths<TPossiblePrefix, TKey, TProperties>
+  | WithTypeSpecificPropertyPaths<
+      TPossiblePrefix,
+      TKey,
+      TProperties,
+      TAllowTypeSpecificProperties
+    >
   | WithSuffix<TPossiblePrefix, TKey>;
 
 type LeafPath<
   PossiblePrefix extends string,
   TLeafType,
-  TKey extends string
+  TKey extends string,
+  TAllowTypeSpecificProperties extends boolean
 > = TLeafType extends string
-  ? WithKeyAndTypeSpecificPropertyPaths<PossiblePrefix, TKey, ["length"]>
+  ? WithKeyAndTypeSpecificPropertyPaths<
+      PossiblePrefix,
+      TKey,
+      ["length"],
+      TAllowTypeSpecificProperties
+    >
   : WithSuffix<PossiblePrefix, TKey>;
 
 type BlobPathProperties<
   TPossiblePrefix extends string,
-  TKey extends string
-> = WithTypeSpecificPropertyPaths<TPossiblePrefix, TKey, ["size", "type"]>;
+  TKey extends string,
+  TAllowTypeSpecificProperties extends boolean
+> = WithTypeSpecificPropertyPaths<
+  TPossiblePrefix,
+  TKey,
+  ["size", "type"],
+  TAllowTypeSpecificProperties
+>;
 
-type FilePathProperties<TPossiblePrefix extends string, TKey extends string> =
+type FilePathProperties<
+  TPossiblePrefix extends string,
+  TKey extends string,
+  TAllowTypeSpecificProperties extends boolean
+> =
   | WithTypeSpecificPropertyPaths<
       TPossiblePrefix,
       TKey,
-      ["name", "lastModified"]
+      ["name", "lastModified"],
+      TAllowTypeSpecificProperties
     >
-  | BlobPathProperties<TPossiblePrefix, TKey>;
+  | BlobPathProperties<TPossiblePrefix, TKey, TAllowTypeSpecificProperties>;
 
 // ---------- Main recursive type ----------
-export type ValidIndexedDBKeyPaths<T, Prefix extends string = NoPefix> = {
+export type ValidIndexedDBKeyPaths<
+  T,
+  Prefix extends string = NoPefix,
+  TAllowTypeSpecificProperties extends boolean = true
+> = {
   [P in StringKey<T>]: IsAllowedLeaf<T[P]> extends true // Case A: Allowed leaf type
-    ? LeafPath<Prefix, T[P], P>
+    ? LeafPath<Prefix, T[P], P, TAllowTypeSpecificProperties>
     : IsFile<T[P]> extends true
-    ? FilePathProperties<Prefix, P>
+    ? FilePathProperties<Prefix, P, TAllowTypeSpecificProperties>
     : IsBlob<T[P]> extends true
-    ? BlobPathProperties<Prefix, P>
+    ? BlobPathProperties<Prefix, P, TAllowTypeSpecificProperties>
     : // todo - this needs to be checked !
     IsArray<T[P]> extends true
     ? ArrayElement<T[P]> extends infer Elem
       ? Elem extends AllowedKeyLeaf
         ? WithSuffix<Prefix, P>
         : Elem extends string
-        ? WithKeyAndTypeSpecificPropertyPaths<Prefix, P, ["length"]>
+        ? WithKeyAndTypeSpecificPropertyPaths<
+            Prefix,
+            P,
+            ["length"],
+            TAllowTypeSpecificProperties
+          >
         : Elem extends object
-        ? ValidIndexedDBKeyPaths<Elem, WithSuffix<Prefix, P>>
+        ? ValidIndexedDBKeyPaths<
+            Elem,
+            WithSuffix<Prefix, P>,
+            TAllowTypeSpecificProperties
+          >
         : never
       : never
     : T[P] extends object
-    ? ValidIndexedDBKeyPaths<T[P], WithSuffix<Prefix, P>>
+    ? ValidIndexedDBKeyPaths<
+        T[P],
+        WithSuffix<Prefix, P>,
+        TAllowTypeSpecificProperties
+      >
     : never;
 }[StringKey<T>];
+
+type IsMultiEntryArray<T> = T extends readonly (infer E)[]
+  ? E extends AllowedKeyLeaf
+    ? true
+    : false
+  : false;
+
+export type MultiEntryKeyPaths<T> = ValidIndexedDBKeyPaths<
+  T,
+  "",
+  false
+> extends infer P
+  ? P extends string
+    ? IsMultiEntryArray<UpdateKeyPathValue<T, P>> extends true
+      ? P
+      : never
+    : never
+  : never;
 
 export interface IndexMethods<
   T,
@@ -102,7 +171,7 @@ export interface IndexMethods<
   unique<I extends ValidIndexedDBKeyPaths<T>>(
     indexKey: I
   ): IndexMethods<T, K, Auto, [...Indices, I]>;
-  multi<I extends ValidIndexedDBKeyPaths<T>>(
+  multi<I extends MultiEntryKeyPaths<T>>(
     indexKey: I
   ): IndexMethods<T, K, Auto, [...Indices, I]>;
   compound<I extends DexieCompoundIndex<T>>(
@@ -154,7 +223,7 @@ export function tableBuilder<T>() {
   }
 
   return {
-    autoIncrement<K extends DexieIndex<T>>(key: K) {
+    autoIncrement<K extends ValidIndexedDBKeyPaths<T, "", false>>(key: K) {
       return createIndexMethods(key, true, []);
     },
     primaryKey<K extends DexieIndex<T>>(key: K) {

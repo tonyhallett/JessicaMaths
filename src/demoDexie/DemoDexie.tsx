@@ -1,14 +1,16 @@
 import Button from "@mui/material/Button";
-import { dexieFactoryWithBuilder } from "./dexieFactory";
+import { dexieFactory } from "./dexieFactory";
 import { tableBuilder } from "./tableBuilder";
 
 interface DexieDataItem {
   id: number;
   numberValue: number;
   stringValue: string;
+  multiEntry: string[];
 }
 
-const db2 = dexieFactoryWithBuilder(
+// demo that can have a primary key based on a property of the type
+const db2 = dexieFactory(
   1,
   {
     data: tableBuilder<DexieDataItem>()
@@ -21,30 +23,44 @@ db2.open().catch((err) => {
   console.error("Failed to open db2:", err);
 });
 db2.on("populate", (tx) => {
-  tx.data.add({ id: 1, numberValue: 42, stringValue: "L2" });
-  tx.data.add({ id: 1, numberValue: 42, stringValue: "Four" });
+  tx.data.add({ id: 1, numberValue: 42, stringValue: "L2", multiEntry: [] });
+  tx.data.add({ id: 1, numberValue: 42, stringValue: "Four", multiEntry: [] });
   /* tx.data.add({ id: 1, numberValue: 42, stringValue: "Same" }).catch((err) => {
     console.error("Failed to add item to db2:", err);
   }); */
 });
 
-db2.data.get(1 as any).then((item) => {
+db2.data.get(1).then((item) => {
   console.log("db2 item with key 1:", item);
 });
-db2.data.get(2 as any).then((item) => {
+db2.data.get(2).then((item) => {
   console.log("db2 item with key 2:", item);
 });
-db2.data.get(4 as any).then((item) => {
+db2.data.get(4).then((item) => {
   console.log("db2 item with key 4:", item);
 });
+// get is typed to the primary key type
+//db2.data.get("string"); // error
 
-const db = dexieFactoryWithBuilder(
+// should not be able to autoincrement type specific property
+/* const db3 = dexieFactoryWithBuilder(
+  1,
+  {
+    data: tableBuilder<DexieDataItem>()
+      .autoIncrement("stringValue.length")
+      .build(),
+  },
+  "DemoDexie3"
+); */
+
+const db = dexieFactory(
   1,
   {
     data: tableBuilder<DexieDataItem>()
       .primaryKey("id")
       .index("stringValue")
       .index("numberValue")
+      .multi("multiEntry") // only allowed value
       .build(),
     other: tableBuilder<{ id: number }>().primaryKey("id").build(),
     notInTx: tableBuilder<{ id: number }>().primaryKey("id").build(),
@@ -54,9 +70,9 @@ const db = dexieFactoryWithBuilder(
 
 // typed transaction
 db.on("populate", (tx) => {
-  tx.data.add({ id: 1, numberValue: 42, stringValue: "Hello" });
-  tx.data.add({ id: 2, numberValue: 7, stringValue: "World" });
-  tx.data.add({ id: 3, numberValue: 13, stringValue: "Dexie" });
+  tx.data.add({ id: 1, numberValue: 42, stringValue: "Hello", multiEntry: [] });
+  tx.data.add({ id: 2, numberValue: 7, stringValue: "World", multiEntry: [] });
+  tx.data.add({ id: 3, numberValue: 13, stringValue: "Dexie", multiEntry: [] });
 });
 
 // typed transaction
