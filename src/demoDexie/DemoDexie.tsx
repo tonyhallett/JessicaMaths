@@ -7,6 +7,7 @@ interface DexieDataItem {
   numberValue: number;
   stringValue: string;
   multiEntry: string[];
+  arrayKey: string[];
 }
 
 // demo that can have a primary key based on a property of the type
@@ -23,8 +24,20 @@ db2.open().catch((err) => {
   console.error("Failed to open db2:", err);
 });
 db2.on("populate", (tx) => {
-  tx.data.add({ id: 1, numberValue: 42, stringValue: "L2", multiEntry: [] });
-  tx.data.add({ id: 1, numberValue: 42, stringValue: "Four", multiEntry: [] });
+  tx.data.add({
+    id: 1,
+    numberValue: 42,
+    stringValue: "L2",
+    multiEntry: [],
+    arrayKey: [],
+  });
+  tx.data.add({
+    id: 1,
+    numberValue: 42,
+    stringValue: "Four",
+    multiEntry: [],
+    arrayKey: [],
+  });
   /* tx.data.add({ id: 1, numberValue: 42, stringValue: "Same" }).catch((err) => {
     console.error("Failed to add item to db2:", err);
   }); */
@@ -60,7 +73,8 @@ const db = dexieFactory(
       .primaryKey("id")
       .index("stringValue")
       .index("numberValue")
-      .multi("multiEntry") // only allowed value
+      .index("arrayKey")
+      .multi("multiEntry") // only arrays allowed
       .build(),
     other: tableBuilder<{ id: number }>().primaryKey("id").build(),
     notInTx: tableBuilder<{ id: number }>().primaryKey("id").build(),
@@ -70,9 +84,27 @@ const db = dexieFactory(
 
 // typed transaction
 db.on("populate", (tx) => {
-  tx.data.add({ id: 1, numberValue: 42, stringValue: "Hello", multiEntry: [] });
-  tx.data.add({ id: 2, numberValue: 7, stringValue: "World", multiEntry: [] });
-  tx.data.add({ id: 3, numberValue: 13, stringValue: "Dexie", multiEntry: [] });
+  tx.data.add({
+    id: 1,
+    numberValue: 42,
+    stringValue: "Hello",
+    multiEntry: [],
+    arrayKey: [],
+  });
+  tx.data.add({
+    id: 2,
+    numberValue: 7,
+    stringValue: "World",
+    multiEntry: [],
+    arrayKey: [],
+  });
+  tx.data.add({
+    id: 3,
+    numberValue: 13,
+    stringValue: "Dexie",
+    multiEntry: [],
+    arrayKey: [],
+  });
 });
 
 // typed transaction

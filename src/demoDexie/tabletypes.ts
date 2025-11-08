@@ -7,7 +7,7 @@ import type {
   TableHooks,
   TableSchema,
 } from "dexie";
-import type { DexieIndices, TableConfig } from "./tableBuilder";
+import type { DexieIndexes, TableConfig } from "./tableBuilder";
 import type {
   Collection,
   KeysOf,
@@ -23,7 +23,7 @@ export interface TableBase<
   TName extends string = string,
   T = any,
   TKey = any,
-  TIndices extends DexieIndices<T> = any
+  TIndexes extends DexieIndexes<T> = any
 > {
   db: Dexie;
   name: TName;
@@ -42,7 +42,7 @@ export interface TableBase<
 
   where(equalityCriterias: Partial<T>): Collection<T, TKey>;
   where<K extends KeysOf<T>>(index: K): WhereClause<T, K, TKey>;
-  //where(index: TIndices): WhereClause<T, K, TKey>;
+  //where(index: TIndexes): WhereClause<T, K, TKey>;
 
   filter(fn: (obj: T) => boolean): Collection<T, TKey>;
 
@@ -123,11 +123,11 @@ type KeyPathTable<
   TName extends string,
   T,
   TKey,
-  TIndices extends DexieIndices<T>
-> = TableBase<TName, T, TKey, TIndices> & {
+  TIndexes extends DexieIndexes<T>
+> = TableBase<TName, T, TKey, TIndexes> & {
   get(key: UpdateKeyPathValue<T, TKey>): PromiseExtended<T | undefined>;
   add(item: T): PromiseExtended<TKey>;
-  // index methods to use TIndices for parameter type
+  // index methods to use TIndexes for parameter type
 };
 type KeyPathAutoIncrementTable<TName extends string, T> = TableBase<
   TName,

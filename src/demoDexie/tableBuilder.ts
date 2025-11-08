@@ -4,7 +4,7 @@ export interface TableConfig<
   T,
   PK extends DexieIndex<T>,
   Auto extends boolean,
-  Indices extends DexieIndices<T>
+  Indices extends DexieIndexes<T>
 > {
   readonly pk: { key: PK; auto: Auto };
   readonly indicesSchema: string;
@@ -12,7 +12,7 @@ export interface TableConfig<
 }
 type DexieCompoundIndex<T> = ValidIndexedDBKeyPaths<T>[];
 type DexieIndex<T> = ValidIndexedDBKeyPaths<T> | DexieCompoundIndex<T>;
-export type DexieIndices<T> = DexieIndex<T>[];
+export type DexieIndexes<T> = DexieIndex<T>[];
 
 // ---------- Helpers ----------
 type StringKey<T> = keyof T & string;
@@ -163,7 +163,7 @@ export interface IndexMethods<
   T,
   K extends DexieIndex<T>,
   Auto extends boolean,
-  Indices extends DexieIndices<T>
+  Indices extends DexieIndexes<T>
 > {
   index<I extends ValidIndexedDBKeyPaths<T>>(
     indexKey: I
@@ -180,13 +180,17 @@ export interface IndexMethods<
   build(): TableConfig<T, K, Auto, Indices>;
 }
 
+const isDistinctArray = (arr: any[]): boolean => {
+  return Array.from(new Set(arr)).length === arr.length;
+};
+
 export function tableBuilder<T>() {
   const indexParts: string[] = [];
 
   function createIndexMethods<
     K extends DexieIndex<T>,
     Auto extends boolean,
-    Indices extends DexieIndices<T>
+    Indices extends DexieIndexes<T>
   >(key: K, auto: Auto, indices: Indices): IndexMethods<T, K, Auto, Indices> {
     return {
       index(indexKey) {
@@ -202,8 +206,7 @@ export function tableBuilder<T>() {
         return createIndexMethods(key, auto, [...indices, indexKey]);
       },
       compound(keys) {
-        const distinctKeys = Array.from(new Set(keys));
-        if (distinctKeys.length !== keys.length) {
+        if (!isDistinctArray(keys)) {
           throw new Error("Duplicate keys in compound index are not allowed");
         }
         if (keys.length < 2) {
@@ -213,6 +216,9 @@ export function tableBuilder<T>() {
         return createIndexMethods(key, auto, [...indices, keys]);
       },
       build() {
+        if (!isDistinctArray(indexParts)) {
+          throw new Error("Duplicate indexes are not allowed");
+        }
         return {
           pk: { key, auto },
           indicesSchema: indexParts.join(", "),
