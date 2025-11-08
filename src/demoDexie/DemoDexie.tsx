@@ -8,15 +8,49 @@ interface DexieDataItem {
   stringValue: string;
 }
 
-const db = dexieFactoryWithBuilder(1, {
-  data: tableBuilder<DexieDataItem>()
-    .primaryKey("id")
-    .index("stringValue")
-    .index("numberValue")
-    .build(),
-  other: tableBuilder<{ id: number }>().primaryKey("id").build(),
-  notInTx: tableBuilder<{ id: number }>().primaryKey("id").build(),
+const db2 = dexieFactoryWithBuilder(
+  1,
+  {
+    data: tableBuilder<DexieDataItem>()
+      .primaryKey("stringValue.length")
+      .build(),
+  },
+  "DemoDexie2"
+);
+db2.open().catch((err) => {
+  console.error("Failed to open db2:", err);
 });
+db2.on("populate", (tx) => {
+  tx.data.add({ id: 1, numberValue: 42, stringValue: "L2" });
+  tx.data.add({ id: 1, numberValue: 42, stringValue: "Four" });
+  /* tx.data.add({ id: 1, numberValue: 42, stringValue: "Same" }).catch((err) => {
+    console.error("Failed to add item to db2:", err);
+  }); */
+});
+
+db2.data.get(1 as any).then((item) => {
+  console.log("db2 item with key 1:", item);
+});
+db2.data.get(2 as any).then((item) => {
+  console.log("db2 item with key 2:", item);
+});
+db2.data.get(4 as any).then((item) => {
+  console.log("db2 item with key 4:", item);
+});
+
+const db = dexieFactoryWithBuilder(
+  1,
+  {
+    data: tableBuilder<DexieDataItem>()
+      .primaryKey("id")
+      .index("stringValue")
+      .index("numberValue")
+      .build(),
+    other: tableBuilder<{ id: number }>().primaryKey("id").build(),
+    notInTx: tableBuilder<{ id: number }>().primaryKey("id").build(),
+  },
+  "DemoDexie"
+);
 
 // typed transaction
 db.on("populate", (tx) => {

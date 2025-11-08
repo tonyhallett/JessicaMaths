@@ -10,8 +10,8 @@ type TypedDexie<
 
 export function dexieFactoryWithBuilder<
   S extends Record<string, TableConfig<any, any, any, any>>
->(version: number, tableConfigs: S) {
-  const db = new Dexie("MyDatabase") as unknown as TypedDexie<S>;
+>(version: number, tableConfigs: S, databaseName: string) {
+  const db = new Dexie(databaseName) as unknown as TypedDexie<S>;
 
   db.version(version).stores(buildStores(tableConfigs));
 

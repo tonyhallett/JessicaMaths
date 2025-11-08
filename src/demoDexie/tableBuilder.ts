@@ -1,6 +1,6 @@
 export interface TableConfig<
   T,
-  PK extends keyof T,
+  PK extends DexieIndex<T>,
   Auto extends boolean,
   Indices extends DexieIndices<T>
 > {
@@ -92,7 +92,7 @@ export type ValidIndexedDBKeyPaths<T, Prefix extends string = NoPefix> = {
 
 export interface IndexMethods<
   T,
-  K extends keyof T,
+  K extends DexieIndex<T>,
   Auto extends boolean,
   Indices extends DexieIndices<T>
 > {
@@ -115,7 +115,7 @@ export function tableBuilder<T>() {
   const indexParts: string[] = [];
 
   function createIndexMethods<
-    K extends keyof T,
+    K extends DexieIndex<T>,
     Auto extends boolean,
     Indices extends DexieIndices<T>
   >(key: K, auto: Auto, indices: Indices): IndexMethods<T, K, Auto, Indices> {
@@ -154,11 +154,14 @@ export function tableBuilder<T>() {
   }
 
   return {
-    autoIncrement<K extends keyof T>(key: K) {
+    autoIncrement<K extends DexieIndex<T>>(key: K) {
       return createIndexMethods(key, true, []);
     },
-    primaryKey<K extends keyof T>(key: K) {
+    primaryKey<K extends DexieIndex<T>>(key: K) {
       return createIndexMethods(key, false, []);
+    },
+    compoundKey<K extends DexieCompoundIndex<T>>(keys: K) {
+      return createIndexMethods(keys, false, []);
     },
     hiddenAuto() {
       return createIndexMethods(null as never, true, []);
