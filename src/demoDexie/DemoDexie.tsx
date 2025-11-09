@@ -177,6 +177,9 @@ export const DemoDexie = () => {
         await db.data.reverse().each((item) => {
           console.log("Reversed item:", item);
         });
+
+        // where
+        // db.data.where("XXX"); error
         await db.data
           .where("numberValue")
           .above(10)
@@ -228,6 +231,15 @@ export const DemoDexie = () => {
 
         await db.data
           .where("stringValue")
+          .anyOfIgnoreCase(["hello", "dexie"])
+          .each((item) => {
+            console.log("any of ignore case item:", item);
+          });
+
+        //db.data.where("numberValue").anyOfIgnoreCase(["hello"]); // error
+
+        await db.data
+          .where("stringValue")
           .equals("World")
           .each((item) => {
             console.log("equals item:", item);
@@ -239,8 +251,27 @@ export const DemoDexie = () => {
           .where("stringValue")
           .startsWithAnyOfIgnoreCase(["W", "d"])
           .each((item) => {
-            console.log("starts with ignore case item:", item);
+            console.log("starts with any of ignore case item:", item);
           });
+
+        await db.data
+          .where("stringValue")
+          .startsWithAnyOfIgnoreCase("W", "d")
+          .each((item) => {
+            console.log("starts with any of ignore case item:", item);
+          });
+
+        await db.data
+          .where("stringValue")
+          .startsWithAnyOf("W", "d")
+          .each((item) => {
+            console.log("starts with any of item:", item);
+          });
+
+        //db.data.where("numberValue").startsWithAnyOfIgnoreCase("d"); // error";
+        //db.data.where("numberValue").startsWithAnyOfIgnoreCase(["d"]); // error
+        //db.data.where("numberValue").startsWithAnyOf(["1"]);
+        //db.data.where("numberValue").equalsIgnoreCase("42"); // error
 
         await db.data
           .where("numberValue")

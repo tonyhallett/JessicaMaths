@@ -222,7 +222,7 @@ export function tableBuilder<T>() {
         return {
           pk: { key, auto },
           indicesSchema: indexParts.join(", "),
-          indices: indices,
+          indices,
         };
       },
     };

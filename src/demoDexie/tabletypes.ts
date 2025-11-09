@@ -12,9 +12,6 @@ import type { KeysOf, UpdateKeyPathValue } from "./better-dexie";
 import type { WhereClause } from "./WhereClause";
 import type { Collection } from "./Collection";
 
-type AllowedIndexFields<S extends TableConfig<any, any, any, any>> =
-  S["indices"][number];
-
 export interface TableBase<
   TName extends string,
   T,
@@ -169,10 +166,10 @@ export type DBTables<
   >
     ? PK extends never
       ? Auto extends true
-        ? HiddenAutoIncrementTable<K, TRow, PK, AllowedIndexFields<TConfig[K]>>
-        : HiddenTable<K, TRow, PK, AllowedIndexFields<TConfig[K]>>
+        ? HiddenAutoIncrementTable<K, TRow, PK, TConfig[K]["indices"]>
+        : HiddenTable<K, TRow, PK, TConfig[K]["indices"]>
       : Auto extends true
-      ? KeyPathAutoIncrementTable<K, TRow, PK, AllowedIndexFields<TConfig[K]>>
-      : KeyPathTable<K, TRow, PK, AllowedIndexFields<TConfig[K]>>
+      ? KeyPathAutoIncrementTable<K, TRow, PK, TConfig[K]["indices"]>
+      : KeyPathTable<K, TRow, PK, TConfig[K]["indices"]>
     : never;
 };
