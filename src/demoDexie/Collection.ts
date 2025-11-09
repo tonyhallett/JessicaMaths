@@ -81,8 +81,8 @@ export interface Collection<
     callback: (
       obj: T,
       cursor: {
-        key: TIndexes; // IndexableType;
-        primaryKey: TKey;
+        key: UpdateKeyPathValue<T, TKey>; // IndexableType;
+        primaryKey: UpdateKeyPathValue<T, TPkey>;
       }
     ) => any
   ): PromiseExtended<void>;
@@ -119,8 +119,8 @@ export interface Collection<
     ) => any
   ): PromiseExtended<void>;
 
-  keys(): PromiseExtended<UpdateKeyPathValue<T, TIndexes>>; // *************** // IndexableTypeArray
-  uniqueKeys(): PromiseExtended<UpdateKeyPathValue<T, TIndexes>>; // *************** // IndexableTypeArray
+  keys(): PromiseExtended<UpdateKeyPathValue<T, TKey>[]>; // *************** // IndexableTypeArray
+  uniqueKeys(): PromiseExtended<UpdateKeyPathValue<T, TKey>[]>; // *************** // IndexableTypeArray
 
   primaryKeys(): PromiseExtended<UpdateKeyPathValue<T, TPkey>[]>;
 

@@ -346,14 +346,54 @@ export const DemoDexie = () => {
           });
 
         db.data
+          .where("stringValue")
+          .equals("Hello")
+          .each((obj, cursor) => {
+            // key typed to string
+            cursor.key.includes("H");
+            cursor.primaryKey.toFixed(2);
+            console.log("Collection each:", obj);
+          });
+
+        db.data
           .where("numberValue")
-          .equals(1)
+          .equals(42)
           .eachKey((key, cursor) => {
             // key typed to number
             cursor.key.toFixed(2);
             cursor.primaryKey.toFixed(2);
             console.log("Collection eachKey key:", key);
           });
+
+        db.data
+          .where("numberValue")
+          .equals(42)
+          .eachUniqueKey((key, cursor) => {
+            // key typed to number
+            cursor.key.toFixed(2);
+            cursor.primaryKey.toFixed(2);
+            console.log("Collection eachUniqueKey key:", key);
+          });
+
+        const pKeys = await db.data.toCollection().keys();
+        pKeys[0]?.toFixed(2);
+        const uniquePKeys = await db.data.toCollection().keys();
+        uniquePKeys[0]?.toFixed(2);
+
+        const numberKeys = await db.data.where("numberValue").equals(42).keys();
+        numberKeys[0]?.toFixed(2);
+
+        const stringKeys = await db.data
+          .where("stringValue")
+          .equals("Hello")
+          .keys();
+        stringKeys[0]?.includes("H");
+
+        const uniqueStringKeys = await db.data
+          .where("stringValue")
+          .equals("Hello")
+          .uniqueKeys();
+        uniqueStringKeys[0]?.includes("H");
 
         const startsWithDCollectionBegin = db.data
           .where("stringValue")

@@ -22,7 +22,7 @@ export function App() {
             Tests
           </Button>
           <Button color="inherit" component={RouterLink} to="/demodexie">
-            Demo Dixie
+            Demo Dexie
           </Button>
           <TestsMenu anchorElement={anchorEl} handleClose={handleClose} />
         </Toolbar>
