@@ -217,6 +217,17 @@ export const DemoDexie = () => {
 
         await db.data
           .where("numberValue")
+          .noneOf(7, 42)
+          .each((item) => {
+            console.log("None of item:", item);
+          });
+
+        /* await db.data
+          .where("numberValue")
+          .noneOf("7", 42)  error */
+
+        await db.data
+          .where("numberValue")
           .anyOf([7, 42])
           .each((item) => {
             console.log("any of item:", item);
