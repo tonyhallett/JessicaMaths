@@ -23,6 +23,17 @@ const nested: DexieDataItem["nested"] = {
   },
 };
 
+const dbCompound = dexieFactory(
+  1,
+  {
+    data: tableBuilder<DexieDataItem>()
+      .primaryKey("id")
+      .compound("stringValue", "numberValue")
+      .build(),
+  },
+  "DemoDexieCompound"
+);
+
 // demo that can have a primary key based on a property of the type
 const db2 = dexieFactory(
   1,
@@ -447,6 +458,13 @@ export const DemoDexie = () => {
         const orCollection = startsWithDCollectionBegin
           .or("stringValue")
           .startsWith("H");
+
+        startsWithDCollectionBegin
+          .or("numberValue")
+          //.startsWith("D"); error
+          //.equals("1") error
+          .above(1);
+
         const startsWithDCount = await startsWithDCollection.count();
         console.log(
           "Count of items with stringValue starting with 'D':",
@@ -457,6 +475,21 @@ export const DemoDexie = () => {
           "Count of items with stringValue starting with 'D' or 'H':",
           orCount
         );
+
+        // compound - .compound(["stringValue", "numberValue"])
+
+        /*  const whereClause = dbCompound.data.where([
+          "numberValue",
+          "stringValue",
+        ]); error */
+        // correct
+        const whereClause = dbCompound.data.where([
+          "stringValue",
+          "numberValue",
+        ]);
+
+        whereClause.equals(["Hello", 42]);
+        // whereClause.equals([42, "Hello"]); // error
       }}
     >
       Demo Dexie

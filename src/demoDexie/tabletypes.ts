@@ -108,18 +108,6 @@ export interface TableBase<
   // bulkDelete(keys: TKey[]): PromiseExtended<void>;
 }
 
-/*
-Dexie where
-		    where(index: string | string[]): WhereClause<T, TKey, TInsertType>;
-		    where(equalityCriterias: {
-		        [key: string]: any;
-    }): Collection<T, TKey, TInsertType>;
-
-  Better dexie where
-    where<K extends KeysOf<T>>(index: K): WhereClause<T, K, TKey>
-  where(equalityCriterias: Partial<T>): Collection<T, TKey>
-*/
-
 type KeyPathTable<
   TName extends string,
   T,

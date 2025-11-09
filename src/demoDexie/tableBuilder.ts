@@ -10,9 +10,9 @@ export interface TableConfig<
   readonly indicesSchema: string;
   readonly indices: Indices;
 }
-export type DexieCompoundIndex<T> = ValidIndexedDBKeyPaths<T>[];
+export type DexieCompoundIndex<T> = readonly ValidIndexedDBKeyPaths<T>[];
 export type DexieIndex<T> = ValidIndexedDBKeyPaths<T> | DexieCompoundIndex<T>;
-export type DexieIndexes<T> = DexieIndex<T>[];
+export type DexieIndexes<T> = readonly DexieIndex<T>[];
 
 // ---------- Helpers ----------
 type StringKey<T> = keyof T & string;
@@ -175,12 +175,12 @@ export interface IndexMethods<
     indexKey: I
   ): IndexMethods<T, K, Auto, [...Indices, I]>;
   compound<I extends DexieCompoundIndex<T>>(
-    indexKey: I
+    ...indexKeys: I
   ): IndexMethods<T, K, Auto, [...Indices, I]>;
   build(): TableConfig<T, K, Auto, Indices>;
 }
 
-const isDistinctArray = (arr: any[]): boolean => {
+const isDistinctArray = (arr: readonly any[]): boolean => {
   return Array.from(new Set(arr)).length === arr.length;
 };
 
@@ -205,7 +205,7 @@ export function tableBuilder<T>() {
         indexParts.push(`*${indexKey}`);
         return createIndexMethods(key, auto, [...indices, indexKey]);
       },
-      compound(keys) {
+      compound(...keys) {
         if (!isDistinctArray(keys)) {
           throw new Error("Duplicate keys in compound index are not allowed");
         }

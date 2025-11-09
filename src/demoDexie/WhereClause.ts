@@ -64,6 +64,13 @@ type KeyValues<
   TIndexes extends DexieIndexes<T>
 > = ValuesOf<T, TPkey, Key, TIndexes, UpdateKeyPathValue<T, Key>>;
 
+type KeyValueForIndex<T, K extends DexieIndex<T>> = K extends readonly [
+  any,
+  ...any[]
+] // compound
+  ? { [I in keyof K]: UpdateKeyPathValue<T, K[I]> }
+  : UpdateKeyPathValue<T, K>; // single
+
 export interface WhereClause<
   T,
   TPkey extends DexieIndex<T>,
@@ -83,14 +90,12 @@ export interface WhereClause<
     key: UpdateKeyPathValue<T, Key>
   ): Collection<T, TPkey, Key, TIndexes>;
   // https://dexie.org/docs/WhereClause/WhereClause.equals()
-  equals(
-    value: UpdateKeyPathValue<T, Key>
-  ): Collection<T, TPkey, Key, TIndexes>;
+  equals(value: KeyValueForIndex<T, Key>): Collection<T, TPkey, Key, TIndexes>;
   // https://dexie.org/docs/WhereClause/WhereClause.anyOf()
   anyOf: KeyValues<T, TPkey, Key, TIndexes>;
   // https://dexie.org/docs/WhereClause/WhereClause.notEqual()
   notEqual(
-    value: UpdateKeyPathValue<T, Key>
+    value: KeyValueForIndex<T, Key>
   ): Collection<T, TPkey, Key, TIndexes>;
   // https://dexie.org/docs/WhereClause/WhereClause.noneOf()
   noneOf: KeyValues<T, TPkey, Key, TIndexes>;
