@@ -10,8 +10,8 @@ export interface TableConfig<
   readonly indicesSchema: string;
   readonly indices: Indices;
 }
-type DexieCompoundIndex<T> = ValidIndexedDBKeyPaths<T>[];
-type DexieIndex<T> = ValidIndexedDBKeyPaths<T> | DexieCompoundIndex<T>;
+export type DexieCompoundIndex<T> = ValidIndexedDBKeyPaths<T>[];
+export type DexieIndex<T> = ValidIndexedDBKeyPaths<T> | DexieCompoundIndex<T>;
 export type DexieIndexes<T> = DexieIndex<T>[];
 
 // ---------- Helpers ----------

@@ -8,7 +8,20 @@ interface DexieDataItem {
   stringValue: string;
   multiEntry: string[];
   arrayKey: string[];
+  nested: {
+    level1: {
+      numberValue: number;
+      stringValue: string;
+    };
+  };
 }
+
+const nested: DexieDataItem["nested"] = {
+  level1: {
+    numberValue: 100,
+    stringValue: "Nested Level 1",
+  },
+};
 
 // demo that can have a primary key based on a property of the type
 const db2 = dexieFactory(
@@ -30,6 +43,7 @@ db2.on("populate", (tx) => {
     stringValue: "L2",
     multiEntry: [],
     arrayKey: [],
+    nested,
   });
   tx.data.add({
     id: 1,
@@ -37,6 +51,7 @@ db2.on("populate", (tx) => {
     stringValue: "Four",
     multiEntry: [],
     arrayKey: [],
+    nested,
   });
   /* tx.data.add({ id: 1, numberValue: 42, stringValue: "Same" }).catch((err) => {
     console.error("Failed to add item to db2:", err);
@@ -90,6 +105,7 @@ db.on("populate", (tx) => {
     stringValue: "Hello",
     multiEntry: [],
     arrayKey: [],
+    nested,
   });
   tx.data.add({
     id: 2,
@@ -97,6 +113,7 @@ db.on("populate", (tx) => {
     stringValue: "World",
     multiEntry: [],
     arrayKey: [],
+    nested,
   });
   tx.data.add({
     id: 3,
@@ -104,6 +121,7 @@ db.on("populate", (tx) => {
     stringValue: "Dexie",
     multiEntry: [],
     arrayKey: [],
+    nested,
   });
 });
 
@@ -246,9 +264,103 @@ export const DemoDexie = () => {
         const tableCount = await db.data.toCollection().count();
         console.log("Total count of items in data table:", tableCount);
 
+        // typed sortBy
+        const sorted = await db.data
+          .toCollection()
+          .sortBy("nested.level1.numberValue");
+        sorted[0]?.numberValue;
+
+        db.data
+          .toCollection()
+          .reverse()
+          .each((item) => {
+            console.log("Reversed collection item:", item.id);
+          });
+
+        db.data
+          .toCollection()
+          .distinct()
+          .each((item) => {
+            console.log("Distinct collection item:", item.id);
+          });
+
+        const limited = await db.data.toCollection().limit(1).toArray();
+        limited[0]?.numberValue;
+
+        db.data
+          .toCollection()
+          .offset(1)
+          .each((item) => {
+            console.log("Offset collection item:", item.id);
+          });
+
+        db.data
+          .toCollection()
+          .until((item) => item.numberValue === 13)
+          .each((item) => {
+            console.log("Until collection item:", item.id);
+          });
+
+        db.data
+          .toCollection()
+          .first()
+          .then((firstItem) => {
+            console.log("First item in data table:", firstItem?.id);
+          });
+
+        db.data
+          .toCollection()
+          .last()
+          .then((lastItem) => {
+            console.log("Last item in data table:", lastItem?.id);
+          });
+
+        db.data
+          .toCollection()
+          .filter((item) => item.id === 2)
+          .each((item) => {
+            console.log("Filtered collection item with id 2:", item.id);
+          });
+
+        db.data
+          .toCollection()
+          .and((item) => item.id === 2)
+          .each((item) => {
+            console.log("Filtered collection item with id 2:", item.id);
+          });
+
+        db.data.toCollection().eachKey((key, cursor) => {
+          // key typed to primary key type (number)
+          cursor.key.toFixed(2);
+          cursor.primaryKey.toFixed(2);
+          console.log("Collection eachKey key:", key);
+        });
+        db.data
+          .where("stringValue")
+          .equals("Hello")
+          .eachKey((key, cursor) => {
+            // key typed to string
+            cursor.key.includes("H");
+            cursor.primaryKey.toFixed(2);
+            console.log("Collection eachKey key:", key);
+          });
+
+        db.data
+          .where("numberValue")
+          .equals(1)
+          .eachKey((key, cursor) => {
+            // key typed to number
+            cursor.key.toFixed(2);
+            cursor.primaryKey.toFixed(2);
+            console.log("Collection eachKey key:", key);
+          });
+
         const startsWithDCollectionBegin = db.data
           .where("stringValue")
           .startsWith("D");
+
+        // db.data.where("numberValue").startsWith("D"); // error
+
         const startsWithDCollection = startsWithDCollectionBegin.clone();
         const orCollection = startsWithDCollectionBegin
           .or("stringValue")
