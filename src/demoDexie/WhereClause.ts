@@ -3,15 +3,33 @@ import type { UpdateKeyPathValue } from "./better-dexie";
 import type { DexieIndex, DexieIndexes } from "./tableBuilder";
 import type { Collection } from "./Collection";
 
+export type StringWhenFn<
+  T,
+  TKey extends DexieIndex<T>,
+  TFunc
+> = UpdateKeyPathValue<T, TKey> extends string ? TFunc : never;
+
 export type PrefixWhereFn<
   T,
   TPkey extends DexieIndex<T>,
   Key extends DexieIndex<T>,
   TIndexes extends DexieIndexes<T>
-> = UpdateKeyPathValue<T, Key> extends string
-  ? (prefix: string) => Collection<T, TPkey, Key, TIndexes>
-  : never;
+> = StringWhenFn<
+  T,
+  Key,
+  (prefix: string) => Collection<T, TPkey, Key, TIndexes>
+>;
 
+export type EqualsIgnoreCaseWhereFn<
+  T,
+  TPkey extends DexieIndex<T>,
+  Key extends DexieIndex<T>,
+  TIndexes extends DexieIndexes<T>
+> = StringWhenFn<
+  T,
+  Key,
+  (value: string) => Collection<T, TPkey, Key, TIndexes>
+>;
 interface Prefixes<
   T,
   TPkey extends DexieIndex<T>,
@@ -22,14 +40,22 @@ interface Prefixes<
   (...prefixes: string[]): Collection<T, TPkey, Key, TIndexes>;
 }
 
+interface AnyOfIgnoreCase<
+  T,
+  TPkey extends DexieIndex<T>,
+  Key extends DexieIndex<T>,
+  TIndexes extends DexieIndexes<T>
+> {
+  (values: string[]): Collection<T, TPkey, Key, TIndexes>;
+  (...values: string[]): Collection<T, TPkey, Key, TIndexes>;
+}
+
 export type PrefixesWhereFn<
   T,
   TPkey extends DexieIndex<T>,
   Key extends DexieIndex<T>,
   TIndexes extends DexieIndexes<T>
-> = UpdateKeyPathValue<T, Key> extends string
-  ? Prefixes<T, TPkey, Key, TIndexes>
-  : never;
+> = StringWhenFn<T, Key, Prefixes<T, TPkey, Key, TIndexes>>;
 
 export interface WhereClause<
   T,
@@ -54,11 +80,12 @@ export interface WhereClause<
     value: UpdateKeyPathValue<T, Key>
   ): Collection<T, TPkey, Key, TIndexes>;
   // https://dexie.org/docs/WhereClause/WhereClause.anyOf()
-  // why does this not use ValuesOfKey?
   anyOf(
-    values: ReadonlyArray<IndexableType>
+    values: ReadonlyArray<UpdateKeyPathValue<T, Key>>
   ): Collection<T, TPkey, Key, TIndexes>;
-  anyOf(...values: Array<IndexableType>): Collection<T, TPkey, Key, TIndexes>;
+  anyOf(
+    ...values: Array<UpdateKeyPathValue<T, Key>>
+  ): Collection<T, TPkey, Key, TIndexes>;
   // https://dexie.org/docs/WhereClause/WhereClause.notEqual()
   notEqual(
     value: UpdateKeyPathValue<T, Key>
@@ -69,14 +96,14 @@ export interface WhereClause<
   ): Collection<T, TPkey, Key, TIndexes>;
 
   //https://dexie.org/docs/WhereClause/WhereClause.anyOfIgnoreCase()
-  // this is incorrect as should be string values
-  // so should type this to be never dependent upon Key
-  // anyOfIgnoreCase(values: ValuesOfKey<T, Key>): Collection2<T, TKey>;
-  anyOfIgnoreCase(...values: string[]): Collection<T, TPkey, Key, TIndexes>;
+  anyOfIgnoreCase: StringWhenFn<
+    T,
+    Key,
+    AnyOfIgnoreCase<T, TPkey, Key, TIndexes>
+  >;
+
   // https://dexie.org/docs/WhereClause/WhereClause.equalsIgnoreCase()
-  // this is incorrect as should be string values
-  // should type this to be never dependent upon Key
-  //equalsIgnoreCase(value: ValuesOfKey<T, Key>): Collection2<T, TKey>;
+  equalsIgnoreCase: EqualsIgnoreCaseWhereFn<T, TPkey, Key, TIndexes>;
   // https://dexie.org/docs/WhereClause/WhereClause.startsWith()
   startsWith: PrefixWhereFn<T, TPkey, Key, TIndexes>;
   // https://dexie.org/docs/WhereClause/WhereClause.startsWithIgnoreCase()
