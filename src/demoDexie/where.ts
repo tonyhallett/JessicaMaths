@@ -4,7 +4,6 @@ import type {
   CompoundIndex,
   DexieIndex,
   DexieIndexes,
-  DexiePlainKey,
   MultiIndex,
   SingleIndex,
 } from "./dexieindexes";
@@ -68,14 +67,14 @@ type WhereForCompound<
   where(paths: I["paths"]): CompoundWhereClause<T>;
 }; */
 
-interface Prefixes<T, TPkey, Key, TIndexes extends DexieIndexes<T>> {
-  (prefixes: string[]): Collection<T, TPkey, Key, TIndexes>;
-  (...prefixes: string[]): Collection<T, TPkey, Key, TIndexes>;
+interface Prefixes<T, TPkey, TIndexes extends DexieIndexes<T>> {
+  (prefixes: string[]): Collection<T, TPkey, string, TIndexes>;
+  (...prefixes: string[]): Collection<T, TPkey, string, TIndexes>;
 }
 
-interface ValuesOf<T, TPkey, Key, TIndexes extends DexieIndexes<T>, TValue> {
-  (values: readonly TValue[]): Collection<T, TPkey, Key, TIndexes>;
-  (...values: readonly TValue[]): Collection<T, TPkey, Key, TIndexes>;
+interface ValuesOf<T, TPkey, Key, TIndexes extends DexieIndexes<T>> {
+  (values: readonly Key[]): Collection<T, TPkey, Key, TIndexes>;
+  (...values: readonly Key[]): Collection<T, TPkey, Key, TIndexes>;
 }
 
 /* type KeyValues<
@@ -92,22 +91,22 @@ export type KeyValueForIndex<
   ? { [I in keyof K]: UpdateKeyPathValue<T, K[I]> }
   : UpdateKeyPathValue<T, K>; // single */
 
-interface WhereStringClause<T, TPkey, Key, TIndexes extends DexieIndexes<T>> {
+interface WhereStringClause<T, TPkey, TIndexes extends DexieIndexes<T>> {
   //https://dexie.org/docs/WhereClause/WhereClause.anyOfIgnoreCase()
-  anyOfIgnoreCase: ValuesOf<T, TPkey, Key, TIndexes, string>;
+  anyOfIgnoreCase: ValuesOf<T, TPkey, string, TIndexes>;
 
   // https://dexie.org/docs/WhereClause/WhereClause.equalsIgnoreCase()
-  equalsIgnoreCase(value: string): Collection<T, TPkey, Key, TIndexes>;
+  equalsIgnoreCase(value: string): Collection<T, TPkey, string, TIndexes>;
   // https://dexie.org/docs/WhereClause/WhereClause.startsWith()
-  startsWith(prefix: string): Collection<T, TPkey, Key, TIndexes>;
+  startsWith(prefix: string): Collection<T, TPkey, string, TIndexes>;
   // https://dexie.org/docs/WhereClause/WhereClause.startsWithIgnoreCase()
-  startsWithIgnoreCase(prefix: string): Collection<T, TPkey, Key, TIndexes>;
+  startsWithIgnoreCase(prefix: string): Collection<T, TPkey, string, TIndexes>;
 
   // https://dexie.org/docs/WhereClause/WhereClause.startsWithAnyOf()
-  startsWithAnyOf: Prefixes<T, TPkey, Key, TIndexes>;
+  startsWithAnyOf: Prefixes<T, TPkey, TIndexes>;
 
   // https://dexie.org/docs/WhereClause/WhereClause.startsWithAnyOfIgnoreCase()
-  startsWithAnyOfIgnoreCase: Prefixes<T, TPkey, Key, TIndexes>;
+  startsWithAnyOfIgnoreCase: Prefixes<T, TPkey, TIndexes>;
 }
 
 export type WhereClause<
@@ -116,7 +115,7 @@ export type WhereClause<
   Key,
   TIndexes extends DexieIndexes<T>
 > = WhereClauseNonStrings<T, TPkey, Key, TIndexes> &
-  (Key extends string ? WhereStringClause<T, TPkey, Key, TIndexes> : {});
+  (Key extends string ? WhereStringClause<T, TPkey, TIndexes> : {});
 
 export interface WhereClauseNonStrings<
   T,
@@ -136,25 +135,11 @@ export interface WhereClauseNonStrings<
   equals(value: Key): Collection<T, TPkey, Key, TIndexes>;
   // https://dexie.org/docs/WhereClause/WhereClause.anyOf()
 
-  /*
-interface ValuesOf<
-  T,
-  TPkey,
-  Key,
-  TIndexes extends DexieIndexes<T>,
-  TValue
-> {
-  (values: readonly TValue[]): Collection<T, TPkey, Key, TIndexes>;
-  (...values: readonly TValue[]): Collection<T, TPkey, Key, TIndexes>;
-}
-
-*/
-
-  anyOf: ValuesOf<T, TPkey, Key, TIndexes, Key>;
+  anyOf: ValuesOf<T, TPkey, Key, TIndexes>;
   // https://dexie.org/docs/WhereClause/WhereClause.notEqual()
   notEqual(value: Key): Collection<T, TPkey, Key, TIndexes>;
   // https://dexie.org/docs/WhereClause/WhereClause.noneOf()
-  noneOf: ValuesOf<T, TPkey, Key, TIndexes, Key>;
+  noneOf: ValuesOf<T, TPkey, Key, TIndexes>;
 
   // https://dexie.org/docs/WhereClause/WhereClause.between()
   between(

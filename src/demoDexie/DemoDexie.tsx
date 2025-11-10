@@ -110,7 +110,7 @@ db2.data.get(4).then((item) => {
 // get is typed to the primary key type
 //db2.data.get("string"); // error
 
-// should not be able to autoincrement type specific property
+// should not be able to autoincrement type specific property - error
 /* const db3 = dexieFactoryWithBuilder(
   1,
   {
@@ -119,7 +119,7 @@ db2.data.get(4).then((item) => {
       .build(),
   },
   "DemoDexie3"
-); */
+);  */
 
 const db = dexieFactory(
   1,
@@ -194,6 +194,8 @@ export const DemoDexie = () => {
       onClick={async () => {
         const allData = await db.data.toArray();
         await db.data.each((item, cursor) => {
+          cursor.key.toFixed(2);
+          cursor.primaryKey.toFixed(2);
           console.log(
             `Item with key ${cursor.key}, primaryKey ${cursor.primaryKey}:`,
             item
@@ -225,7 +227,7 @@ export const DemoDexie = () => {
         });
 
         // where
-        // db.data.where("XXX"); error
+        //db.data.where("XXX"); error
         await db.data
           .where("numberValue")
           .above(10)
@@ -311,7 +313,7 @@ export const DemoDexie = () => {
             console.log("any of ignore case item:", item);
           });
 
-        // db.data.where("numberValue").anyOfIgnoreCase(["hello"]); // error
+        //db.data.where("numberValue").anyOfIgnoreCase(["hello"]); // error
 
         await db.data
           .where("stringValue")
@@ -320,7 +322,7 @@ export const DemoDexie = () => {
             console.log("equals item:", item);
           });
 
-        //db.data.where("stringValue").equals(10);
+        // db.data.where("stringValue").equals(10);
 
         await db.data
           .where("stringValue")
@@ -512,7 +514,7 @@ export const DemoDexie = () => {
           .where("stringValue")
           .startsWith("D");
 
-        // db.data.where("numberValue").startsWith("D"); // error
+        //db.data.where("numberValue").startsWith("D"); // error
 
         const startsWithDCollection = startsWithDCollectionBegin.clone();
         const orCollection = startsWithDCollectionBegin

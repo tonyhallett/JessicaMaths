@@ -74,9 +74,8 @@ export interface TableBase<
   offset(n: number): PrimaryKeyCollection<T, TKey, TIndexes>;
   limit(n: number): PrimaryKeyCollection<T, TKey, TIndexes>;
 
-  each(
-    callback: (obj: T, cursor: { key: any; primaryKey: TKey }) => any
-  ): PromiseExtended<void>;
+  // this.toCollection().each(callback);
+  each: PrimaryKeyCollection<T, TKey, TIndexes>["each"];
 
   toArray(): PromiseExtended<Array<T>>;
   toCollection(): PrimaryKeyCollection<T, TKey, TIndexes>;

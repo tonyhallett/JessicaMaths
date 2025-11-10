@@ -78,7 +78,7 @@ interface CollectionBase<T, TPkey, TKey, TIndexes extends DexieIndexes<T>> {
     callback: (
       obj: T,
       cursor: {
-        key: TKey; // IndexableType;
+        key: TKey;
         primaryKey: TPkey;
       }
     ) => any
