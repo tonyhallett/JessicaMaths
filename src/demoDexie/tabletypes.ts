@@ -5,7 +5,14 @@ import type {
   TableSchema,
 } from "dexie";
 import type { Collection } from "./Collection";
-import type { DexieIndexes, DexiePlainKey } from "./dexieindexes";
+import type {
+  CompoundIndex,
+  DexieIndex,
+  DexieIndexes,
+  DexiePlainKey,
+  MultiIndex,
+  SingleIndex,
+} from "./dexieindexes";
 import type { UpdateKeyPathValue } from "./better-dexie";
 import type { WhereClausesFromIndexes } from "./where";
 import type { TableConfig } from "./tableBuilder";
@@ -28,6 +35,14 @@ export type DBTables<
       : KeyPathTable<K, TRow, PK, TConfig[K]["indices"]>
     : never;
 };
+
+type OrderBy<T, I extends DexieIndex<T>> = I extends SingleIndex<T, infer P>
+  ? I["path"]
+  : I extends MultiIndex<T, infer P>
+  ? I["path"]
+  : I extends CompoundIndex<T, infer Ps>
+  ? I["paths"]
+  : never;
 
 export interface TableBase<
   TName extends string,
@@ -54,7 +69,9 @@ export interface TableBase<
 
   toArray(): PromiseExtended<Array<T>>;
   toCollection(): Collection<T, TKey, TKey, TIndexes>;
-  //orderBy(index: KeysOf<T>): Collection<T, TKey, TKey, TIndexes>;
+  orderBy<I extends OrderBy<T, TIndexes[number]>>(
+    index: I
+  ): Collection<T, TKey, I, TIndexes>;
   reverse(): Collection<T, TKey, TKey, TIndexes>;
   mapToClass(constructor: Function): Function;
 

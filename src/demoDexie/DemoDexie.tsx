@@ -29,10 +29,30 @@ const dbCompound = dexieFactory(
     data: tableBuilder<DexieDataItem>()
       .primaryKey("id")
       .compound("stringValue", "numberValue")
+      .multi("multiEntry")
+      .index("arrayKey")
       .build(),
   },
   "DemoDexieCompound"
 );
+dbCompound.on("populate", (tx) => {
+  tx.data.add({
+    id: 1,
+    numberValue: 42,
+    stringValue: "Hello",
+    multiEntry: ["a", "b"],
+    arrayKey: ["1", "2"],
+    nested,
+  });
+  tx.data.add({
+    id: 2,
+    numberValue: 43,
+    stringValue: "Hi",
+    multiEntry: ["c", "d"],
+    arrayKey: ["1", "2", "3"],
+    nested,
+  });
+});
 
 // demo that can have a primary key based on a property of the type
 const db2 = dexieFactory(
@@ -191,10 +211,15 @@ export const DemoDexie = () => {
         db.data.offset(1).each((item) => {
           console.log("Offset item:", item);
         });
-        /*         
-        await db.data.orderBy("stringValue").each((item) => {
+
+        await db.data.orderBy("stringValue").each((item, cursor) => {
           console.log("Ordered item:", item);
-        }); */
+        });
+
+        await db.data.orderBy("numberValue").each((item, cursor) => {
+          console.log("Ordered item:", item);
+        });
+
         await db.data.reverse().each((item) => {
           console.log("Reversed item:", item);
         });
@@ -206,6 +231,24 @@ export const DemoDexie = () => {
           .above(10)
           .each((item) => {
             console.log("above 10 item:", item);
+          });
+
+        await db.data
+          .where("numberValue")
+          .above(10)
+          .eachPrimaryKey((key, cursor) => {
+            key.toFixed(2);
+            cursor.key.toFixed(2);
+            cursor.primaryKey.toFixed(2);
+          });
+
+        await db.data
+          .where("stringValue")
+          .above("H")
+          .eachPrimaryKey((key, cursor) => {
+            key.toFixed(2);
+            cursor.key.includes("H");
+            cursor.primaryKey.toFixed(2);
           });
 
         await db.data
@@ -421,6 +464,13 @@ export const DemoDexie = () => {
         db.data
           .where("numberValue")
           .equals(42)
+          .each((obj, cursor) => {
+            cursor.key.toFixed(2);
+            cursor.primaryKey.toFixed(2);
+          });
+        db.data
+          .where("numberValue")
+          .equals(42)
           .eachKey((key, cursor) => {
             // key typed to number
             cursor.key.toFixed(2);
@@ -465,26 +515,26 @@ export const DemoDexie = () => {
         // db.data.where("numberValue").startsWith("D"); // error
 
         const startsWithDCollection = startsWithDCollectionBegin.clone();
-        /*         const orCollection = startsWithDCollectionBegin
+        const orCollection = startsWithDCollectionBegin
           .or("stringValue")
-          .startsWith("H"); */
+          .startsWith("H");
 
-        /* startsWithDCollectionBegin
+        startsWithDCollectionBegin
           .or("numberValue")
           //.startsWith("D"); error
           //.equals("1") error
-          .above(1); */
+          .above(1);
 
         const startsWithDCount = await startsWithDCollection.count();
         console.log(
           "Count of items with stringValue starting with 'D':",
           startsWithDCount
         );
-        //const orCount = await orCollection.count();
-        /* console.log(
+        const orCount = await orCollection.count();
+        console.log(
           "Count of items with stringValue starting with 'D' or 'H':",
           orCount
-        ); */
+        );
 
         // compound - .compound(["stringValue", "numberValue"])
 
@@ -498,8 +548,28 @@ export const DemoDexie = () => {
           "numberValue",
         ]);
 
-        // whereClause.equals(["Hello", 42]);
-        // whereClause.equals([42, "Hello"]); // error
+        dbCompound.data
+          .orderBy(["stringValue", "numberValue"])
+          .eachKey((key) => {
+            key[0].toLowerCase();
+            key[1].toFixed(2);
+            console.log("Ordered by compound key:", key);
+          })
+          .catch((err) => {
+            console.error("Failed to orderBy compound key:", err);
+          });
+
+        dbCompound.data.orderBy("arrayKey").eachKey((key) => {
+          console.log("Ordered by array key", key);
+        });
+
+        // incorrect typing for multientry
+        dbCompound.data.orderBy("multiEntry").eachKey((key) => {
+          console.log("Ordered by multiEntry key", key);
+        });
+
+        //whereClause.equals(["Hello", 42]);
+        //whereClause.equals([42, "Hello"]); // error
       }}
     >
       Demo Dexie

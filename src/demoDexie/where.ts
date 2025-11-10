@@ -19,16 +19,20 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
 export type WhereClausesFromIndexes<
   T,
   TKey extends DexiePlainKey<T>,
-  TIndexes extends DexieIndexes<T>
-> = UnionToIntersection<WhereClauseFor<T, TKey, TIndexes[number], TIndexes>>;
+  TIndexes extends DexieIndexes<T>,
+  TMethodName extends string = "where"
+> = UnionToIntersection<
+  WhereClauseFor<T, TKey, TIndexes[number], TIndexes, TMethodName>
+>;
 
 type WhereClauseFor<
   T,
   TKey extends DexiePlainKey<T>,
   I extends DexieIndex<T>,
-  TIndexes extends DexieIndexes<T>
+  TIndexes extends DexieIndexes<T>,
+  TMethodName extends string
 > = I extends SingleIndex<T, infer P>
-  ? WhereForSingle<T, TKey, P, I, TIndexes>
+  ? WhereForSingle<T, TKey, P, I, TIndexes, TMethodName>
   : I extends MultiIndex<T, infer P>
   ? WhereForMulti<T, P, I>
   : I extends CompoundIndex<T, infer Ps>
@@ -40,11 +44,12 @@ type WhereForSingle<
   PKey extends DexiePlainKey<T>,
   P extends ValidIndexedDBKeyPaths<T>,
   I extends SingleIndex<T, P>,
-  TIndexes extends DexieIndexes<T>
+  TIndexes extends DexieIndexes<T>,
+  TMethodName extends string
 > = {
-  where<PATH extends I["path"]>(
-    path: PATH
-  ): WhereClause<T, PKey, PATH, TIndexes>;
+  [K in TMethodName]: (
+    path: I["path"]
+  ) => WhereClause<T, PKey, I["path"], TIndexes>;
 };
 
 type WhereForMulti<
@@ -63,33 +68,6 @@ type WhereForCompound<
   where(paths: I["paths"]): CompoundWhereClause<T>;
 };
 
-/* export type StringWhenFn<
-  T,
-  TKey extends DexiePlainKey<T>,
-  TFunc
-> = UpdateKeyPathValue<T, TKey> extends string ? TFunc : never; */
-
-/* export type PrefixWhereFn<
-  T,
-  TPkey extends DexiePlainKey<T>,
-  Key extends DexiePlainKey<T>,
-  TIndexes extends DexieIndexes<T>
-> = StringWhenFn<
-  T,
-  Key,
-  (prefix: string) => Collection<T, TPkey, Key, TIndexes>
->; */
-
-/* export type EqualsIgnoreCaseWhereFn<
-  T,
-  TPkey extends DexiePlainKey<T>,
-  Key extends DexiePlainKey<T>,
-  TIndexes extends DexieIndexes<T>
-> = StringWhenFn<
-  T,
-  Key,
-  (value: string) => Collection<T, TPkey, Key, TIndexes>
->; */
 interface Prefixes<
   T,
   TPkey extends DexiePlainKey<T>,
@@ -111,13 +89,6 @@ interface ValuesOf<
   (...values: readonly TValue[]): Collection<T, TPkey, Key, TIndexes>;
 }
 
-/* export type PrefixesWhereFn<
-  T,
-  TPkey extends DexiePlainKey<T>,
-  Key extends DexiePlainKey<T>,
-  TIndexes extends DexieIndexes<T>
-> = StringWhenFn<T, Key, Prefixes<T, TPkey, Key, TIndexes>>; */
-
 type KeyValues<
   T,
   TPkey extends DexiePlainKey<T>,
@@ -125,10 +96,10 @@ type KeyValues<
   TIndexes extends DexieIndexes<T>
 > = ValuesOf<T, TPkey, Key, TIndexes, UpdateKeyPathValue<T, Key>>;
 
-type KeyValueForIndex<T, K extends DexiePlainKey<T>> = K extends readonly [
-  any,
-  ...any[]
-] // compound
+export type KeyValueForIndex<
+  T,
+  K extends DexiePlainKey<T>
+> = K extends readonly [any, ...any[]] // compound
   ? { [I in keyof K]: UpdateKeyPathValue<T, K[I]> }
   : UpdateKeyPathValue<T, K>; // single
 

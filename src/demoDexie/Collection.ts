@@ -1,6 +1,7 @@
 import type { PromiseExtended } from "dexie";
 import type { UpdateKeyPathValue } from "./better-dexie";
 import type { DexiePlainKey, DexieIndexes } from "./dexieindexes";
+import type { KeyValueForIndex, WhereClausesFromIndexes } from "./where";
 
 type Comparable =
   | number
@@ -45,7 +46,15 @@ export type AndFilter<
   TIndexes extends DexieIndexes<T>
 > = (filter: (x: T) => boolean) => Collection<T, TPkey, TKey, TIndexes>;
 
-export interface Collection<
+export type Collection<
+  T,
+  PKey extends DexiePlainKey<T>,
+  TKey extends DexiePlainKey<T>,
+  TIndexes extends DexieIndexes<T>
+> = CollectionBase<T, PKey, TKey, TIndexes> &
+  WhereClausesFromIndexes<T, PKey, TIndexes, "or">;
+
+interface CollectionBase<
   T,
   TPkey extends DexiePlainKey<T>,
   TKey extends DexiePlainKey<T>,
@@ -87,9 +96,9 @@ export interface Collection<
   // ***************
   eachKey(
     callback: (
-      key: UpdateKeyPathValue<T, TKey>, //IndexableType,
+      key: KeyValueForIndex<T, TKey>,
       cursor: {
-        key: UpdateKeyPathValue<T, TKey>; //IndexableType;
+        key: UpdateKeyPathValue<T, TKey>;
         primaryKey: UpdateKeyPathValue<T, TPkey>;
       }
     ) => any
@@ -98,9 +107,9 @@ export interface Collection<
   // ***************
   eachUniqueKey(
     callback: (
-      key: UpdateKeyPathValue<T, TKey>, // IndexableType,
+      key: UpdateKeyPathValue<T, TKey>,
       cursor: {
-        key: UpdateKeyPathValue<T, TKey>; //IndexableType;
+        key: UpdateKeyPathValue<T, TKey>;
         primaryKey: UpdateKeyPathValue<T, TPkey>;
       }
     ) => any
@@ -108,16 +117,16 @@ export interface Collection<
 
   eachPrimaryKey(
     callback: (
-      key: TKey,
+      key: UpdateKeyPathValue<T, TPkey>,
       cursor: {
-        key: TIndexes; // IndexableType;
+        key: UpdateKeyPathValue<T, TKey>;
         primaryKey: UpdateKeyPathValue<T, TPkey>;
       }
     ) => any
   ): PromiseExtended<void>;
 
-  keys(): PromiseExtended<UpdateKeyPathValue<T, TKey>[]>; // *************** // IndexableTypeArray
-  uniqueKeys(): PromiseExtended<UpdateKeyPathValue<T, TKey>[]>; // *************** // IndexableTypeArray
+  keys(): PromiseExtended<UpdateKeyPathValue<T, TKey>[]>;
+  uniqueKeys(): PromiseExtended<UpdateKeyPathValue<T, TKey>[]>;
 
   primaryKeys(): PromiseExtended<UpdateKeyPathValue<T, TPkey>[]>;
 
@@ -134,10 +143,6 @@ export interface Collection<
   filter: AndFilter<T, TPkey, TKey, TIndexes>;
   distinct(): Collection<T, TPkey, TKey, TIndexes>;
 
-  // todo
-  /* or<K extends TIndexes[number]>(
-      indexOrPrimayKey: K
-    ): WhereClause<T, TPkey, K, TIndexes>; */
   reverse(): Collection<T, TPkey, TKey, TIndexes>;
   sortBy(keyPath: DotKeyComparable<T>): PromiseExtended<T[]>;
 
