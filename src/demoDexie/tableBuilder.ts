@@ -128,7 +128,7 @@ export function tableBuilder<T>() {
     primaryKey<K extends ValidIndexedDBKeyPaths<T>>(key: K) {
       return createIndexMethods(key, false, []);
     },
-    compoundKey<K extends ValidIndexedDBKeyPaths<T>[]>(keys: K) {
+    compoundKey<const K extends ValidIndexedDBKeyPaths<T>[]>(keys: K) {
       return createIndexMethods(keys, false, []);
     },
     hiddenAuto() {
@@ -139,37 +139,3 @@ export function tableBuilder<T>() {
     },
   };
 }
-
-/* type TypedDexie<
-  TConfig extends Record<string, TableConfig<any, any, any, any>>
-> = DBTables<TConfig> & DexieTypedTransaction<TConfig>;
-
-interface DexieDataItem {
-  id: number;
-  numberValue: number;
-  stringValue: string;
-  multiEntry: string[];
-  arrayKey: string[];
-  nested: {
-    level1: {
-      numberValue: number;
-      stringValue: string;
-    };
-  };
-}
-
-const tableConfig = tableBuilder<DexieDataItem>()
-  .primaryKey("id")
-  .index("stringValue")
-  .index("numberValue")
-  .index("arrayKey")
-  .multi("multiEntry") // only arrays allowed
-  .compound("stringValue", "numberValue")
-  .build();
-
-type DemoTypedDexie = TypedDexie<{
-  data: typeof tableConfig;
-}>;
-
-const x: DemoTypedDexie = null as unknown as DemoTypedDexie;
-x.data.where("stringValue"); */

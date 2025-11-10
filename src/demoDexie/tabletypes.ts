@@ -36,33 +36,12 @@ export type DBTables<
     : never;
 };
 
-type OrderBy<T, I extends DexieIndex<T>> = I extends SingleIndex<T, infer P>
+type IndexPath<T, I extends DexieIndex<T>> = I extends SingleIndex<T, infer P>
   ? I["path"]
   : I extends MultiIndex<T, infer P>
   ? I["path"]
   : I extends CompoundIndex<T, infer Ps>
   ? I["paths"]
-  : never;
-
-type OrderKeyValue<T, I extends DexieIndex<T>> = I extends SingleIndex<
-  T,
-  infer P
->
-  ? UpdateKeyPathValue<T, P>
-  : I extends CompoundIndex<T, infer Ps>
-  ? { [K in keyof Ps]: UpdateKeyPathValue<T, Ps[K]> }
-  : I extends MultiIndex<T, infer P>
-  ? UpdateKeyPathValue<T, P> extends readonly (infer Elem)[]
-    ? Elem
-    : never
-  : never;
-
-type IndexSelector<T, P> = P extends SingleIndex<T, infer Path>
-  ? Path
-  : P extends MultiIndex<T, infer Path>
-  ? Path
-  : P extends CompoundIndex<T, infer Paths>
-  ? Paths
   : never;
 
 export type KeyForIndex<T, P> =
@@ -99,16 +78,18 @@ type ExtractSelectedIndex<
     : never
   : never;
 
+export type PrimaryKey<
+  T,
+  TKey extends DexiePlainKey<T>
+> = TKey extends readonly any[]
+  ? { [I in keyof TKey]: UpdateKeyPathValue<T, TKey[I] & keyof T> }
+  : UpdateKeyPathValue<T, TKey & keyof T>;
+
 export type PrimaryKeyCollection<
   T,
   TKey extends DexiePlainKey<T>,
   TIndexes extends DexieIndexes<T>
-> = Collection<
-  T,
-  UpdateKeyPathValue<T, TKey>, // todo KeyValueForIndex
-  UpdateKeyPathValue<T, TKey>, // todo KeyValueForIndex
-  TIndexes
->;
+> = Collection<T, PrimaryKey<T, TKey>, PrimaryKey<T, TKey>, TIndexes>;
 
 export interface TableBase<
   TName extends string,
@@ -134,7 +115,7 @@ export interface TableBase<
 
   toArray(): PromiseExtended<Array<T>>;
   toCollection(): PrimaryKeyCollection<T, TKey, TIndexes>;
-  orderBy<Path extends OrderBy<T, TIndexes[number]>>(
+  orderBy<Path extends IndexPath<T, TIndexes[number]>>(
     index: Path
   ): Collection<
     T,

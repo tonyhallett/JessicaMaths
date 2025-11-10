@@ -65,14 +65,6 @@ type WhereForMulti<
   ) => WhereClause<T, PKey, KeyForIndex<T, I>, TIndexes>;
 };
 
-/* type WhereForMulti<
-  T,
-  P extends ValidIndexedDBKeyPaths<T>,
-  I extends MultiIndex<T, P>
-> = {
-  where(path: I["path"]): MultiWhereClause<T>;
-}; */
-
 /* 
 
 type WhereForCompound<

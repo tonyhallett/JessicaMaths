@@ -29,4 +29,4 @@ export type DexieIndexes<T> = readonly DexieIndex<T>[];
 
 export type DexiePlainKey<T> =
   | ValidIndexedDBKeyPaths<T>
-  | ValidIndexedDBKeyPaths<T>[];
+  | readonly ValidIndexedDBKeyPaths<T>[];

@@ -23,6 +23,20 @@ const nested: DexieDataItem["nested"] = {
   },
 };
 
+const dbCompoundPrimary = dexieFactory(
+  1,
+  {
+    data: tableBuilder<DexieDataItem>()
+      .compoundKey(["id", "stringValue"])
+      .build(),
+  },
+  "DemoDexieCompoundPrimary"
+);
+dbCompoundPrimary.data.toCollection().each((item, cursor) => {
+  cursor.key[0].toFixed(2);
+  cursor.key[1].toLowerCase();
+});
+
 const dbCompound = dexieFactory(
   1,
   {
