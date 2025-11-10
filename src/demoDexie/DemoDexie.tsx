@@ -48,7 +48,7 @@ db2.open().catch((err) => {
   console.error("Failed to open db2:", err);
 });
 db2.on("populate", (tx) => {
-  /* tx.data.add({
+  tx.data.add({
     id: 1,
     numberValue: 42,
     stringValue: "L2",
@@ -63,10 +63,19 @@ db2.on("populate", (tx) => {
     multiEntry: [],
     arrayKey: [],
     nested,
-  }); */
-  /* tx.data.add({ id: 1, numberValue: 42, stringValue: "Same" }).catch((err) => {
-    console.error("Failed to add item to db2:", err);
-  }); */
+  });
+  tx.data
+    .add({
+      id: 1,
+      numberValue: 42,
+      stringValue: "Same",
+      arrayKey: [],
+      multiEntry: [],
+      nested,
+    })
+    .catch((err) => {
+      console.error("Failed to add item to db2:", err);
+    });
 });
 
 db2.data.get(1).then((item) => {
@@ -110,7 +119,7 @@ const db = dexieFactory(
 
 // typed transaction
 db.on("populate", (tx) => {
-  /* tx.data.add({
+  tx.data.add({
     id: 1,
     numberValue: 42,
     stringValue: "Hello",
@@ -133,29 +142,29 @@ db.on("populate", (tx) => {
     multiEntry: [],
     arrayKey: [],
     nested,
-  }); */
+  });
 });
 
 // typed transaction
-/* db.transaction("rw", db.data, db.other, (tx) => {
+db.transaction("rw", db.data, db.other, (tx) => {
   const dataTable = tx.data;
   const otherTable = tx.other;
   //const notInTxTable = tx.notInTx; error
-}); */
+});
 
 // typed transaction
-/* db.transaction("rw", db.data, "other", (tx) => {
+db.transaction("rw", db.data, "other", (tx) => {
   const dataTable = tx.data;
   const otherTable = tx.other;
   //const notInTxTable = tx.notInTx; error
-}); */
+});
 
 // typed transaction
-/* db.transaction("rw", [db.data, "other"], (tx) => {
+db.transaction("rw", [db.data, "other"], (tx) => {
   const dataTable = tx.data;
   const otherTable = tx.other;
   //const notInTxTable = tx.notInTx; error
-}); */
+});
 
 // todo - support db.transaction("rw", [db.data, "other"],"else", (tx) => {
 

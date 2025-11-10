@@ -1,4 +1,5 @@
 import type {
+  DbEvents,
   Dexie,
   DexieCloseEvent,
   DexieEvent,
@@ -10,8 +11,8 @@ import type {
   Transaction,
   TransactionMode,
 } from "dexie";
-import type { TableConfig } from "./tableBuilder";
-import type { DBTables } from "./tabletypes";
+import type { TableConfig } from "./tableBuilderOld";
+import type { DBTables } from "./tabletypesold";
 
 // Helper: the union of allowed argument shapes (either a table name key or a table instance)
 type TableArg<TTablesMap extends Record<string, any>> =
