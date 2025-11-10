@@ -542,13 +542,16 @@ export const DemoDexie = () => {
           "numberValue",
           "stringValue",
         ]); error */
+
+        // todo - return to compound
         // correct
-        const whereClause = dbCompound.data.where([
+        /* const whereClause = dbCompound.data.where([
           "stringValue",
           "numberValue",
-        ]);
+        ]); */
 
-        dbCompound.data
+        // todo - orderBy
+        /*  dbCompound.data
           .orderBy(["stringValue", "numberValue"])
           .eachKey((key) => {
             key[0].toLowerCase();
@@ -558,15 +561,16 @@ export const DemoDexie = () => {
           .catch((err) => {
             console.error("Failed to orderBy compound key:", err);
           });
-
-        dbCompound.data.orderBy("arrayKey").eachKey((key) => {
+ */
+        // todo return to orderBy
+        /*         dbCompound.data.orderBy("arrayKey").eachKey((key) => {
           console.log("Ordered by array key", key);
-        });
+        }); */
 
-        // incorrect typing for multientry
-        dbCompound.data.orderBy("multiEntry").eachKey((key) => {
+        // todo return to orderBy incorrect typing for multientry
+        /*         dbCompound.data.orderBy("multiEntry").eachKey((key) => {
           console.log("Ordered by multiEntry key", key);
-        });
+        }); */
 
         //whereClause.equals(["Hello", 42]);
         //whereClause.equals([42, "Hello"]); // error

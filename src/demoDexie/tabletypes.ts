@@ -44,6 +44,17 @@ type OrderBy<T, I extends DexieIndex<T>> = I extends SingleIndex<T, infer P>
   ? I["paths"]
   : never;
 
+export type PrimaryKeyCollection<
+  T,
+  TKey extends DexiePlainKey<T>,
+  TIndexes extends DexieIndexes<T>
+> = Collection<
+  T,
+  UpdateKeyPathValue<T, TKey>, // todo KeyValueForIndex
+  UpdateKeyPathValue<T, TKey>, // todo KeyValueForIndex
+  TIndexes
+>;
+
 export interface TableBase<
   TName extends string,
   T,
@@ -56,19 +67,19 @@ export interface TableBase<
   hook: TableHooks<T, TKey>;
   core: DBCoreTable;
 
-  filter(fn: (obj: T) => boolean): Collection<T, TKey, TKey, TIndexes>;
+  filter(fn: (obj: T) => boolean): PrimaryKeyCollection<T, TKey, TIndexes>;
 
   count(): PromiseExtended<number>;
 
-  offset(n: number): Collection<T, TKey, TKey, TIndexes>;
-  limit(n: number): Collection<T, TKey, TKey, TIndexes>;
+  offset(n: number): PrimaryKeyCollection<T, TKey, TIndexes>;
+  limit(n: number): PrimaryKeyCollection<T, TKey, TIndexes>;
 
   each(
     callback: (obj: T, cursor: { key: any; primaryKey: TKey }) => any
   ): PromiseExtended<void>;
 
   toArray(): PromiseExtended<Array<T>>;
-  toCollection(): Collection<T, TKey, TKey, TIndexes>;
+  toCollection(): PrimaryKeyCollection<T, TKey, TIndexes>;
   orderBy<I extends OrderBy<T, TIndexes[number]>>(
     index: I
   ): Collection<T, TKey, I, TIndexes>;
@@ -90,4 +101,4 @@ type KeyPathTable<
     keys: UpdateKeyPathValue<T, TKey>[]
   ): PromiseExtended<(T | undefined)[]>;
   add(item: T): PromiseExtended<TKey>;
-} & WhereClausesFromIndexes<T, TKey, TIndexes>;
+} & WhereClausesFromIndexes<T, UpdateKeyPathValue<T, TKey>, TIndexes>;

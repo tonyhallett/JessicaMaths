@@ -1,7 +1,6 @@
 import type { PromiseExtended } from "dexie";
-import type { UpdateKeyPathValue } from "./better-dexie";
-import type { DexiePlainKey, DexieIndexes } from "./dexieindexes";
-import type { KeyValueForIndex, WhereClausesFromIndexes } from "./where";
+import type { DexieIndexes } from "./dexieindexes";
+import type { WhereClausesFromIndexes } from "./where";
 
 type Comparable =
   | number
@@ -39,27 +38,19 @@ export type DotKeyComparable<TValue> = IsAny<TValue> extends true
 
 export type DotKey<T> = DotNestedKeys<T>;
 
-export type AndFilter<
-  T,
-  TPkey extends DexiePlainKey<T>,
-  TKey extends DexiePlainKey<T>,
-  TIndexes extends DexieIndexes<T>
-> = (filter: (x: T) => boolean) => Collection<T, TPkey, TKey, TIndexes>;
+export type AndFilter<T, TPkey, TKey, TIndexes extends DexieIndexes<T>> = (
+  filter: (x: T) => boolean
+) => Collection<T, TPkey, TKey, TIndexes>;
 
 export type Collection<
   T,
-  PKey extends DexiePlainKey<T>,
-  TKey extends DexiePlainKey<T>,
+  PKey,
+  TKey,
   TIndexes extends DexieIndexes<T>
 > = CollectionBase<T, PKey, TKey, TIndexes> &
   WhereClausesFromIndexes<T, PKey, TIndexes, "or">;
 
-interface CollectionBase<
-  T,
-  TPkey extends DexiePlainKey<T>,
-  TKey extends DexiePlainKey<T>,
-  TIndexes extends DexieIndexes<T>
-> {
+interface CollectionBase<T, TPkey, TKey, TIndexes extends DexieIndexes<T>> {
   //db: Database;
   // then shortcuts
   // count<R>(thenShortcut: ThenShortcut<number, R>): PromiseExtended<R>
@@ -87,8 +78,8 @@ interface CollectionBase<
     callback: (
       obj: T,
       cursor: {
-        key: UpdateKeyPathValue<T, TKey>; // IndexableType;
-        primaryKey: UpdateKeyPathValue<T, TPkey>;
+        key: TKey; // IndexableType;
+        primaryKey: TPkey;
       }
     ) => any
   ): PromiseExtended<void>;
@@ -96,10 +87,10 @@ interface CollectionBase<
   // ***************
   eachKey(
     callback: (
-      key: KeyValueForIndex<T, TKey>,
+      key: TKey,
       cursor: {
-        key: UpdateKeyPathValue<T, TKey>;
-        primaryKey: UpdateKeyPathValue<T, TPkey>;
+        key: TKey;
+        primaryKey: TPkey;
       }
     ) => any
   ): PromiseExtended<void>;
@@ -107,28 +98,28 @@ interface CollectionBase<
   // ***************
   eachUniqueKey(
     callback: (
-      key: UpdateKeyPathValue<T, TKey>,
+      key: TKey,
       cursor: {
-        key: UpdateKeyPathValue<T, TKey>;
-        primaryKey: UpdateKeyPathValue<T, TPkey>;
+        key: TKey;
+        primaryKey: TPkey;
       }
     ) => any
   ): PromiseExtended<void>;
 
   eachPrimaryKey(
     callback: (
-      key: UpdateKeyPathValue<T, TPkey>,
+      key: TPkey,
       cursor: {
-        key: UpdateKeyPathValue<T, TKey>;
-        primaryKey: UpdateKeyPathValue<T, TPkey>;
+        key: TKey;
+        primaryKey: TPkey;
       }
     ) => any
   ): PromiseExtended<void>;
 
-  keys(): PromiseExtended<UpdateKeyPathValue<T, TKey>[]>;
-  uniqueKeys(): PromiseExtended<UpdateKeyPathValue<T, TKey>[]>;
+  keys(): PromiseExtended<TKey[]>;
+  uniqueKeys(): PromiseExtended<TKey[]>;
 
-  primaryKeys(): PromiseExtended<UpdateKeyPathValue<T, TPkey>[]>;
+  primaryKeys(): PromiseExtended<TPkey[]>;
 
   first(): PromiseExtended<T | undefined>;
   last(): PromiseExtended<T | undefined>;
