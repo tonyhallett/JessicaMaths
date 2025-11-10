@@ -1,8 +1,8 @@
 import { Dexie } from "dexie";
+import { type TableConfig } from "./tableBuilderOld";
+import type { DBTables } from "./tabletypesold";
 import { buildStores } from "./buildStores";
 import type { DexieTypedTransaction } from "./DexieTypedTransaction";
-import type { TableConfig } from "./tableBuilder";
-import type { DBTables } from "./tabletypes";
 
 type TypedDexie<
   TConfig extends Record<string, TableConfig<any, any, any, any>>

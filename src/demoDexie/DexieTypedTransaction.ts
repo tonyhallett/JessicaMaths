@@ -11,8 +11,8 @@ import type {
   Transaction,
   TransactionMode,
 } from "dexie";
-import type { TableConfig } from "./tableBuilder";
-import type { DBTables } from "./tabletypes";
+import type { TableConfig } from "./tableBuilderOld";
+import type { DBTables } from "./tabletypesold";
 
 // Helper: the union of allowed argument shapes (either a table name key or a table instance)
 type TableArg<TTablesMap extends Record<string, any>> =
@@ -57,8 +57,8 @@ type DexieWithoutTransactions = Omit<Dexie, "transaction" | "on">;
 
 type TypedOn<TConfig extends Record<string, TableConfig<any, any, any, any>>> =
   {
-    on: DexieEventSet & // DbEventFns with typed transaction for 'populate' event
-    {
+    on: DexieEventSet & {
+      // DbEventFns with typed transaction for 'populate' event
       (
         eventName: "populate",
         subscriber: (trans: Transaction & DBTables<TConfig>) => any

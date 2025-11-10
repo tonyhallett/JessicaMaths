@@ -1,6 +1,6 @@
 import type { UpdateKeyPathValue } from "./better-dexie";
-import type { DexieIndex, DexieIndexes } from "./tableBuilder";
-import type { Collection } from "./Collection";
+import type { DexieIndex, DexieIndexes } from "./tableBuilderOld";
+import type { Collection } from "./Collectionold";
 
 export type StringWhenFn<
   T,

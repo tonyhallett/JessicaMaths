@@ -1,6 +1,6 @@
 import Button from "@mui/material/Button";
-import { dexieFactory } from "./dexieFactory";
 import { tableBuilder } from "./tableBuilder";
+import { dexieFactory } from "./dexieFactory";
 
 interface DexieDataItem {
   id: number;
@@ -48,7 +48,7 @@ db2.open().catch((err) => {
   console.error("Failed to open db2:", err);
 });
 db2.on("populate", (tx) => {
-  tx.data.add({
+  /* tx.data.add({
     id: 1,
     numberValue: 42,
     stringValue: "L2",
@@ -63,7 +63,7 @@ db2.on("populate", (tx) => {
     multiEntry: [],
     arrayKey: [],
     nested,
-  });
+  }); */
   /* tx.data.add({ id: 1, numberValue: 42, stringValue: "Same" }).catch((err) => {
     console.error("Failed to add item to db2:", err);
   }); */
@@ -110,7 +110,7 @@ const db = dexieFactory(
 
 // typed transaction
 db.on("populate", (tx) => {
-  tx.data.add({
+  /* tx.data.add({
     id: 1,
     numberValue: 42,
     stringValue: "Hello",
@@ -133,29 +133,29 @@ db.on("populate", (tx) => {
     multiEntry: [],
     arrayKey: [],
     nested,
-  });
+  }); */
 });
 
 // typed transaction
-db.transaction("rw", db.data, db.other, (tx) => {
+/* db.transaction("rw", db.data, db.other, (tx) => {
   const dataTable = tx.data;
   const otherTable = tx.other;
   //const notInTxTable = tx.notInTx; error
-});
+}); */
 
 // typed transaction
-db.transaction("rw", db.data, "other", (tx) => {
+/* db.transaction("rw", db.data, "other", (tx) => {
   const dataTable = tx.data;
   const otherTable = tx.other;
   //const notInTxTable = tx.notInTx; error
-});
+}); */
 
 // typed transaction
-db.transaction("rw", [db.data, "other"], (tx) => {
+/* db.transaction("rw", [db.data, "other"], (tx) => {
   const dataTable = tx.data;
   const otherTable = tx.other;
   //const notInTxTable = tx.notInTx; error
-});
+}); */
 
 // todo - support db.transaction("rw", [db.data, "other"],"else", (tx) => {
 
@@ -182,9 +182,10 @@ export const DemoDexie = () => {
         db.data.offset(1).each((item) => {
           console.log("Offset item:", item);
         });
+        /*         
         await db.data.orderBy("stringValue").each((item) => {
           console.log("Ordered item:", item);
-        });
+        }); */
         await db.data.reverse().each((item) => {
           console.log("Reversed item:", item);
         });
@@ -258,7 +259,7 @@ export const DemoDexie = () => {
             console.log("any of ignore case item:", item);
           });
 
-        //db.data.where("numberValue").anyOfIgnoreCase(["hello"]); // error
+        // db.data.where("numberValue").anyOfIgnoreCase(["hello"]); // error
 
         await db.data
           .where("stringValue")
@@ -455,26 +456,26 @@ export const DemoDexie = () => {
         // db.data.where("numberValue").startsWith("D"); // error
 
         const startsWithDCollection = startsWithDCollectionBegin.clone();
-        const orCollection = startsWithDCollectionBegin
+        /*         const orCollection = startsWithDCollectionBegin
           .or("stringValue")
-          .startsWith("H");
+          .startsWith("H"); */
 
-        startsWithDCollectionBegin
+        /* startsWithDCollectionBegin
           .or("numberValue")
           //.startsWith("D"); error
           //.equals("1") error
-          .above(1);
+          .above(1); */
 
         const startsWithDCount = await startsWithDCollection.count();
         console.log(
           "Count of items with stringValue starting with 'D':",
           startsWithDCount
         );
-        const orCount = await orCollection.count();
-        console.log(
+        //const orCount = await orCollection.count();
+        /* console.log(
           "Count of items with stringValue starting with 'D' or 'H':",
           orCount
-        );
+        ); */
 
         // compound - .compound(["stringValue", "numberValue"])
 
@@ -488,7 +489,7 @@ export const DemoDexie = () => {
           "numberValue",
         ]);
 
-        whereClause.equals(["Hello", 42]);
+        // whereClause.equals(["Hello", 42]);
         // whereClause.equals([42, "Hello"]); // error
       }}
     >

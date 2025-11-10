@@ -1,8 +1,19 @@
 import type { UpdateKeyPathValue } from "./better-dexie";
+import type {
+  DexiePlainKey,
+  DexieIndexes,
+  SingleIndex,
+  MultiIndex,
+  CompoundIndex,
+} from "./dexieindexes";
+import type {
+  AllowedKeyLeaf,
+  ValidIndexedDBKeyPaths,
+} from "./ValidIndexedDBKeyPaths";
 
 export interface TableConfig<
   T,
-  PK extends DexieIndex<T>,
+  PK extends DexiePlainKey<T>,
   Auto extends boolean,
   Indices extends DexieIndexes<T>
 > {
@@ -10,136 +21,6 @@ export interface TableConfig<
   readonly indicesSchema: string;
   readonly indices: Indices;
 }
-export type DexieCompoundIndex<T> = readonly ValidIndexedDBKeyPaths<T>[];
-export type DexieIndex<T> = ValidIndexedDBKeyPaths<T> | DexieCompoundIndex<T>;
-export type DexieIndexes<T> = readonly DexieIndex<T>[];
-
-// ---------- Helpers ----------
-type StringKey<T> = keyof T & string;
-type AllowedKeyLeaf =
-  | string
-  | number
-  | Date
-  | ArrayBuffer
-  | ArrayBufferView
-  | DataView;
-type IsAllowedLeaf<T> = [T] extends [AllowedKeyLeaf] ? true : false;
-type IsArray<T> = T extends readonly (infer E)[] ? true : false;
-type ArrayElement<T> = T extends readonly (infer E)[] ? E : never;
-type IsFile<T> = T extends File ? true : false;
-type IsBlob<T> = T extends Blob ? true : false;
-
-type NoPefix = "";
-type WithSuffix<
-  TPossiblePrefix extends string,
-  TSuffix extends string
-> = TPossiblePrefix extends NoPefix ? TSuffix : `${TPossiblePrefix}.${TSuffix}`;
-
-type WithTypeSpecificPropertyPaths<
-  TPossiblePrefix extends string,
-  TKey extends string,
-  TProperties extends readonly string[],
-  TAllowTypeSpecificProperties extends boolean
-> = TAllowTypeSpecificProperties extends true
-  ? TProperties[number] extends infer P
-    ? P extends string
-      ? WithSuffix<TPossiblePrefix, `${TKey}.${P}`>
-      : never
-    : never
-  : never;
-
-type WithKeyAndTypeSpecificPropertyPaths<
-  TPossiblePrefix extends string,
-  TKey extends string,
-  TProperties extends readonly string[],
-  TAllowTypeSpecificProperties extends boolean
-> =
-  | WithTypeSpecificPropertyPaths<
-      TPossiblePrefix,
-      TKey,
-      TProperties,
-      TAllowTypeSpecificProperties
-    >
-  | WithSuffix<TPossiblePrefix, TKey>;
-
-type LeafPath<
-  PossiblePrefix extends string,
-  TLeafType,
-  TKey extends string,
-  TAllowTypeSpecificProperties extends boolean
-> = TLeafType extends string
-  ? WithKeyAndTypeSpecificPropertyPaths<
-      PossiblePrefix,
-      TKey,
-      ["length"],
-      TAllowTypeSpecificProperties
-    >
-  : WithSuffix<PossiblePrefix, TKey>;
-
-type BlobPathProperties<
-  TPossiblePrefix extends string,
-  TKey extends string,
-  TAllowTypeSpecificProperties extends boolean
-> = WithTypeSpecificPropertyPaths<
-  TPossiblePrefix,
-  TKey,
-  ["size", "type"],
-  TAllowTypeSpecificProperties
->;
-
-type FilePathProperties<
-  TPossiblePrefix extends string,
-  TKey extends string,
-  TAllowTypeSpecificProperties extends boolean
-> =
-  | WithTypeSpecificPropertyPaths<
-      TPossiblePrefix,
-      TKey,
-      ["name", "lastModified"],
-      TAllowTypeSpecificProperties
-    >
-  | BlobPathProperties<TPossiblePrefix, TKey, TAllowTypeSpecificProperties>;
-
-// ---------- Main recursive type ----------
-export type ValidIndexedDBKeyPaths<
-  T,
-  Prefix extends string = NoPefix,
-  TAllowTypeSpecificProperties extends boolean = true
-> = {
-  [P in StringKey<T>]: IsAllowedLeaf<T[P]> extends true // Case A: Allowed leaf type
-    ? LeafPath<Prefix, T[P], P, TAllowTypeSpecificProperties>
-    : IsFile<T[P]> extends true
-    ? FilePathProperties<Prefix, P, TAllowTypeSpecificProperties>
-    : IsBlob<T[P]> extends true
-    ? BlobPathProperties<Prefix, P, TAllowTypeSpecificProperties>
-    : // todo - this needs to be checked !
-    IsArray<T[P]> extends true
-    ? ArrayElement<T[P]> extends infer Elem
-      ? Elem extends AllowedKeyLeaf
-        ? WithSuffix<Prefix, P>
-        : Elem extends string
-        ? WithKeyAndTypeSpecificPropertyPaths<
-            Prefix,
-            P,
-            ["length"],
-            TAllowTypeSpecificProperties
-          >
-        : Elem extends object
-        ? ValidIndexedDBKeyPaths<
-            Elem,
-            WithSuffix<Prefix, P>,
-            TAllowTypeSpecificProperties
-          >
-        : never
-      : never
-    : T[P] extends object
-    ? ValidIndexedDBKeyPaths<
-        T[P],
-        WithSuffix<Prefix, P>,
-        TAllowTypeSpecificProperties
-      >
-    : never;
-}[StringKey<T>];
 
 type IsMultiEntryArray<T> = T extends readonly (infer E)[]
   ? E extends AllowedKeyLeaf
@@ -161,22 +42,22 @@ export type MultiEntryKeyPaths<T> = ValidIndexedDBKeyPaths<
 
 export interface IndexMethods<
   T,
-  K extends DexieIndex<T>,
+  K extends DexiePlainKey<T>,
   Auto extends boolean,
   Indices extends DexieIndexes<T>
 > {
   index<I extends ValidIndexedDBKeyPaths<T>>(
     indexKey: I
-  ): IndexMethods<T, K, Auto, [...Indices, I]>;
+  ): IndexMethods<T, K, Auto, [...Indices, SingleIndex<T, I>]>;
   unique<I extends ValidIndexedDBKeyPaths<T>>(
     indexKey: I
-  ): IndexMethods<T, K, Auto, [...Indices, I]>;
+  ): IndexMethods<T, K, Auto, [...Indices, SingleIndex<T, I>]>;
   multi<I extends MultiEntryKeyPaths<T>>(
     indexKey: I
-  ): IndexMethods<T, K, Auto, [...Indices, I]>;
-  compound<I extends DexieCompoundIndex<T>>(
+  ): IndexMethods<T, K, Auto, [...Indices, MultiIndex<T, I>]>;
+  compound<I extends ValidIndexedDBKeyPaths<T>[]>(
     ...indexKeys: I
-  ): IndexMethods<T, K, Auto, [...Indices, I]>;
+  ): IndexMethods<T, K, Auto, [...Indices, CompoundIndex<T, I>]>;
   build(): TableConfig<T, K, Auto, Indices>;
 }
 
@@ -188,22 +69,31 @@ export function tableBuilder<T>() {
   const indexParts: string[] = [];
 
   function createIndexMethods<
-    K extends DexieIndex<T>,
+    K extends ValidIndexedDBKeyPaths<T> | ValidIndexedDBKeyPaths<T>[],
     Auto extends boolean,
     Indices extends DexieIndexes<T>
   >(key: K, auto: Auto, indices: Indices): IndexMethods<T, K, Auto, Indices> {
     return {
       index(indexKey) {
         indexParts.push(indexKey);
-        return createIndexMethods(key, auto, [...indices, indexKey]);
+        return createIndexMethods(key, auto, [
+          ...indices,
+          { kind: "single", path: indexKey, multi: false },
+        ]);
       },
       unique(indexKey) {
         indexParts.push(`&${indexKey}`);
-        return createIndexMethods(key, auto, [...indices, indexKey]);
+        return createIndexMethods(key, auto, [
+          ...indices,
+          { kind: "single", path: indexKey, multi: false },
+        ]);
       },
       multi(indexKey) {
         indexParts.push(`*${indexKey}`);
-        return createIndexMethods(key, auto, [...indices, indexKey]);
+        return createIndexMethods(key, auto, [
+          ...indices,
+          { kind: "multi", path: indexKey, multi: true },
+        ]);
       },
       compound(...keys) {
         if (!isDistinctArray(keys)) {
@@ -213,7 +103,10 @@ export function tableBuilder<T>() {
           throw new Error("Compound index must have at least two keys");
         }
         indexParts.push(`[${keys.join("+")}]`);
-        return createIndexMethods(key, auto, [...indices, keys]);
+        return createIndexMethods(key, auto, [
+          ...indices,
+          { kind: "compound", paths: keys },
+        ]);
       },
       build() {
         if (!isDistinctArray(indexParts)) {
@@ -232,10 +125,10 @@ export function tableBuilder<T>() {
     autoIncrement<K extends ValidIndexedDBKeyPaths<T, "", false>>(key: K) {
       return createIndexMethods(key, true, []);
     },
-    primaryKey<K extends DexieIndex<T>>(key: K) {
+    primaryKey<K extends ValidIndexedDBKeyPaths<T>>(key: K) {
       return createIndexMethods(key, false, []);
     },
-    compoundKey<K extends DexieCompoundIndex<T>>(keys: K) {
+    compoundKey<K extends ValidIndexedDBKeyPaths<T>[]>(keys: K) {
       return createIndexMethods(keys, false, []);
     },
     hiddenAuto() {
@@ -246,3 +139,37 @@ export function tableBuilder<T>() {
     },
   };
 }
+
+/* type TypedDexie<
+  TConfig extends Record<string, TableConfig<any, any, any, any>>
+> = DBTables<TConfig> & DexieTypedTransaction<TConfig>;
+
+interface DexieDataItem {
+  id: number;
+  numberValue: number;
+  stringValue: string;
+  multiEntry: string[];
+  arrayKey: string[];
+  nested: {
+    level1: {
+      numberValue: number;
+      stringValue: string;
+    };
+  };
+}
+
+const tableConfig = tableBuilder<DexieDataItem>()
+  .primaryKey("id")
+  .index("stringValue")
+  .index("numberValue")
+  .index("arrayKey")
+  .multi("multiEntry") // only arrays allowed
+  .compound("stringValue", "numberValue")
+  .build();
+
+type DemoTypedDexie = TypedDexie<{
+  data: typeof tableConfig;
+}>;
+
+const x: DemoTypedDexie = null as unknown as DemoTypedDexie;
+x.data.where("stringValue"); */

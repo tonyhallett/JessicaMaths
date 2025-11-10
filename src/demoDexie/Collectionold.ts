@@ -1,6 +1,7 @@
 import type { PromiseExtended } from "dexie";
+import type { DexieIndex, DexieIndexes } from "./tableBuilderOld";
+import type { WhereClause } from "./WhereClause";
 import type { UpdateKeyPathValue } from "./better-dexie";
-import type { DexiePlainKey, DexieIndexes } from "./dexieindexes";
 
 type Comparable =
   | number
@@ -31,24 +32,24 @@ type DotKeysOfType<T, V> = T extends object
     }[Extract<keyof T, string>]
   : never;
 
-export type DotKeyComparable<TValue> = IsAny<TValue> extends true
+type DotKeyComparable<TValue> = IsAny<TValue> extends true
   ? string
   : // the cmp function
     DotKeysOfType<TValue, Comparable>;
 
 export type DotKey<T> = DotNestedKeys<T>;
 
-export type AndFilter<
+type AndFilter<
   T,
-  TPkey extends DexiePlainKey<T>,
-  TKey extends DexiePlainKey<T>,
+  TPkey extends DexieIndex<T>,
+  TKey extends DexieIndex<T>,
   TIndexes extends DexieIndexes<T>
 > = (filter: (x: T) => boolean) => Collection<T, TPkey, TKey, TIndexes>;
 
 export interface Collection<
   T,
-  TPkey extends DexiePlainKey<T>,
-  TKey extends DexiePlainKey<T>,
+  TPkey extends DexieIndex<T>,
+  TKey extends DexieIndex<T>,
   TIndexes extends DexieIndexes<T>
 > {
   //db: Database;
@@ -61,6 +62,7 @@ export interface Collection<
   // sortBy<R>(keyPath: string, thenShortcut: ThenShortcut<T[], R>): PromiseExtended<R>
   // toArray<R>(thenShortcut: ThenShortcut<T[], R>): PromiseExtended<R>
   // uniqueKeys<R>(thenShortcut: ThenShortcut<IndexableTypeArray, R>): PromiseExtended<R>
+
   clone(props?: Object): Collection<T, TPkey, TKey, TIndexes>;
 
   count(): PromiseExtended<number>;
@@ -68,11 +70,12 @@ export interface Collection<
   toArray(): PromiseExtended<Array<T>>;
 
   /*
-      ***********************
-      from https://dexie.org/docs/Collection/Collection.keys()
-      Not possible to use keys(), uniqueKeys(), eachKey() or eachUniqueKey() when
-      Collection instance is based on the primary key
-    */
+    ***********************
+    from https://dexie.org/docs/Collection/Collection.keys()
+    Not possible to use keys(), uniqueKeys(), eachKey() or eachUniqueKey() when
+    Collection instance is based on the primary key
+  */
+
   // https://dexie.org/docs/Collection/Collection.each()
   each(
     callback: (
@@ -134,10 +137,10 @@ export interface Collection<
   filter: AndFilter<T, TPkey, TKey, TIndexes>;
   distinct(): Collection<T, TPkey, TKey, TIndexes>;
 
-  // todo
-  /* or<K extends TIndexes[number]>(
-      indexOrPrimayKey: K
-    ): WhereClause<T, TPkey, K, TIndexes>; */
+  or<K extends TIndexes[number]>(
+    indexOrPrimayKey: K
+  ): WhereClause<T, TPkey, K, TIndexes>;
+
   reverse(): Collection<T, TPkey, TKey, TIndexes>;
   sortBy(keyPath: DotKeyComparable<T>): PromiseExtended<T[]>;
 

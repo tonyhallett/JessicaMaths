@@ -1,4 +1,4 @@
-import type { TableConfig } from "./tableBuilder";
+import type { TableConfig } from "./tableBuilderOld";
 
 export function buildStores(
   tableConfigs: Record<string, TableConfig<any, any, any, any>>
