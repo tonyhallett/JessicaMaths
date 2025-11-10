@@ -44,6 +44,61 @@ type OrderBy<T, I extends DexieIndex<T>> = I extends SingleIndex<T, infer P>
   ? I["paths"]
   : never;
 
+type OrderKeyValue<T, I extends DexieIndex<T>> = I extends SingleIndex<
+  T,
+  infer P
+>
+  ? UpdateKeyPathValue<T, P>
+  : I extends CompoundIndex<T, infer Ps>
+  ? { [K in keyof Ps]: UpdateKeyPathValue<T, Ps[K]> }
+  : I extends MultiIndex<T, infer P>
+  ? UpdateKeyPathValue<T, P> extends readonly (infer Elem)[]
+    ? Elem
+    : never
+  : never;
+
+type IndexSelector<T, P> = P extends SingleIndex<T, infer Path>
+  ? Path
+  : P extends MultiIndex<T, infer Path>
+  ? Path
+  : P extends CompoundIndex<T, infer Paths>
+  ? Paths
+  : never;
+
+export type KeyForIndex<T, P> =
+  // Single: key is the value stored at the path
+  P extends SingleIndex<T, infer Path>
+    ? UpdateKeyPathValue<T, Path>
+    : // Multi: the index points to an array field; collection key should be the element type
+    P extends MultiIndex<T, infer Path>
+    ? UpdateKeyPathValue<T, Path> extends readonly (infer Elem)[]
+      ? Elem
+      : UpdateKeyPathValue<T, Path>
+    : // Compound: tuple of the per-path key values
+    P extends CompoundIndex<T, infer Paths>
+    ? { [K in keyof Paths]: UpdateKeyPathValue<T, Paths[K] & string> } // keeps path order
+    : never;
+
+type ExtractSelectedIndex<
+  T,
+  TIndexes extends readonly DexieIndex<T>[],
+  Path
+> = TIndexes[number] extends infer I
+  ? I extends SingleIndex<T, infer P>
+    ? Path extends P
+      ? I
+      : never
+    : I extends MultiIndex<T, infer P>
+    ? Path extends P
+      ? I
+      : never
+    : I extends CompoundIndex<T, infer Ps>
+    ? Path extends Ps
+      ? I
+      : never
+    : never
+  : never;
+
 export type PrimaryKeyCollection<
   T,
   TKey extends DexiePlainKey<T>,
@@ -79,9 +134,14 @@ export interface TableBase<
 
   toArray(): PromiseExtended<Array<T>>;
   toCollection(): PrimaryKeyCollection<T, TKey, TIndexes>;
-  orderBy<I extends OrderBy<T, TIndexes[number]>>(
-    index: I
-  ): Collection<T, TKey, I, TIndexes>;
+  orderBy<Path extends OrderBy<T, TIndexes[number]>>(
+    index: Path
+  ): Collection<
+    T,
+    UpdateKeyPathValue<T, TKey>,
+    KeyForIndex<T, ExtractSelectedIndex<T, TIndexes, Path>>,
+    TIndexes
+  >;
   reverse(): Collection<T, TKey, TKey, TIndexes>;
   mapToClass(constructor: Function): Function;
 

@@ -50,6 +50,15 @@ export type Collection<
 > = CollectionBase<T, PKey, TKey, TIndexes> &
   WhereClausesFromIndexes<T, PKey, TIndexes, "or">;
 
+export interface Cursor<TKey, TPkey> {
+  key: TKey;
+  primaryKey: TPkey;
+}
+
+export interface EachKeyCallback<TKey, TCursorKey, TPkey> {
+  (key: TKey, cursor: Cursor<TCursorKey, TPkey>): any;
+}
+
 interface CollectionBase<T, TPkey, TKey, TIndexes extends DexieIndexes<T>> {
   //db: Database;
   // then shortcuts
@@ -75,45 +84,19 @@ interface CollectionBase<T, TPkey, TKey, TIndexes extends DexieIndexes<T>> {
     */
   // https://dexie.org/docs/Collection/Collection.each()
   each(
-    callback: (
-      obj: T,
-      cursor: {
-        key: TKey;
-        primaryKey: TPkey;
-      }
-    ) => any
+    callback: (obj: T, cursor: Cursor<TKey, TPkey>) => any
   ): PromiseExtended<void>;
   // https://dexie.org/docs/Collection/Collection.eachKey()
   // ***************
-  eachKey(
-    callback: (
-      key: TKey,
-      cursor: {
-        key: TKey;
-        primaryKey: TPkey;
-      }
-    ) => any
-  ): PromiseExtended<void>;
+  eachKey(callback: EachKeyCallback<TKey, TKey, TPkey>): PromiseExtended<void>;
   // https://dexie.org/docs/Collection/Collection.eachUniqueKey()
   // ***************
   eachUniqueKey(
-    callback: (
-      key: TKey,
-      cursor: {
-        key: TKey;
-        primaryKey: TPkey;
-      }
-    ) => any
+    callback: EachKeyCallback<TKey, TKey, TPkey>
   ): PromiseExtended<void>;
 
   eachPrimaryKey(
-    callback: (
-      key: TPkey,
-      cursor: {
-        key: TKey;
-        primaryKey: TPkey;
-      }
-    ) => any
+    callback: EachKeyCallback<TPkey, TKey, TPkey>
   ): PromiseExtended<void>;
 
   keys(): PromiseExtended<TKey[]>;

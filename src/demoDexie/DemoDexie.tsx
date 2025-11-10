@@ -29,6 +29,7 @@ const dbCompound = dexieFactory(
     data: tableBuilder<DexieDataItem>()
       .primaryKey("id")
       .compound("stringValue", "numberValue")
+      .index("nested.level1.numberValue")
       .multi("multiEntry")
       .index("arrayKey")
       .build(),
@@ -552,8 +553,7 @@ export const DemoDexie = () => {
           "numberValue",
         ]); */
 
-        // todo - orderBy
-        /*  dbCompound.data
+        dbCompound.data
           .orderBy(["stringValue", "numberValue"])
           .eachKey((key) => {
             key[0].toLowerCase();
@@ -563,19 +563,41 @@ export const DemoDexie = () => {
           .catch((err) => {
             console.error("Failed to orderBy compound key:", err);
           });
- */
-        // todo return to orderBy
-        /*         dbCompound.data.orderBy("arrayKey").eachKey((key) => {
-          console.log("Ordered by array key", key);
-        }); */
 
-        // todo return to orderBy incorrect typing for multientry
-        /*         dbCompound.data.orderBy("multiEntry").eachKey((key) => {
-          console.log("Ordered by multiEntry key", key);
-        }); */
+        dbCompound.data.orderBy("arrayKey").eachKey((key) => {
+          key.entries();
+        });
+
+        dbCompound.data.orderBy("multiEntry").eachKey((key) => {
+          key.endsWith("a");
+        });
+
+        dbCompound.data.orderBy("nested.level1.numberValue").eachKey((key) => {
+          key.toFixed(2);
+        });
 
         //whereClause.equals(["Hello", 42]);
         //whereClause.equals([42, "Hello"]); // error
+
+        // multiEntry where
+        const multiEntryWhere = dbCompound.data.where("multiEntry");
+        multiEntryWhere.equals("a").each((item, cursor) => {
+          console.log("multiEntry where item:", item);
+          cursor.key.endsWith("a");
+          cursor.primaryKey.toFixed(2);
+        });
+
+        multiEntryWhere.anyOf(["a", "d"]).each((item, cursor) => {
+          console.log("multiEntry anyOf where item:", item);
+          cursor.key.endsWith("a");
+          cursor.primaryKey.toFixed(2);
+        });
+
+        multiEntryWhere.startsWithIgnoreCase("A").each((item, cursor) => {
+          console.log("multiEntry startsWithIgnoreCase where item:", item);
+          cursor.key.endsWith("a");
+          cursor.primaryKey.toFixed(2);
+        });
       }}
     >
       Demo Dexie

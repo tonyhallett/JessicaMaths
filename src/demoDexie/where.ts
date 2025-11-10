@@ -7,6 +7,7 @@ import type {
   MultiIndex,
   SingleIndex,
 } from "./dexieindexes";
+import type { KeyForIndex } from "./tabletypes";
 import type { ValidIndexedDBKeyPaths } from "./ValidIndexedDBKeyPaths";
 
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
@@ -33,7 +34,7 @@ type WhereClauseFor<
 > = I extends SingleIndex<T, infer P>
   ? WhereForSingle<T, TPKey, P, I, TIndexes, TMethodName>
   : I extends MultiIndex<T, infer P>
-  ? never //WhereForMulti<T, P, I>
+  ? WhereForMulti<T, TPKey, P, I, TIndexes, TMethodName>
   : I extends CompoundIndex<T, infer Ps>
   ? never //WhereForCompound<T, Ps, I>
   : never;
@@ -51,13 +52,28 @@ type WhereForSingle<
   ) => WhereClause<T, PKey, UpdateKeyPathValue<T, I["path"]>, TIndexes>;
 };
 
+type WhereForMulti<
+  T,
+  PKey,
+  P extends ValidIndexedDBKeyPaths<T>,
+  I extends MultiIndex<T, P>,
+  TIndexes extends DexieIndexes<T>,
+  TMethodName extends string
+> = {
+  [K in TMethodName]: (
+    path: I["path"]
+  ) => WhereClause<T, PKey, KeyForIndex<T, I>, TIndexes>;
+};
+
 /* type WhereForMulti<
   T,
   P extends ValidIndexedDBKeyPaths<T>,
   I extends MultiIndex<T, P>
 > = {
   where(path: I["path"]): MultiWhereClause<T>;
-};
+}; */
+
+/* 
 
 type WhereForCompound<
   T,
@@ -76,20 +92,6 @@ interface ValuesOf<T, TPkey, Key, TIndexes extends DexieIndexes<T>> {
   (values: readonly Key[]): Collection<T, TPkey, Key, TIndexes>;
   (...values: readonly Key[]): Collection<T, TPkey, Key, TIndexes>;
 }
-
-/* type KeyValues<
-  T,
-  TPkey extends DexiePlainKey<T>,
-  Key extends DexiePlainKey<T>,
-  TIndexes extends DexieIndexes<T>
-> = ValuesOf<T, TPkey, Key, TIndexes, UpdateKeyPathValue<T, Key>>;
-
-export type KeyValueForIndex<
-  T,
-  K extends DexiePlainKey<T>
-> = K extends readonly [any, ...any[]] // compound
-  ? { [I in keyof K]: UpdateKeyPathValue<T, K[I]> }
-  : UpdateKeyPathValue<T, K>; // single */
 
 interface WhereStringClause<T, TPkey, TIndexes extends DexieIndexes<T>> {
   //https://dexie.org/docs/WhereClause/WhereClause.anyOfIgnoreCase()
