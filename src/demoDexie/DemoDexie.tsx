@@ -1,11 +1,13 @@
 import Button from "@mui/material/Button";
 import { tableBuilder } from "./tableBuilder";
 import { dexieFactory } from "./dexieFactory";
+import { add, replacePrefix, type UpdateSpec } from "dexie";
 
 interface DexieDataItem {
   id: number;
   numberValue: number;
   stringValue: string;
+  optional?: string;
   multiEntry: string[];
   arrayKey: string[];
   nested: {
@@ -15,6 +17,13 @@ interface DexieDataItem {
     };
   };
 }
+type DexieDataItemUpdateSpec = UpdateSpec<DexieDataItem>;
+const dexieDataItemUpdateSpec: DexieDataItemUpdateSpec = {
+  multiEntry: add(["newEntry"]),
+  numberValue: add(5),
+  // numberValue: add("5"), error
+  optional: undefined, // delete optional property
+};
 
 const nested: DexieDataItem["nested"] = {
   level1: {
