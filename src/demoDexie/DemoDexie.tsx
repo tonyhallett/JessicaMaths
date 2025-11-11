@@ -1,7 +1,8 @@
 import Button from "@mui/material/Button";
 import { tableBuilder } from "./tableBuilder";
 import { dexieFactory } from "./dexieFactory";
-import { add, replacePrefix, type UpdateSpec } from "dexie";
+import { add, type UpdateSpec } from "dexie";
+import type { KeyPaths } from "dexie";
 
 interface DexieDataItem {
   id: number;
@@ -17,12 +18,26 @@ interface DexieDataItem {
     };
   };
 }
-type DexieDataItemUpdateSpec = UpdateSpec<DexieDataItem>;
-const dexieDataItemUpdateSpec: DexieDataItemUpdateSpec = {
+type DexieDataItemUpdateSpecLevel2 = UpdateSpec<DexieDataItem, "II">;
+const dexieDataItemUpdateSpecLevel2: DexieDataItemUpdateSpecLevel2 = {
   multiEntry: add(["newEntry"]),
   numberValue: add(5),
   // numberValue: add("5"), error
   optional: undefined, // delete optional property
+  "nested.level1.numberValue": 8,
+};
+
+type DexieDataItemUpdateSpecLevel1 = UpdateSpec<DexieDataItem, "I">;
+const dexieDataItemUpdateSpecLevel1: DexieDataItemUpdateSpecLevel1 = {
+  multiEntry: add(["newEntry"]),
+  numberValue: add(5),
+  // numberValue: add("5"), error
+  optional: undefined, // delete optional property
+  "nested.level1": {
+    stringValue: "Updated String",
+    numberValue: 8,
+  },
+  //"nested.level1.numberValue":8, error
 };
 
 const nested: DexieDataItem["nested"] = {
