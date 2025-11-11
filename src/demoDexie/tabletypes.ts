@@ -1,5 +1,6 @@
 import type {
   DBCoreTable,
+  KeyPathValue,
   PromiseExtended,
   TableHooks,
   TableSchema,
@@ -13,7 +14,6 @@ import type {
   MultiIndex,
   SingleIndex,
 } from "./dexieindexes";
-import type { UpdateKeyPathValue } from "./better-dexie";
 import type { WhereClausesFromIndexes } from "./where";
 import type { TableConfig } from "./tableBuilder";
 
@@ -47,15 +47,15 @@ type IndexPath<T, I extends DexieIndex<T>> = I extends SingleIndex<T, infer P>
 export type KeyForIndex<T, P> =
   // Single: key is the value stored at the path
   P extends SingleIndex<T, infer Path>
-    ? UpdateKeyPathValue<T, Path>
+    ? KeyPathValue<T, Path>
     : // Multi: the index points to an array field; collection key should be the element type
     P extends MultiIndex<T, infer Path>
-    ? UpdateKeyPathValue<T, Path> extends readonly (infer Elem)[]
+    ? KeyPathValue<T, Path> extends readonly (infer Elem)[]
       ? Elem
-      : UpdateKeyPathValue<T, Path>
+      : KeyPathValue<T, Path>
     : // Compound: tuple of the per-path key values
     P extends CompoundIndex<T, infer Paths>
-    ? { [K in keyof Paths]: UpdateKeyPathValue<T, Paths[K] & string> } // keeps path order
+    ? { [K in keyof Paths]: KeyPathValue<T, Paths[K] & string> } // keeps path order
     : never;
 
 type ExtractSelectedIndex<
@@ -82,8 +82,8 @@ export type PrimaryKey<
   T,
   TKey extends DexiePlainKey<T>
 > = TKey extends readonly any[]
-  ? { [I in keyof TKey]: UpdateKeyPathValue<T, TKey[I] & keyof T> }
-  : UpdateKeyPathValue<T, TKey & keyof T>;
+  ? { [I in keyof TKey]: KeyPathValue<T, TKey[I] & keyof T> }
+  : KeyPathValue<T, TKey & keyof T>;
 
 export type PrimaryKeyCollection<
   T,
@@ -119,7 +119,7 @@ export interface TableBase<
     index: Path
   ): Collection<
     T,
-    UpdateKeyPathValue<T, TKey>,
+    KeyPathValue<T, TKey>,
     KeyForIndex<T, ExtractSelectedIndex<T, TIndexes, Path>>,
     TIndexes
   >;
@@ -136,9 +136,7 @@ type KeyPathTable<
   TKey extends DexiePlainKey<T>,
   TIndexes extends DexieIndexes<T>
 > = TableBase<TName, T, TKey, TIndexes> & {
-  get(key: UpdateKeyPathValue<T, TKey>): PromiseExtended<T | undefined>;
-  bulkGet(
-    keys: UpdateKeyPathValue<T, TKey>[]
-  ): PromiseExtended<(T | undefined)[]>;
+  get(key: KeyPathValue<T, TKey>): PromiseExtended<T | undefined>;
+  bulkGet(keys: KeyPathValue<T, TKey>[]): PromiseExtended<(T | undefined)[]>;
   add(item: T): PromiseExtended<TKey>;
-} & WhereClausesFromIndexes<T, UpdateKeyPathValue<T, TKey>, TIndexes>;
+} & WhereClausesFromIndexes<T, KeyPathValue<T, TKey>, TIndexes>;

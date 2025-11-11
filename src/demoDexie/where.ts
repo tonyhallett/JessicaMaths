@@ -1,4 +1,4 @@
-import type { UpdateKeyPathValue } from "./better-dexie";
+import type { KeyPathValue } from "dexie";
 import type { Collection } from "./Collection";
 import type {
   CompoundIndex,
@@ -49,7 +49,7 @@ type WhereForSingle<
 > = {
   [K in TMethodName]: (
     path: I["path"]
-  ) => WhereClause<T, PKey, UpdateKeyPathValue<T, I["path"]>, TIndexes>;
+  ) => WhereClause<T, PKey, KeyPathValue<T, I["path"]>, TIndexes>;
 };
 
 type WhereForMulti<

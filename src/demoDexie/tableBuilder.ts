@@ -1,4 +1,4 @@
-import type { UpdateKeyPathValue } from "./better-dexie";
+import type { KeyPathValue } from "dexie";
 import type {
   DexiePlainKey,
   DexieIndexes,
@@ -34,7 +34,7 @@ export type MultiEntryKeyPaths<T> = ValidIndexedDBKeyPaths<
   false
 > extends infer P
   ? P extends string
-    ? IsMultiEntryArray<UpdateKeyPathValue<T, P>> extends true
+    ? IsMultiEntryArray<KeyPathValue<T, P>> extends true
       ? P
       : never
     : never

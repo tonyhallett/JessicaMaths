@@ -1,6 +1,6 @@
 // https://github.com/spion/dexie-better-types/blob/main/index.d.ts
 
-type TupleKeys<T> =
+/* type TupleKeys<T> =
   | [keyof T]
   | [keyof T, keyof T]
   | [keyof T, keyof T, keyof T]
@@ -23,9 +23,9 @@ type ValuesOfKey<T, K extends KeysOf<T>> = K extends keyof T
   ? T[K]
   : K extends TupleKeys<T>
   ? ValuesOfArrayKey<T, K>
-  : never;
+  : never; */
 
-export type UpdateKeyPaths<T> = {
+/* export type UpdateKeyPaths<T> = {
   [P in keyof T]: P extends string
     ? T[P] extends Array<infer K>
       ? K extends object // only drill into the array element if it's an object
@@ -37,9 +37,9 @@ export type UpdateKeyPaths<T> = {
       ? P | `${P}.${UpdateKeyPaths<T[P]>}`
       : P
     : never;
-}[keyof T];
+}[keyof T]; */
 
-export type UpdateKeyPathValue<T, PATH> = PATH extends `${infer R}.${infer S}`
+/* export type UpdateKeyPathValue<T, PATH> = PATH extends `${infer R}.${infer S}`
   ? R extends keyof T
     ? UpdateKeyPathValue<T[R], S>
     : T extends any[]
@@ -53,4 +53,4 @@ export type UpdateKeyPathValue<T, PATH> = PATH extends `${infer R}.${infer S}`
     : void
   : PATH extends keyof T
   ? T[PATH]
-  : void;
+  : void; */
