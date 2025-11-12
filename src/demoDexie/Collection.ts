@@ -1,6 +1,7 @@
 import type { PromiseExtended } from "dexie";
 import type { DexieIndexes } from "./dexieindexes";
 import type { WhereClausesFromIndexes } from "./where";
+import type { UpdateSpec } from "dexie";
 
 type Comparable =
   | number
@@ -57,6 +58,10 @@ export interface Cursor<TKey, TPkey> {
 
 export interface EachKeyCallback<TKey, TCursorKey, TPkey> {
   (key: TKey, cursor: Cursor<TCursorKey, TPkey>): any;
+}
+
+export interface ChangeCallback<T> {
+  (obj: T, ctx: { value: T }): void | boolean;
 }
 
 interface CollectionBase<T, TPkey, TKey, TIndexes extends DexieIndexes<T>> {
@@ -123,15 +128,8 @@ interface CollectionBase<T, TPkey, TKey, TIndexes extends DexieIndexes<T>> {
   // Mutating methods
   delete(): PromiseExtended<number>;
   // https://dexie.org/docs/Collection/Collection.modify()
-  modify(
-    changeCallback: (
-      obj: T,
-      ctx: {
-        value: T;
-      }
-    ) => void | boolean
-  ): PromiseExtended<number>;
-  modify(changes: { [keyPath: string]: any }): PromiseExtended<number>;
+  modify(changeCallback: ChangeCallback<T>): PromiseExtended<number>;
+  modify(changes: UpdateSpec<T>): PromiseExtended<number>;
 
   // Other methods
   // https://dexie.org/docs/Collection/Collection.raw()

@@ -4,8 +4,9 @@ import type {
   PromiseExtended,
   TableHooks,
   TableSchema,
+  UpdateSpec,
 } from "dexie";
-import type { Collection } from "./Collection";
+import type { ChangeCallback, Collection } from "./Collection";
 import type {
   CompoundIndex,
   DexieIndex,
@@ -91,6 +92,16 @@ export type PrimaryKeyCollection<
   TIndexes extends DexieIndexes<T>
 > = Collection<T, PrimaryKey<T, TKey>, PrimaryKey<T, TKey>, TIndexes>;
 
+/*
+  missing the table methods:
+    get / bulkGet
+    ---
+
+    add / bulkAdd
+
+    put / bulkPut
+
+*/
 export interface TableBase<
   TName extends string,
   T,
@@ -130,13 +141,61 @@ export interface TableBase<
   clear(): PromiseExtended<void>;
 }
 
+type PrimaryKeyPaths<
+  T,
+  TKey extends DexiePlainKey<T>
+> = TKey extends readonly (infer U)[]
+  ? U extends string
+    ? U
+    : never
+  : TKey extends string
+  ? TKey
+  : never;
+interface BulkUpdate<T, TKey extends DexiePlainKey<T>> {
+  key: PrimaryKey<T, TKey>;
+  changes: Omit<UpdateSpec<T>, PrimaryKeyPaths<T, TKey>>;
+}
+
 type KeyPathTable<
   TName extends string,
   T,
   TKey extends DexiePlainKey<T>,
   TIndexes extends DexieIndexes<T>
 > = TableBase<TName, T, TKey, TIndexes> & {
-  get(key: KeyPathValue<T, TKey>): PromiseExtended<T | undefined>;
+  // todo object overload
+  get(key: PrimaryKey<T, TKey>): PromiseExtended<T | undefined>;
   bulkGet(keys: KeyPathValue<T, TKey>[]): PromiseExtended<(T | undefined)[]>;
+
   add(item: T): PromiseExtended<TKey>;
+  // can probably remove this overload - this table entries already have the primary key
+  bulkAdd<B extends boolean>(
+    items: readonly T[],
+    options: {
+      allKeys: B;
+    }
+  ): PromiseExtended<B extends true ? TKey[] : TKey>;
+  bulkAdd(items: readonly T[]): PromiseExtended<TKey>;
+  put(item: T): PromiseExtended<TKey>;
+  // can probably remove this overload - this table entries already have the primary key
+  bulkPut<B extends boolean>(
+    items: readonly T[],
+    options: {
+      allKeys: B;
+    }
+  ): PromiseExtended<B extends true ? TKey[] : TKey>;
+  bulkPut(items: readonly T[]): PromiseExtended<TKey>;
+
+  // https://dexie.org/docs/Table/Table.update()
+  update(
+    key: PrimaryKey<T, TKey>,
+    changes: UpdateSpec<T>
+  ): PromiseExtended<0 | 1>;
+  update(
+    key: PrimaryKey<T, TKey>,
+    changes: ChangeCallback<T>
+  ): PromiseExtended<0 | 1>;
+  // note that docs do not mention this ( as the key must exist on the object - so ok for this table type )
+  update(object: T, changes: UpdateSpec<T>): PromiseExtended<0 | 1>;
+  update(object: T, changes: ChangeCallback<T>): PromiseExtended<0 | 1>;
+  bulkUpdate(changes: BulkUpdate<T, TKey>[]): PromiseExtended<number>;
 } & WhereClausesFromIndexes<T, KeyPathValue<T, TKey>, TIndexes>;

@@ -56,6 +56,7 @@ const dbCompoundPrimary = dexieFactory(
   },
   "DemoDexieCompoundPrimary"
 );
+
 dbCompoundPrimary.data.toCollection().each((item, cursor) => {
   cursor.key[0].toFixed(2);
   cursor.key[1].toLowerCase();
@@ -137,7 +138,8 @@ db2.on("populate", (tx) => {
     });
 });
 
-db2.data.get(1).then((item) => {
+// although it is allowed I am using Dexie's KeyPathValue which disallows.
+/* db2.data.get(1).then((item) => {
   console.log("db2 item with key 1:", item);
 });
 db2.data.get(2).then((item) => {
@@ -145,9 +147,7 @@ db2.data.get(2).then((item) => {
 });
 db2.data.get(4).then((item) => {
   console.log("db2 item with key 4:", item);
-});
-// get is typed to the primary key type
-//db2.data.get("string"); // error
+}); */
 
 // should not be able to autoincrement type specific property - error
 /* const db3 = dexieFactoryWithBuilder(
@@ -175,6 +175,8 @@ const db = dexieFactory(
   },
   "DemoDexie"
 );
+// get is typed to the primary key type
+// db.data.get("string"); // error
 
 // typed transaction
 db.on("populate", (tx) => {
@@ -232,6 +234,16 @@ export const DemoDexie = () => {
     <Button
       onClick={async () => {
         const allData = await db.data.toArray();
+        const first = allData[0]!;
+        db.data.bulkUpdate([
+          {
+            key: first.id,
+            changes: {
+              numberValue: add(0),
+              //id: omitted
+            },
+          },
+        ]);
         await db.data.each((item, cursor) => {
           cursor.key.toFixed(2);
           cursor.primaryKey.toFixed(2);
