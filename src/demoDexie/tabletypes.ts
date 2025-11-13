@@ -18,7 +18,7 @@ import type {
 } from "./dexieindexes";
 import type { WhereClausesFromIndexes } from "./where";
 import type { TableConfig } from "./tableBuilder";
-import type { OptionalPrimaryKeys, RequiredOnlyDeep } from "./utilitytypes";
+import type { DeletePrimaryKeys, RequiredOnlyDeep } from "./utilitytypes";
 
 export type DBTables<
   TConfig extends Record<string, TableConfig<any, any, any, any>>
@@ -213,7 +213,7 @@ type KeyPathTable<
   ): PromiseExtended<boolean>;
 } & WhereClausesFromIndexes<T, KeyPathValue<T, TKey>, TIndexes>;
 
-type UpsertSpec<T, TKey extends DexiePlainKey<T>> = OptionalPrimaryKeys<
+type UpsertSpec<T, TKey extends DexiePlainKey<T>> = DeletePrimaryKeys<
   {
     [K in keyof RequiredOnlyDeep<T>]:
       | RequiredOnlyDeep<T>[K]

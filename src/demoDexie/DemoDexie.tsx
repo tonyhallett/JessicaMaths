@@ -72,8 +72,8 @@ dbCompoundPrimary.data.toCollection().each((item, cursor) => {
 
 dbCompoundPrimary.data.upsert([1, "Hello"], {
   numberValue: 200,
-  // id: 1,
-  //stringValue: "Hello",
+  id: 1,
+  stringValue: "Hello",
   multiEntry: ["x", "y"],
   arrayKey: ["a", "b"],
   nested: {
