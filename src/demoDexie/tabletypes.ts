@@ -2,6 +2,7 @@ import type {
   DBCoreTable,
   KeyPathValue,
   PromiseExtended,
+  PropModification,
   TableHooks,
   TableSchema,
   UpdateSpec,
@@ -17,6 +18,7 @@ import type {
 } from "./dexieindexes";
 import type { WhereClausesFromIndexes } from "./where";
 import type { TableConfig } from "./tableBuilder";
+import type { RequiredOnlyDeep } from "./utilitytypes";
 
 export type DBTables<
   TConfig extends Record<string, TableConfig<any, any, any, any>>
@@ -198,4 +200,8 @@ type KeyPathTable<
   update(object: T, changes: UpdateSpec<T>): PromiseExtended<0 | 1>;
   update(object: T, changes: ChangeCallback<T>): PromiseExtended<0 | 1>;
   bulkUpdate(changes: BulkUpdate<T, TKey>[]): PromiseExtended<number>;
+  upsert(
+    key: PrimaryKey<T, TKey> | T,
+    spec: RequiredOnlyDeep<T>
+  ): PromiseExtended<boolean>;
 } & WhereClausesFromIndexes<T, KeyPathValue<T, TKey>, TIndexes>;

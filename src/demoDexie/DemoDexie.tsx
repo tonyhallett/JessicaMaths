@@ -1,23 +1,26 @@
 import Button from "@mui/material/Button";
-import { tableBuilder } from "./tableBuilder";
 import { dexieFactory } from "./dexieFactory";
 import { add, type UpdateSpec } from "dexie";
-import type { KeyPaths } from "dexie";
+import { tableBuilder } from "./tableBuilder";
+import { ObjectPropModification, safeRemove } from "./ObjectPropModification";
 
 interface DexieDataItem {
   id: number;
   numberValue: number;
   stringValue: string;
   optional?: string;
+  optional2?: number;
   multiEntry: string[];
   arrayKey: string[];
   nested: {
     level1: {
       numberValue: number;
       stringValue: string;
+      optional1?: string;
     };
   };
 }
+
 type DexieDataItemUpdateSpecLevel2 = UpdateSpec<DexieDataItem, "II">;
 const dexieDataItemUpdateSpecLevel2: DexieDataItemUpdateSpecLevel2 = {
   multiEntry: add(["newEntry"]),
@@ -25,6 +28,11 @@ const dexieDataItemUpdateSpecLevel2: DexieDataItemUpdateSpecLevel2 = {
   // numberValue: add("5"), error
   optional: undefined, // delete optional property
   "nested.level1.numberValue": 8,
+  nested: new ObjectPropModification((nested) => ({
+    level1: { numberValue: 1, stringValue: "2" },
+  })),
+  // add is ok but dexie remove is not
+  optional2: safeRemove(3),
 };
 
 type DexieDataItemUpdateSpecLevel1 = UpdateSpec<DexieDataItem, "I">;
@@ -227,6 +235,19 @@ db.transaction("rw", [db.data, "other"], (tx) => {
   //const notInTxTable = tx.notInTx; error
 });
 
+db.data.upsert(1, {
+  arrayKey: ["a", "b", "c"],
+  numberValue: 100,
+  stringValue: "Upserted",
+  id: 1,
+  multiEntry: ["x", "y"],
+  nested: {
+    level1: {
+      numberValue: 100,
+      stringValue: "Updated via upsert",
+    },
+  },
+});
 // todo - support db.transaction("rw", [db.data, "other"],"else", (tx) => {
 
 export const DemoDexie = () => {

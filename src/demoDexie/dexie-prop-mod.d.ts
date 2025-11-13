@@ -1,10 +1,11 @@
 import type { KeyPathValue, PropModSpec, KeyPathIgnoreObject } from "dexie";
 
 declare module "dexie" {
-  export type AddRemoveValueType = number | bigint | Array<any>;
+  export type AddRemoveNumberType = number | bigint;
+  export type AddRemoveValueType = AddRemoveNumberType | Array<string | number>;
   export type PropModificationValueType = string | AddRemoveValueType;
 
-  export class PropModification<T extends PropModificationValueType = any> {
+  export class PropModification<T = PropModificationValueType> {
     ["@@propmod"]: PropModSpec;
     constructor(spec: PropModSpec);
     execute(value: T): T;
@@ -13,7 +14,7 @@ declare module "dexie" {
   export function replacePrefix(
     prefix: string,
     replaced: string
-  ): PropModification<string>;
+  ): ExactPropModification<string>;
 
   export function add<T extends AddRemoveValueType>(
     value: T
@@ -70,7 +71,7 @@ declare module "dexie" {
     ? {
         [KP in KeyPaths<Required<T>, TMAXDEPTH>]?:
           | KeyPathValue<Required<T>, KP>
-          | PropModification<KeyPathValue<Required<T>, KP>>
+          | PropModification<KeyPathValue<T, KP>>
           | (undefined extends KeyPathValue<T, KP> ? undefined : never); // delete semantics
       }
     : never;

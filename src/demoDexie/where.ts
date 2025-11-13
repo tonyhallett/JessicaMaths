@@ -9,12 +9,7 @@ import type {
 } from "./dexieindexes";
 import type { KeyForIndex } from "./tabletypes";
 import type { ValidIndexedDBKeyPaths } from "./ValidIndexedDBKeyPaths";
-
-type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
-  k: infer I
-) => void
-  ? I
-  : never;
+import type { UnionToIntersection } from "./utilitytypes";
 
 export type WhereClausesFromIndexes<
   T,

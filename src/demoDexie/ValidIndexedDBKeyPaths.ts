@@ -1,5 +1,7 @@
 // ---------- Helpers ----------
-export type StringKey<T> = keyof T & string;
+
+import type { StringKey } from "./utilitytypes";
+
 export type AllowedKeyLeaf =
   | string
   | number
