@@ -18,7 +18,7 @@ import type {
 } from "./dexieindexes";
 import type { WhereClausesFromIndexes } from "./where";
 import type { TableConfig } from "./tableBuilder";
-import type { RequiredOnlyDeep } from "./utilitytypes";
+import type { OptionalPrimaryKeys, RequiredOnlyDeep } from "./utilitytypes";
 
 export type DBTables<
   TConfig extends Record<string, TableConfig<any, any, any, any>>
@@ -200,8 +200,24 @@ type KeyPathTable<
   update(object: T, changes: UpdateSpec<T>): PromiseExtended<0 | 1>;
   update(object: T, changes: ChangeCallback<T>): PromiseExtended<0 | 1>;
   bulkUpdate(changes: BulkUpdate<T, TKey>[]): PromiseExtended<number>;
+  /*
+    dexie typescript incorrectly allows T for the key
+    upsert(key: TKey | T, changes: UpdateSpec<TInsertType>): PromiseExtended<boolean>;
+    dexie internal typescript
+    https://github.com/dexie/Dexie.js/blob/761a93313b34640cc7ea8fb550ee67f1d8610f7c/src/classes/table/table.ts#L345
+    upsert(key: IndexableType, modifications: { [keyPath: string]: any; }): PromiseExtended<boolean>
+  */
   upsert(
-    key: PrimaryKey<T, TKey> | T,
-    spec: RequiredOnlyDeep<T>
+    key: PrimaryKey<T, TKey>,
+    spec: UpsertSpec<T, TKey>
   ): PromiseExtended<boolean>;
 } & WhereClausesFromIndexes<T, KeyPathValue<T, TKey>, TIndexes>;
+
+type UpsertSpec<T, TKey extends DexiePlainKey<T>> = OptionalPrimaryKeys<
+  {
+    [K in keyof RequiredOnlyDeep<T>]:
+      | RequiredOnlyDeep<T>[K]
+      | PropModification<RequiredOnlyDeep<T>[K]>;
+  },
+  TKey
+>;

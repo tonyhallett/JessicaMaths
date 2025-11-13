@@ -70,6 +70,20 @@ dbCompoundPrimary.data.toCollection().each((item, cursor) => {
   cursor.key[1].toLowerCase();
 });
 
+dbCompoundPrimary.data.upsert([1, "Hello"], {
+  numberValue: 200,
+  // id: 1,
+  //stringValue: "Hello",
+  multiEntry: ["x", "y"],
+  arrayKey: ["a", "b"],
+  nested: {
+    level1: {
+      numberValue: 200,
+      stringValue: "Updated Nested",
+    },
+  },
+});
+
 const dbCompound = dexieFactory(
   1,
   {
@@ -239,7 +253,7 @@ db.data.upsert(1, {
   arrayKey: ["a", "b", "c"],
   numberValue: 100,
   stringValue: "Upserted",
-  id: 1,
+  //id: 1, - not necessary
   multiEntry: ["x", "y"],
   nested: {
     level1: {
