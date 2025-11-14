@@ -118,6 +118,7 @@ export interface TableBase<
   core: DBCoreTable;
 
   //filter(fn: (obj: T) => boolean): PrimaryKeyCollection<T, TKey, TIndexes>;
+  // this.toCollection().and(filterFunction);
   filter(
     fn: Parameters<PrimaryKeyCollection<T, TKey, TIndexes>["and"]>["0"]
   ): ReturnType<PrimaryKeyCollection<T, TKey, TIndexes>["and"]>;
