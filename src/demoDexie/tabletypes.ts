@@ -104,6 +104,7 @@ export type PrimaryKeyCollection<
     put / bulkPut
 
 */
+
 export interface TableBase<
   TName extends string,
   T,
@@ -116,8 +117,10 @@ export interface TableBase<
   hook: TableHooks<T, TKey>;
   core: DBCoreTable;
 
-  filter(fn: (obj: T) => boolean): PrimaryKeyCollection<T, TKey, TIndexes>;
-
+  //filter(fn: (obj: T) => boolean): PrimaryKeyCollection<T, TKey, TIndexes>;
+  filter(
+    fn: Parameters<PrimaryKeyCollection<T, TKey, TIndexes>["and"]>["0"]
+  ): ReturnType<PrimaryKeyCollection<T, TKey, TIndexes>["and"]>;
   count(): PromiseExtended<number>;
 
   offset(n: number): PrimaryKeyCollection<T, TKey, TIndexes>;
