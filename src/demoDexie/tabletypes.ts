@@ -136,10 +136,10 @@ export interface TableBase<
     KeyForIndex<T, ExtractSelectedIndex<T, TIndexes, Path>>,
     TIndexes
   >;
-  reverse(): Collection<T, TKey, TKey, TIndexes>;
+  reverse(): PrimaryKeyCollection<T, TKey, TIndexes>;
   mapToClass(constructor: Function): Function;
 
-  delete(key: TKey): PromiseExtended<void>;
+  delete(key: PrimaryKey<T, TKey>): PromiseExtended<void>;
   clear(): PromiseExtended<void>;
 }
 
@@ -206,6 +206,10 @@ type KeyPathTable<
     dexie internal typescript
     https://github.com/dexie/Dexie.js/blob/761a93313b34640cc7ea8fb550ee67f1d8610f7c/src/classes/table/table.ts#L345
     upsert(key: IndexableType, modifications: { [keyPath: string]: any; }): PromiseExtended<boolean>
+
+    purpose of UpsertSpec is to ensure that when there is no item with key
+    we can only insert an item that is valid for the table
+    todo look at typing with dotted paths too
   */
   upsert(
     key: PrimaryKey<T, TKey>,

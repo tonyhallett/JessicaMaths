@@ -72,8 +72,6 @@ dbCompoundPrimary.data.toCollection().each((item, cursor) => {
 
 dbCompoundPrimary.data.upsert([1, "Hello"], {
   numberValue: 200,
-  id: 1,
-  stringValue: "Hello",
   multiEntry: ["x", "y"],
   arrayKey: ["a", "b"],
   nested: {
@@ -279,6 +277,7 @@ export const DemoDexie = () => {
             },
           },
         ]);
+        await db.data.delete(first.id);
         await db.data.each((item, cursor) => {
           cursor.key.toFixed(2);
           cursor.primaryKey.toFixed(2);
@@ -467,9 +466,17 @@ export const DemoDexie = () => {
         db.data
           .toCollection()
           .reverse()
-          .each((item) => {
+          .each((item, cursor) => {
+            cursor.key.toFixed(2);
+            cursor.primaryKey.toFixed(2);
             console.log("Reversed collection item:", item.id);
           });
+
+        await db.data.reverse().each((item, cursor) => {
+          cursor.key.toFixed(2);
+          cursor.primaryKey.toFixed(2);
+          console.log("Reversed item:", item);
+        });
 
         db.data
           .toCollection()
