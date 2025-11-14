@@ -117,11 +117,9 @@ export interface TableBase<
   hook: TableHooks<T, TKey>;
   core: DBCoreTable;
 
-  //filter(fn: (obj: T) => boolean): PrimaryKeyCollection<T, TKey, TIndexes>;
+  // filter(fn: (obj: T) => boolean): PrimaryKeyCollection<T, TKey, TIndexes>;
   // this.toCollection().and(filterFunction);
-  filter(
-    fn: Parameters<PrimaryKeyCollection<T, TKey, TIndexes>["and"]>["0"]
-  ): ReturnType<PrimaryKeyCollection<T, TKey, TIndexes>["and"]>;
+  filter: PrimaryKeyCollection<T, TKey, TIndexes>["and"];
   count(): PromiseExtended<number>;
 
   offset(n: number): PrimaryKeyCollection<T, TKey, TIndexes>;
@@ -130,7 +128,9 @@ export interface TableBase<
   // this.toCollection().each(callback);
   each: PrimaryKeyCollection<T, TKey, TIndexes>["each"];
 
-  toArray(): PromiseExtended<Array<T>>;
+  // this.toCollection().toArray(thenShortcut);
+  // toArray(): PromiseExtended<Array<T>>;
+  toArray: PrimaryKeyCollection<T, TKey, TIndexes>["toArray"];
   toCollection(): PrimaryKeyCollection<T, TKey, TIndexes>;
   orderBy<Path extends IndexPath<T, TIndexes[number]>>(
     index: Path
