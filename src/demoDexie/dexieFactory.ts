@@ -1,7 +1,7 @@
 import { Dexie } from "dexie";
 import { buildStores } from "./buildStores";
 import type { DexieTypedTransaction } from "./DexieTypedTransaction";
-import type { TableConfig } from "./tableBuilder";
+import type { TableConfig } from "./tablebuilder";
 import type { DBTables } from "./tabletypes";
 
 type TypedDexie<

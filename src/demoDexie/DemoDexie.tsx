@@ -1,7 +1,7 @@
 import Button from "@mui/material/Button";
 import { dexieFactory } from "./dexieFactory";
 import { add, type UpdateSpec } from "dexie";
-import { tableBuilder } from "./tableBuilder";
+import { tableBuilder } from "./tablebuilder";
 import { ObjectPropModification, safeRemove } from "./ObjectPropModification";
 
 interface DexieDataItem {

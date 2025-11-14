@@ -10,7 +10,7 @@ import type {
   Transaction,
   TransactionMode,
 } from "dexie";
-import type { TableConfig } from "./tableBuilder";
+import type { TableConfig } from "./tablebuilder";
 import type { DBTables } from "./tabletypes";
 
 // Helper: the union of allowed argument shapes (either a table name key or a table instance)

@@ -17,7 +17,7 @@ import type {
   SingleIndex,
 } from "./dexieindexes";
 import type { WhereClausesFromIndexes } from "./where";
-import type { TableConfig } from "./tableBuilder";
+import type { TableConfig } from "./tablebuilder";
 import type { DeletePrimaryKeys, RequiredOnlyDeep } from "./utilitytypes";
 
 export type DBTables<
