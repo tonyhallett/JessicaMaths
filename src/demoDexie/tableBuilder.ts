@@ -19,7 +19,6 @@ export interface TableConfig<
 > {
   readonly pk: { key: PK; auto: Auto };
   readonly indicesSchema: string;
-  readonly indices: Indices;
 }
 
 type IsMultiEntryArray<T> = T extends readonly (infer E)[]
@@ -112,11 +111,11 @@ export function tableBuilder<T>() {
         if (!isDistinctArray(indexParts)) {
           throw new Error("Duplicate indexes are not allowed");
         }
-        return {
+        const tableConfig: TableConfig<T, K, Auto, Indices> = {
           pk: { key, auto },
           indicesSchema: indexParts.join(", "),
-          indices,
         };
+        return tableConfig;
       },
     };
   }

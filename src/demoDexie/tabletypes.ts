@@ -27,7 +27,7 @@ export type DBTables<
     infer TRow,
     infer PK,
     infer Auto,
-    any
+    infer Indices
   >
     ? PK extends never
       ? Auto extends true
@@ -35,7 +35,7 @@ export type DBTables<
         : never
       : Auto extends true
       ? never
-      : KeyPathTable<K, TRow, PK, TConfig[K]["indices"]>
+      : KeyPathTable<K, TRow, PK, Indices>
     : never;
 };
 
