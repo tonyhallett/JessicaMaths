@@ -1,8 +1,59 @@
 import Button from "@mui/material/Button";
 import { dexieFactory } from "./dexieFactory";
-import { add, type UpdateSpec } from "dexie";
+import Dexie, {
+  add,
+  Entity,
+  type EntityTable,
+  type IDType,
+  type InsertType,
+  type UpdateSpec,
+} from "dexie";
 import { tableBuilder } from "./tablebuilder";
 import { ObjectPropModification, safeRemove } from "./ObjectPropModification";
+
+type ConstructorOf<T> = new (...args: any[]) => T & { prototype: T };
+
+type AConstructorDemo = ConstructorOf<WithConstructor>;
+type ConstructorParametersDemo = ConstructorParameters<typeof WithConstructor>;
+type InstanceTypeDemo = InstanceType<typeof WithConstructor>;
+
+class WithConstructor {
+  constructor(public name: string, public value: number) {}
+}
+
+type IDTypeAny = IDType<any, "abc">;
+type IDKeyOfT = IDType<{ key: number }, "key">;
+type IDStringNonKey = IDType<{ key: number }, "nonkey">;
+type IDNonStringType = IDType<{ key: number }, boolean>;
+
+class TypeWithMethods {
+  id!: number;
+  method() {}
+}
+
+type InsertTypeDemo = InsertType<TypeWithMethods, "id">;
+function demoInsertType(item: InsertTypeDemo) {}
+demoInsertType(new TypeWithMethods());
+
+// cannot use my dexie type - Entity<typeof dbCompoundPrimary>
+type DexieTs = Dexie & {
+  custom: EntityTable<CustomEntity, "id">;
+};
+
+class CustomEntity extends Entity<DexieTs> {
+  // cannot provide own ctor as have to call super which throws
+  // so every field will need !
+  id!: number;
+  other!: string;
+  save() {
+    this.db.custom.put(this);
+    // given above would you need to use this.table()
+    // if you created own helper derivation
+    this.db.table(this.table()).put(this);
+  }
+}
+
+// new CustomEntityType() - cannot call ctor - only from db
 
 interface DexieDataItem {
   id: number;
@@ -95,7 +146,7 @@ const dbCompound = dexieFactory(
   },
   "DemoDexieCompound"
 );
-dbCompound.on("populate", (tx) => {
+dbCompound.on("populate", async (tx) => {
   tx.data.add({
     id: 1,
     numberValue: 42,
@@ -104,7 +155,7 @@ dbCompound.on("populate", (tx) => {
     arrayKey: ["1", "2"],
     nested,
   });
-  tx.data.add({
+  const key = await tx.data.add({
     id: 2,
     numberValue: 43,
     stringValue: "Hi",
@@ -112,6 +163,7 @@ dbCompound.on("populate", (tx) => {
     arrayKey: ["1", "2", "3"],
     nested,
   });
+  key.toFixed(2);
 });
 
 // demo that can have a primary key based on a property of the type

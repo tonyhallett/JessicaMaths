@@ -49,34 +49,6 @@ export type OptionalPrimaryKeys<
   ? OptionalByPath<T, Split<TKey>>
   : T;
 
-/* type DeleteByPath<T, Parts extends readonly string[]> = Parts extends [
-  infer Head,
-  ...infer Rest
-]
-  ? Head extends keyof T
-    ? Rest extends []
-      ? Omit<T, Head>
-      : Omit<T, Head> & {
-          [K in Head]: DeleteByPath<T[Head], Extract<Rest, string[]>>;
-        }
-    : T
-  : T;
-
-export type DeletePrimaryKeys<
-  T,
-  TKey extends string | readonly string[]
-> = TKey extends readonly string[]
-  ? TKey extends [infer First, ...infer Rest]
-    ? First extends string
-      ? Rest extends readonly string[]
-        ? DeletePrimaryKeys<OptionalByPath<T, Split<First>>, Rest>
-        : DeleteByPath<T, Split<First>>
-      : T
-    : T
-  : TKey extends string
-  ? DeleteByPath<T, Split<TKey>>
-  : T; */
-
 // Recursively remove a nested key path from T, preserving optionality
 type DeleteByPath<T, Parts extends readonly string[]> = Parts extends [
   infer Head,

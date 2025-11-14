@@ -173,24 +173,28 @@ type KeyPathTable<
   get(key: PrimaryKey<T, TKey>): PromiseExtended<T | undefined>;
   bulkGet(keys: KeyPathValue<T, TKey>[]): PromiseExtended<(T | undefined)[]>;
 
-  add(item: T): PromiseExtended<TKey>;
+  add(item: T): PromiseExtended<PrimaryKey<T, TKey>>;
   // can probably remove this overload - this table entries already have the primary key
   bulkAdd<B extends boolean>(
     items: readonly T[],
     options: {
       allKeys: B;
     }
-  ): PromiseExtended<B extends true ? TKey[] : TKey>;
-  bulkAdd(items: readonly T[]): PromiseExtended<TKey>;
-  put(item: T): PromiseExtended<TKey>;
+  ): PromiseExtended<
+    B extends true ? PrimaryKey<T, TKey>[] : PrimaryKey<T, TKey>
+  >;
+  bulkAdd(items: readonly T[]): PromiseExtended<PrimaryKey<T, TKey>>;
+  put(item: T): PromiseExtended<PrimaryKey<T, TKey>>;
   // can probably remove this overload - this table entries already have the primary key
   bulkPut<B extends boolean>(
     items: readonly T[],
     options: {
       allKeys: B;
     }
-  ): PromiseExtended<B extends true ? TKey[] : TKey>;
-  bulkPut(items: readonly T[]): PromiseExtended<TKey>;
+  ): PromiseExtended<
+    B extends true ? PrimaryKey<T, TKey>[] : PrimaryKey<T, TKey>
+  >;
+  bulkPut(items: readonly T[]): PromiseExtended<PrimaryKey<T, TKey>>;
 
   // https://dexie.org/docs/Table/Table.update()
   update(
