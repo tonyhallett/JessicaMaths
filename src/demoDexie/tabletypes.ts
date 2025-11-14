@@ -140,6 +140,7 @@ export interface TableBase<
   mapToClass(constructor: Function): Function;
 
   delete(key: PrimaryKey<T, TKey>): PromiseExtended<void>;
+  bulkDelete(keys: PrimaryKey<T, TKey>[]): PromiseExtended<void>;
   clear(): PromiseExtended<void>;
 }
 
