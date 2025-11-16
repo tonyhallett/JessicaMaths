@@ -346,6 +346,7 @@ const dbEntityExclude = dexieFactory(
   "DemoDexieEntityExclude"
 );
 dbEntityExclude.on("populate", (tx) => {
+  tx.data.add({ id: 1 });
   // tx.data.add({ id: 1, str: "Hello" }); error on excluded str property
 });
 
