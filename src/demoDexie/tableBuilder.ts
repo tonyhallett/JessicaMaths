@@ -17,7 +17,8 @@ export interface TableConfig<
   PK extends DexiePlainKey<T>,
   Auto extends boolean,
   Indices extends DexieIndexes<T>,
-  TInsert = T
+  TInsert = T,
+  TGet = T
 > {
   readonly pk: { key: PK; auto: Auto };
   readonly indicesSchema: string;
@@ -46,7 +47,8 @@ export interface IndexMethods<
   K extends DexiePlainKey<T>,
   Auto extends boolean,
   Indices extends DexieIndexes<T>,
-  TInsert = T
+  TInsert = T,
+  TGet = T
 > {
   index<I extends ValidIndexedDBKeyPaths<T>>(
     indexKey: I
@@ -60,7 +62,7 @@ export interface IndexMethods<
   compound<I extends ValidIndexedDBKeyPaths<T>[]>(
     ...indexKeys: I
   ): IndexMethods<T, K, Auto, [...Indices, CompoundIndex<T, I>]>;
-  build(): TableConfig<T, K, Auto, Indices, TInsert>;
+  build(): TableConfig<T, K, Auto, Indices, TInsert, TGet>;
 }
 
 const isDistinctArray = (arr: readonly any[]): boolean => {
@@ -166,7 +168,8 @@ export function tableClassBuilder<
     K,
     Auto,
     Indices,
-    Auto extends true ? OptionalPrimaryKeys<TInsert, K> : TInsert
+    Auto extends true ? OptionalPrimaryKeys<TInsert, K> : TInsert,
+    TEntity
   > {
     return {
       index(indexKey) {

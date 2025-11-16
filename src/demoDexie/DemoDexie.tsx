@@ -315,7 +315,10 @@ db.data.upsert(1, {
 // todo - support db.transaction("rw", [db.data, "other"],"else", (tx) => {
 
 class EntityClass {
-  id: number = 0;
+  constructor(id: number) {
+    this.id = id;
+  }
+  id: number;
   str: string = "";
   method() {}
 }
@@ -329,6 +332,7 @@ const dbEntity = dexieFactory(
 );
 dbEntity.on("populate", (tx) => {
   tx.data.add({ id: 1, str: "Hello" });
+  tx.data.add(new EntityClass(2));
   // tx.data.add({ str: "Hello" }); error - id is required
 });
 
@@ -346,8 +350,13 @@ const dbEntityExclude = dexieFactory(
   "DemoDexieEntityExclude"
 );
 dbEntityExclude.on("populate", (tx) => {
+  tx.data.add(new EntityClass(2));
   tx.data.add({ id: 1 });
   // tx.data.add({ id: 1, str: "Hello" }); error on excluded str property
+});
+
+dbEntityExclude.data.get(1).then((item) => {
+  item?.str;
 });
 
 export const DemoDexie = () => {

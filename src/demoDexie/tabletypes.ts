@@ -28,7 +28,8 @@ export type DBTables<
     infer PK,
     infer Auto,
     infer Indices,
-    infer TInsert
+    infer TInsert,
+    infer TGet
   >
     ? PK extends never
       ? Auto extends true
@@ -36,7 +37,7 @@ export type DBTables<
         : never
       : Auto extends true
       ? never
-      : KeyPathTable<K, TRow, PK, Indices, TInsert>
+      : KeyPathTable<K, TRow, PK, Indices, TInsert, TGet>
     : never;
 };
 
@@ -169,11 +170,12 @@ type KeyPathTable<
   T,
   TKey extends DexiePlainKey<T>,
   TIndexes extends DexieIndexes<T>,
-  TInsert = T
+  TInsert = T,
+  TGet = T
 > = TableBase<TName, T, TKey, TIndexes> & {
   // todo object overload
-  get(key: PrimaryKey<T, TKey>): PromiseExtended<T | undefined>;
-  bulkGet(keys: KeyPathValue<T, TKey>[]): PromiseExtended<(T | undefined)[]>;
+  get(key: PrimaryKey<T, TKey>): PromiseExtended<TGet | undefined>;
+  bulkGet(keys: KeyPathValue<T, TKey>[]): PromiseExtended<(TGet | undefined)[]>;
 
   add(item: TInsert): PromiseExtended<PrimaryKey<T, TKey>>;
   // can probably remove this overload - this table entries already have the primary key
