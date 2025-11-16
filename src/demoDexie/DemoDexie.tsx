@@ -357,16 +357,12 @@ const dbEntityExclude = dexieFactory(
 dbEntityExclude.on("populate", (tx) => {
   tx.excludedEntity.add({ id: 1 });
   // tx.data.add({ id: 1, str: "Hello" }); error on excluded str property
-  // Typescript allows add via instance - but addon will throw
+  // Typescript allows add via instance - but addon will filter excluded keys
   tx.excludedEntity.add(new EntityClass(2));
 });
 
 dbEntityExclude.excludedEntity.get(1).then((item) => {
   item?.method();
-});
-
-dbEntityExclude.excludedEntity.add(new EntityClass(3)).catch((error) => {
-  console.log("Error adding entity with excluded keys:", error);
 });
 
 export const DemoDexie = () => {
