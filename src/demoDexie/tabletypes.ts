@@ -27,7 +27,8 @@ export type DBTables<
     infer TRow,
     infer PK,
     infer Auto,
-    infer Indices
+    infer Indices,
+    infer TInsert
   >
     ? PK extends never
       ? Auto extends true
@@ -35,7 +36,7 @@ export type DBTables<
         : never
       : Auto extends true
       ? never
-      : KeyPathTable<K, TRow, PK, Indices>
+      : KeyPathTable<K, TRow, PK, Indices, TInsert>
     : never;
 };
 
@@ -167,47 +168,48 @@ type KeyPathTable<
   TName extends string,
   T,
   TKey extends DexiePlainKey<T>,
-  TIndexes extends DexieIndexes<T>
+  TIndexes extends DexieIndexes<T>,
+  TInsert = T
 > = TableBase<TName, T, TKey, TIndexes> & {
   // todo object overload
   get(key: PrimaryKey<T, TKey>): PromiseExtended<T | undefined>;
   bulkGet(keys: KeyPathValue<T, TKey>[]): PromiseExtended<(T | undefined)[]>;
 
-  add(item: T): PromiseExtended<PrimaryKey<T, TKey>>;
+  add(item: TInsert): PromiseExtended<PrimaryKey<T, TKey>>;
   // can probably remove this overload - this table entries already have the primary key
   bulkAdd<B extends boolean>(
-    items: readonly T[],
+    items: readonly TInsert[],
     options: {
       allKeys: B;
     }
   ): PromiseExtended<
     B extends true ? PrimaryKey<T, TKey>[] : PrimaryKey<T, TKey>
   >;
-  bulkAdd(items: readonly T[]): PromiseExtended<PrimaryKey<T, TKey>>;
-  put(item: T): PromiseExtended<PrimaryKey<T, TKey>>;
+  bulkAdd(items: readonly TInsert[]): PromiseExtended<PrimaryKey<T, TKey>>;
+  put(item: TInsert): PromiseExtended<PrimaryKey<T, TKey>>;
   // can probably remove this overload - this table entries already have the primary key
   bulkPut<B extends boolean>(
-    items: readonly T[],
+    items: readonly TInsert[],
     options: {
       allKeys: B;
     }
   ): PromiseExtended<
     B extends true ? PrimaryKey<T, TKey>[] : PrimaryKey<T, TKey>
   >;
-  bulkPut(items: readonly T[]): PromiseExtended<PrimaryKey<T, TKey>>;
+  bulkPut(items: readonly TInsert[]): PromiseExtended<PrimaryKey<T, TKey>>;
 
   // https://dexie.org/docs/Table/Table.update()
   update(
     key: PrimaryKey<T, TKey>,
-    changes: UpdateSpec<T>
+    changes: UpdateSpec<TInsert>
   ): PromiseExtended<0 | 1>;
   update(
     key: PrimaryKey<T, TKey>,
-    changes: ChangeCallback<T>
+    changes: ChangeCallback<TInsert>
   ): PromiseExtended<0 | 1>;
   // note that docs do not mention this ( as the key must exist on the object - so ok for this table type )
-  update(object: T, changes: UpdateSpec<T>): PromiseExtended<0 | 1>;
-  update(object: T, changes: ChangeCallback<T>): PromiseExtended<0 | 1>;
+  update(object: T, changes: UpdateSpec<TInsert>): PromiseExtended<0 | 1>;
+  update(object: T, changes: ChangeCallback<TInsert>): PromiseExtended<0 | 1>;
   bulkUpdate(changes: BulkUpdate<T, TKey>[]): PromiseExtended<number>;
   /*
     dexie typescript incorrectly allows T for the key

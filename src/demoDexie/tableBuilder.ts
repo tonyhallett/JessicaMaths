@@ -1,4 +1,4 @@
-import type { KeyPathValue } from "dexie";
+import type { KeyPathValue, InsertType } from "dexie";
 import type {
   DexiePlainKey,
   DexieIndexes,
@@ -10,12 +10,14 @@ import type {
   AllowedKeyLeaf,
   ValidIndexedDBKeyPaths,
 } from "./ValidIndexedDBKeyPaths";
+import type { OptionalPrimaryKeys } from "./utilitytypes";
 
 export interface TableConfig<
   T,
   PK extends DexiePlainKey<T>,
   Auto extends boolean,
-  Indices extends DexieIndexes<T>
+  Indices extends DexieIndexes<T>,
+  TInsert = T
 > {
   readonly pk: { key: PK; auto: Auto };
   readonly indicesSchema: string;
@@ -43,7 +45,8 @@ export interface IndexMethods<
   T,
   K extends DexiePlainKey<T>,
   Auto extends boolean,
-  Indices extends DexieIndexes<T>
+  Indices extends DexieIndexes<T>,
+  TInsert = T
 > {
   index<I extends ValidIndexedDBKeyPaths<T>>(
     indexKey: I
@@ -57,7 +60,7 @@ export interface IndexMethods<
   compound<I extends ValidIndexedDBKeyPaths<T>[]>(
     ...indexKeys: I
   ): IndexMethods<T, K, Auto, [...Indices, CompoundIndex<T, I>]>;
-  build(): TableConfig<T, K, Auto, Indices>;
+  build(): TableConfig<T, K, Auto, Indices, TInsert>;
 }
 
 const isDistinctArray = (arr: readonly any[]): boolean => {
@@ -112,6 +115,105 @@ export function tableBuilder<T>() {
           throw new Error("Duplicate indexes are not allowed");
         }
         const tableConfig: TableConfig<T, K, Auto, Indices> = {
+          pk: { key, auto },
+          indicesSchema: indexParts.join(", "),
+        };
+        return tableConfig;
+      },
+    };
+  }
+
+  return {
+    autoIncrement<K extends ValidIndexedDBKeyPaths<T, "", false>>(key: K) {
+      return createIndexMethods(key, true, []);
+    },
+    primaryKey<K extends ValidIndexedDBKeyPaths<T>>(key: K) {
+      return createIndexMethods(key, false, []);
+    },
+    compoundKey<const K extends ValidIndexedDBKeyPaths<T>[]>(keys: K) {
+      return createIndexMethods(keys, false, []);
+    },
+    hiddenAuto() {
+      return createIndexMethods(null as never, true, []);
+    },
+    hiddenExplicit<K>() {
+      return createIndexMethods(null as never, false, []);
+    },
+  };
+}
+
+export type ConstructorOf<T> = new (...args: any[]) => T;
+
+export function tableClassBuilder<
+  TEntity,
+  TExcludeProps extends keyof TEntity = never
+>(ctor: ConstructorOf<TEntity>) {
+  const indexParts: string[] = [];
+
+  type T = Omit<TEntity, TExcludeProps>;
+  type TInsert = InsertType<T, never>;
+
+  function createIndexMethods<
+    K extends ValidIndexedDBKeyPaths<T> | ValidIndexedDBKeyPaths<T>[],
+    Auto extends boolean,
+    Indices extends DexieIndexes<T>
+  >(
+    key: K,
+    auto: Auto,
+    indices: Indices
+  ): IndexMethods<
+    T,
+    K,
+    Auto,
+    Indices,
+    Auto extends true ? OptionalPrimaryKeys<TInsert, K> : TInsert
+  > {
+    return {
+      index(indexKey) {
+        indexParts.push(indexKey);
+        return createIndexMethods(key, auto, [
+          ...indices,
+          { kind: "single", path: indexKey, multi: false },
+        ]);
+      },
+      unique(indexKey) {
+        indexParts.push(`&${indexKey}`);
+        return createIndexMethods(key, auto, [
+          ...indices,
+          { kind: "single", path: indexKey, multi: false },
+        ]);
+      },
+      multi(indexKey) {
+        indexParts.push(`*${indexKey}`);
+        return createIndexMethods(key, auto, [
+          ...indices,
+          { kind: "multi", path: indexKey, multi: true },
+        ]);
+      },
+      compound(...keys) {
+        if (!isDistinctArray(keys)) {
+          throw new Error("Duplicate keys in compound index are not allowed");
+        }
+        if (keys.length < 2) {
+          throw new Error("Compound index must have at least two keys");
+        }
+        indexParts.push(`[${keys.join("+")}]`);
+        return createIndexMethods(key, auto, [
+          ...indices,
+          { kind: "compound", paths: keys },
+        ]);
+      },
+      build() {
+        if (!isDistinctArray(indexParts)) {
+          throw new Error("Duplicate indexes are not allowed");
+        }
+        const tableConfig: TableConfig<
+          T,
+          K,
+          Auto,
+          Indices,
+          OptionalPrimaryKeys<TInsert, K>
+        > = {
           pk: { key, auto },
           indicesSchema: indexParts.join(", "),
         };

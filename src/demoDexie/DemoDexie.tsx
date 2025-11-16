@@ -8,7 +8,7 @@ import Dexie, {
   type InsertType,
   type UpdateSpec,
 } from "dexie";
-import { tableBuilder } from "./tablebuilder";
+import { tableBuilder, tableClassBuilder } from "./tablebuilder";
 import { ObjectPropModification, safeRemove } from "./ObjectPropModification";
 
 type ConstructorOf<T> = new (...args: any[]) => T & { prototype: T };
@@ -313,6 +313,41 @@ db.data.upsert(1, {
   },
 });
 // todo - support db.transaction("rw", [db.data, "other"],"else", (tx) => {
+
+class EntityClass {
+  id: number = 0;
+  str: string = "";
+  method() {}
+}
+
+const dbEntity = dexieFactory(
+  1,
+  {
+    data: tableClassBuilder<EntityClass>(EntityClass).primaryKey("id").build(),
+  },
+  "DemoDexieEntity"
+);
+dbEntity.on("populate", (tx) => {
+  tx.data.add({ id: 1, str: "Hello" });
+  // tx.data.add({ str: "Hello" }); error - id is required
+});
+
+dbEntity.data.get(1).then((item) => {
+  item?.method();
+});
+
+const dbEntityExclude = dexieFactory(
+  1,
+  {
+    data: tableClassBuilder<EntityClass, "str">(EntityClass)
+      .primaryKey("id")
+      .build(),
+  },
+  "DemoDexieEntityExclude"
+);
+dbEntityExclude.on("populate", (tx) => {
+  // tx.data.add({ id: 1, str: "Hello" }); error on excluded str property
+});
 
 export const DemoDexie = () => {
   return (
