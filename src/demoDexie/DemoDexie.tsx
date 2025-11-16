@@ -350,9 +350,10 @@ const dbEntityExclude = dexieFactory(
   "DemoDexieEntityExclude"
 );
 dbEntityExclude.on("populate", (tx) => {
-  tx.data.add(new EntityClass(2));
   tx.data.add({ id: 1 });
   // tx.data.add({ id: 1, str: "Hello" }); error on excluded str property
+  // BUT can still add via instance
+  tx.data.add(new EntityClass(2));
 });
 
 dbEntityExclude.data.get(1).then((item) => {
