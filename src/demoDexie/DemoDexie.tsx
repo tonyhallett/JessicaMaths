@@ -8,7 +8,11 @@ import Dexie, {
   type InsertType,
   type UpdateSpec,
 } from "dexie";
-import { tableBuilder, tableClassBuilder } from "./tablebuilder";
+import {
+  tableBuilder,
+  tableClassBuilder,
+  tableClassBuilderExcluded,
+} from "./tablebuilder";
 import { ObjectPropModification, safeRemove } from "./ObjectPropModification";
 
 type ConstructorOf<T> = new (...args: any[]) => T & { prototype: T };
@@ -326,7 +330,7 @@ class EntityClass {
 const dbEntity = dexieFactory(
   1,
   {
-    data: tableClassBuilder<EntityClass>(EntityClass).primaryKey("id").build(),
+    data: tableClassBuilder(EntityClass).primaryKey("id").build(),
   },
   "DemoDexieEntity"
 );
@@ -343,21 +347,26 @@ dbEntity.data.get(1).then((item) => {
 const dbEntityExclude = dexieFactory(
   1,
   {
-    data: tableClassBuilder<EntityClass, "str">(EntityClass)
+    excludedEntity: tableClassBuilderExcluded(EntityClass)
+      .excludedKeys(["str"])
       .primaryKey("id")
       .build(),
   },
   "DemoDexieEntityExclude"
 );
 dbEntityExclude.on("populate", (tx) => {
-  tx.data.add({ id: 1 });
+  tx.excludedEntity.add({ id: 1 });
   // tx.data.add({ id: 1, str: "Hello" }); error on excluded str property
-  // BUT can still add via instance
-  tx.data.add(new EntityClass(2));
+  // Typescript allows add via instance - but addon will throw
+  tx.excludedEntity.add(new EntityClass(2));
 });
 
-dbEntityExclude.data.get(1).then((item) => {
-  item?.str;
+dbEntityExclude.excludedEntity.get(1).then((item) => {
+  item?.method();
+});
+
+dbEntityExclude.excludedEntity.add(new EntityClass(3)).catch((error) => {
+  console.log("Error adding entity with excluded keys:", error);
 });
 
 export const DemoDexie = () => {

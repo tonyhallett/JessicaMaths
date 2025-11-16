@@ -3,6 +3,7 @@ import { buildStores } from "./buildStores";
 import type { DexieTypedTransaction } from "./DexieTypedTransaction";
 import type { TableConfig } from "./tablebuilder";
 import type { DBTables } from "./tabletypes";
+import { registerExcludedKeys } from "./ExcludedKeysAddOn";
 
 type TypedDexie<
   TConfig extends Record<string, TableConfig<any, any, any, any>>
@@ -14,6 +15,13 @@ export function dexieFactory<
   const db = new Dexie(databaseName) as unknown as TypedDexie<S>;
 
   db.version(version).stores(buildStores(tableConfigs));
-
+  for (const [name, cfg] of Object.entries(tableConfigs)) {
+    if (cfg.mapToClass) {
+      db.table(name).mapToClass(cfg.mapToClass);
+    }
+    if (cfg.excludedKeys) {
+      registerExcludedKeys(name, cfg.excludedKeys);
+    }
+  }
   return db;
 }
