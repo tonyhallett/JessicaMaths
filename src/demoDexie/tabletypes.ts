@@ -21,10 +21,10 @@ import type { TableConfig } from "./tablebuilder";
 import type { DeletePrimaryKeys, RequiredOnlyDeep } from "./utilitytypes";
 
 export type DBTables<
-  TConfig extends Record<string, TableConfig<any, any, any, any>>
+  TConfig extends Record<string, TableConfig<any, any, any, any, any, any>>
 > = {
-  [K in keyof TConfig & string]: TConfig[K] extends TableConfig<
-    infer TRow,
+  [TName in keyof TConfig & string]: TConfig[TName] extends TableConfig<
+    infer T,
     infer PK,
     infer Auto,
     infer Indices,
@@ -37,7 +37,7 @@ export type DBTables<
         : never
       : Auto extends true
       ? never
-      : KeyPathTable<K, TRow, PK, Indices, TInsert, TGet>
+      : KeyPathTable<TName, T, PK, Indices, TInsert, TGet>
     : never;
 };
 

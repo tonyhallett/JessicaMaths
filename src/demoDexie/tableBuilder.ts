@@ -230,7 +230,8 @@ export function tableClassBuilderExcluded<
               K,
               Auto,
               Indices,
-              OptionalPrimaryKeys<TInsert, K>
+              Auto extends true ? OptionalPrimaryKeys<TInsert, K> : TInsert,
+              TEntity
             > = {
               pk: { key, auto },
               indicesSchema: indexParts.join(", "),
