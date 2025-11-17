@@ -1,63 +1,63 @@
 import type { KeyPathValue } from "dexie";
 import type { Collection } from "./Collection";
 import type {
-  CompoundIndex,
-  DexieIndex,
-  DexieIndexes,
-  MultiIndex,
-  SingleIndex,
+  CompoundIndexPaths,
+  DexieIndexPath,
+  DexieIndexPaths,
+  MultiIndexPath,
+  SingleIndexPath,
 } from "./dexieindexes";
 import type { KeyForIndex } from "./tabletypes";
-import type { ValidIndexedDBKeyPaths } from "./ValidIndexedDBKeyPaths";
+import type { ValidIndexedDBKeyPath } from "./ValidIndexedDBKeyPaths";
 import type { UnionToIntersection } from "./utilitytypes";
 
 export type WhereClausesFromIndexes<
   T,
   TPKey,
-  TIndexes extends DexieIndexes<T>,
+  TIndexPaths extends DexieIndexPaths<T>,
   TMethodName extends string = "where"
 > = UnionToIntersection<
-  WhereClauseFor<T, TPKey, TIndexes[number], TIndexes, TMethodName>
+  WhereClauseFor<T, TPKey, TIndexPaths[number], TIndexPaths, TMethodName>
 >;
 
 type WhereClauseFor<
   T,
   TPKey,
-  I extends DexieIndex<T>,
-  TIndexes extends DexieIndexes<T>,
+  I extends DexieIndexPath<T>,
+  TIndexPaths extends DexieIndexPaths<T>,
   TMethodName extends string
-> = I extends SingleIndex<T, infer P>
-  ? WhereForSingle<T, TPKey, P, I, TIndexes, TMethodName>
-  : I extends MultiIndex<T, infer P>
-  ? WhereForMulti<T, TPKey, P, I, TIndexes, TMethodName>
-  : I extends CompoundIndex<T, infer Ps>
+> = I extends SingleIndexPath<T, infer P>
+  ? WhereForSingle<T, TPKey, P, I, TIndexPaths, TMethodName>
+  : I extends MultiIndexPath<T, infer P>
+  ? WhereForMulti<T, TPKey, P, I, TIndexPaths, TMethodName>
+  : I extends CompoundIndexPaths<T, infer Ps>
   ? never //WhereForCompound<T, Ps, I>
   : never;
 
 type WhereForSingle<
   T,
   PKey,
-  P extends ValidIndexedDBKeyPaths<T>,
-  I extends SingleIndex<T, P>,
-  TIndexes extends DexieIndexes<T>,
+  P extends ValidIndexedDBKeyPath<T>,
+  I extends SingleIndexPath<T, P>,
+  TIndexPaths extends DexieIndexPaths<T>,
   TMethodName extends string
 > = {
   [K in TMethodName]: (
     path: I["path"]
-  ) => WhereClause<T, PKey, KeyPathValue<T, I["path"]>, TIndexes>;
+  ) => WhereClause<T, PKey, KeyPathValue<T, I["path"]>, TIndexPaths>;
 };
 
 type WhereForMulti<
   T,
   PKey,
-  P extends ValidIndexedDBKeyPaths<T>,
-  I extends MultiIndex<T, P>,
-  TIndexes extends DexieIndexes<T>,
+  P extends ValidIndexedDBKeyPath<T>,
+  I extends MultiIndexPath<T, P>,
+  TIndexPaths extends DexieIndexPaths<T>,
   TMethodName extends string
 > = {
   [K in TMethodName]: (
     path: I["path"]
-  ) => WhereClause<T, PKey, KeyForIndex<T, I>, TIndexes>;
+  ) => WhereClause<T, PKey, KeyForIndex<T, I>, TIndexPaths>;
 };
 
 /* 
@@ -70,65 +70,67 @@ type WhereForCompound<
   where(paths: I["paths"]): CompoundWhereClause<T>;
 }; */
 
-interface Prefixes<T, TPkey, TIndexes extends DexieIndexes<T>> {
-  (prefixes: string[]): Collection<T, TPkey, string, TIndexes>;
-  (...prefixes: string[]): Collection<T, TPkey, string, TIndexes>;
+interface Prefixes<T, TPkey, TIndexPaths extends DexieIndexPaths<T>> {
+  (prefixes: string[]): Collection<T, TPkey, string, TIndexPaths>;
+  (...prefixes: string[]): Collection<T, TPkey, string, TIndexPaths>;
 }
 
-interface ValuesOf<T, TPkey, Key, TIndexes extends DexieIndexes<T>> {
-  (values: readonly Key[]): Collection<T, TPkey, Key, TIndexes>;
-  (...values: readonly Key[]): Collection<T, TPkey, Key, TIndexes>;
+interface ValuesOf<T, TPkey, Key, TIndexPaths extends DexieIndexPaths<T>> {
+  (values: readonly Key[]): Collection<T, TPkey, Key, TIndexPaths>;
+  (...values: readonly Key[]): Collection<T, TPkey, Key, TIndexPaths>;
 }
 
-interface WhereStringClause<T, TPkey, TIndexes extends DexieIndexes<T>> {
+interface WhereStringClause<T, TPkey, TIndexPaths extends DexieIndexPaths<T>> {
   //https://dexie.org/docs/WhereClause/WhereClause.anyOfIgnoreCase()
-  anyOfIgnoreCase: ValuesOf<T, TPkey, string, TIndexes>;
+  anyOfIgnoreCase: ValuesOf<T, TPkey, string, TIndexPaths>;
 
   // https://dexie.org/docs/WhereClause/WhereClause.equalsIgnoreCase()
-  equalsIgnoreCase(value: string): Collection<T, TPkey, string, TIndexes>;
+  equalsIgnoreCase(value: string): Collection<T, TPkey, string, TIndexPaths>;
   // https://dexie.org/docs/WhereClause/WhereClause.startsWith()
-  startsWith(prefix: string): Collection<T, TPkey, string, TIndexes>;
+  startsWith(prefix: string): Collection<T, TPkey, string, TIndexPaths>;
   // https://dexie.org/docs/WhereClause/WhereClause.startsWithIgnoreCase()
-  startsWithIgnoreCase(prefix: string): Collection<T, TPkey, string, TIndexes>;
+  startsWithIgnoreCase(
+    prefix: string
+  ): Collection<T, TPkey, string, TIndexPaths>;
 
   // https://dexie.org/docs/WhereClause/WhereClause.startsWithAnyOf()
-  startsWithAnyOf: Prefixes<T, TPkey, TIndexes>;
+  startsWithAnyOf: Prefixes<T, TPkey, TIndexPaths>;
 
   // https://dexie.org/docs/WhereClause/WhereClause.startsWithAnyOfIgnoreCase()
-  startsWithAnyOfIgnoreCase: Prefixes<T, TPkey, TIndexes>;
+  startsWithAnyOfIgnoreCase: Prefixes<T, TPkey, TIndexPaths>;
 }
 
 export type WhereClause<
   T,
   TPkey,
   Key,
-  TIndexes extends DexieIndexes<T>
-> = WhereClauseNonStrings<T, TPkey, Key, TIndexes> &
-  (Key extends string ? WhereStringClause<T, TPkey, TIndexes> : {});
+  TIndexPaths extends DexieIndexPaths<T>
+> = WhereClauseNonStrings<T, TPkey, Key, TIndexPaths> &
+  (Key extends string ? WhereStringClause<T, TPkey, TIndexPaths> : {});
 
 export interface WhereClauseNonStrings<
   T,
   TPkey,
   Key,
-  TIndexes extends DexieIndexes<T>
+  TIndexPaths extends DexieIndexPaths<T>
 > {
   // https://dexie.org/docs/WhereClause/WhereClause.above()
-  above(value: Key): Collection<T, TPkey, Key, TIndexes>;
+  above(value: Key): Collection<T, TPkey, Key, TIndexPaths>;
   // https://dexie.org/docs/WhereClause/WhereClause.aboveOrEqual()
-  aboveOrEqual(value: Key): Collection<T, TPkey, Key, TIndexes>;
+  aboveOrEqual(value: Key): Collection<T, TPkey, Key, TIndexPaths>;
   // https://dexie.org/docs/WhereClause/WhereClause.below()
-  below(value: Key): Collection<T, TPkey, Key, TIndexes>;
+  below(value: Key): Collection<T, TPkey, Key, TIndexPaths>;
   // https://dexie.org/docs/WhereClause/WhereClause.belowOrEqual()
-  belowOrEqual(key: Key): Collection<T, TPkey, Key, TIndexes>;
+  belowOrEqual(key: Key): Collection<T, TPkey, Key, TIndexPaths>;
   // https://dexie.org/docs/WhereClause/WhereClause.equals()
-  equals(value: Key): Collection<T, TPkey, Key, TIndexes>;
+  equals(value: Key): Collection<T, TPkey, Key, TIndexPaths>;
   // https://dexie.org/docs/WhereClause/WhereClause.anyOf()
 
-  anyOf: ValuesOf<T, TPkey, Key, TIndexes>;
+  anyOf: ValuesOf<T, TPkey, Key, TIndexPaths>;
   // https://dexie.org/docs/WhereClause/WhereClause.notEqual()
-  notEqual(value: Key): Collection<T, TPkey, Key, TIndexes>;
+  notEqual(value: Key): Collection<T, TPkey, Key, TIndexPaths>;
   // https://dexie.org/docs/WhereClause/WhereClause.noneOf()
-  noneOf: ValuesOf<T, TPkey, Key, TIndexes>;
+  noneOf: ValuesOf<T, TPkey, Key, TIndexPaths>;
 
   // https://dexie.org/docs/WhereClause/WhereClause.between()
   between(
@@ -136,7 +138,7 @@ export interface WhereClauseNonStrings<
     upper: Key,
     includeLower?: boolean,
     includeUpper?: boolean
-  ): Collection<T, TPkey, Key, TIndexes>;
+  ): Collection<T, TPkey, Key, TIndexPaths>;
 
   // https://dexie.org/docs/WhereClause/WhereClause.inAnyRange()
   inAnyRange(
@@ -145,7 +147,7 @@ export interface WhereClauseNonStrings<
       includeLowers?: boolean;
       includeUppers?: boolean;
     }
-  ): Collection<T, TPkey, Key, TIndexes>;
+  ): Collection<T, TPkey, Key, TIndexPaths>;
 }
 
 type MultiWhereClause<T> = {

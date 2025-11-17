@@ -88,7 +88,7 @@ export type FilePathProperties<
 
 // ---------- Main recursive type ----------
 
-export type ValidIndexedDBKeyPaths<
+export type ValidIndexedDBKeyPath<
   T,
   Prefix extends string = NoPefix,
   TAllowTypeSpecificProperties extends boolean = true
@@ -111,7 +111,7 @@ export type ValidIndexedDBKeyPaths<
             TAllowTypeSpecificProperties
           >
         : Elem extends object
-        ? ValidIndexedDBKeyPaths<
+        ? ValidIndexedDBKeyPath<
             Elem,
             WithSuffix<Prefix, P>,
             TAllowTypeSpecificProperties
@@ -119,7 +119,7 @@ export type ValidIndexedDBKeyPaths<
         : never
       : never
     : T[P] extends object
-    ? ValidIndexedDBKeyPaths<
+    ? ValidIndexedDBKeyPath<
         T[P],
         WithSuffix<Prefix, P>,
         TAllowTypeSpecificProperties

@@ -19,7 +19,7 @@ export function dexieFactory<
     if (cfg.mapToClass) {
       db.table(name).mapToClass(cfg.mapToClass);
     }
-    if (cfg.excludedKeys) {
+    if (cfg.excludedKeys && cfg.excludedKeys.length > 0) {
       registerExcludedKeys(name, cfg.excludedKeys);
     }
   }

@@ -1,5 +1,5 @@
 import type { PromiseExtended } from "dexie";
-import type { DexieIndexes } from "./dexieindexes";
+import type { DexieIndexPaths } from "./dexieindexes";
 import type { WhereClausesFromIndexes } from "./where";
 import type { UpdateSpec } from "dexie";
 
@@ -39,17 +39,20 @@ export type DotKeyComparable<TValue> = IsAny<TValue> extends true
 
 export type DotKey<T> = DotNestedKeys<T>;
 
-export type AndFilter<T, TPkey, TKey, TIndexes extends DexieIndexes<T>> = (
-  filter: (x: T) => boolean
-) => Collection<T, TPkey, TKey, TIndexes>;
+export type AndFilter<
+  T,
+  TPkey,
+  TKey,
+  TIndexPaths extends DexieIndexPaths<T>
+> = (filter: (x: T) => boolean) => Collection<T, TPkey, TKey, TIndexPaths>;
 
 export type Collection<
   T,
   PKey,
   TKey,
-  TIndexes extends DexieIndexes<T>
-> = CollectionBase<T, PKey, TKey, TIndexes> &
-  WhereClausesFromIndexes<T, PKey, TIndexes, "or">;
+  TIndexPaths extends DexieIndexPaths<T>
+> = CollectionBase<T, PKey, TKey, TIndexPaths> &
+  WhereClausesFromIndexes<T, PKey, TIndexPaths, "or">;
 
 export interface Cursor<TKey, TPkey> {
   key: TKey;
@@ -64,7 +67,12 @@ export interface ChangeCallback<T> {
   (obj: T, ctx: { value: T }): void | boolean;
 }
 
-interface CollectionBase<T, TPkey, TKey, TIndexes extends DexieIndexes<T>> {
+interface CollectionBase<
+  T,
+  TPkey,
+  TKey,
+  TIndexPaths extends DexieIndexPaths<T>
+> {
   //db: Database;
   // then shortcuts
   // count<R>(thenShortcut: ThenShortcut<number, R>): PromiseExtended<R>
@@ -75,7 +83,7 @@ interface CollectionBase<T, TPkey, TKey, TIndexes extends DexieIndexes<T>> {
   // sortBy<R>(keyPath: string, thenShortcut: ThenShortcut<T[], R>): PromiseExtended<R>
   // toArray<R>(thenShortcut: ThenShortcut<T[], R>): PromiseExtended<R>
   // uniqueKeys<R>(thenShortcut: ThenShortcut<IndexableTypeArray, R>): PromiseExtended<R>
-  clone(props?: Object): Collection<T, TPkey, TKey, TIndexes>;
+  clone(props?: Object): Collection<T, TPkey, TKey, TIndexPaths>;
 
   count(): PromiseExtended<number>;
 
@@ -111,18 +119,18 @@ interface CollectionBase<T, TPkey, TKey, TIndexes extends DexieIndexes<T>> {
 
   first(): PromiseExtended<T | undefined>;
   last(): PromiseExtended<T | undefined>;
-  limit(n: number): Collection<T, TPkey, TKey, TIndexes>;
+  limit(n: number): Collection<T, TPkey, TKey, TIndexPaths>;
   // https://dexie.org/docs/Collection/Collection.until()  works similar to limit
   until(
     filter: (value: T) => boolean,
     includeStopEntry?: boolean
-  ): Collection<T, TPkey, TKey, TIndexes>;
-  offset(n: number): Collection<T, TPkey, TKey, TIndexes>;
-  and: AndFilter<T, TPkey, TKey, TIndexes>;
-  filter: AndFilter<T, TPkey, TKey, TIndexes>;
-  distinct(): Collection<T, TPkey, TKey, TIndexes>;
+  ): Collection<T, TPkey, TKey, TIndexPaths>;
+  offset(n: number): Collection<T, TPkey, TKey, TIndexPaths>;
+  and: AndFilter<T, TPkey, TKey, TIndexPaths>;
+  filter: AndFilter<T, TPkey, TKey, TIndexPaths>;
+  distinct(): Collection<T, TPkey, TKey, TIndexPaths>;
 
-  reverse(): Collection<T, TPkey, TKey, TIndexes>;
+  reverse(): Collection<T, TPkey, TKey, TIndexPaths>;
   sortBy(keyPath: DotKeyComparable<T>): PromiseExtended<T[]>;
 
   // Mutating methods
@@ -133,5 +141,5 @@ interface CollectionBase<T, TPkey, TKey, TIndexes extends DexieIndexes<T>> {
 
   // Other methods
   // https://dexie.org/docs/Collection/Collection.raw()
-  raw(): Collection<T, TPkey, TKey, TIndexes>;
+  raw(): Collection<T, TPkey, TKey, TIndexPaths>;
 }

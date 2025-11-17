@@ -9,26 +9,25 @@ import type {
 } from "dexie";
 import type { ChangeCallback, Collection } from "./Collection";
 import type {
-  CompoundIndex,
-  DexieIndex,
-  DexieIndexes,
-  DexiePlainKey,
-  MultiIndex,
-  SingleIndex,
+  CompoundIndexPaths,
+  DexieIndexPath,
+  DexieIndexPaths,
+  MultiIndexPath,
+  SingleIndexPath,
 } from "./dexieindexes";
+import type { DexiePrimaryKeyPathOrPaths } from "./tablebuilder";
 import type { WhereClausesFromIndexes } from "./where";
 import type { TableConfig } from "./tablebuilder";
 import type { DeletePrimaryKeys, RequiredOnlyDeep } from "./utilitytypes";
 
 export type DBTables<
-  TConfig extends Record<string, TableConfig<any, any, any, any, any, any>>
+  TConfig extends Record<string, TableConfig<any, any, any, any, any>>
 > = {
   [TName in keyof TConfig & string]: TConfig[TName] extends TableConfig<
     infer T,
     infer PK,
     infer Auto,
     infer Indices,
-    infer TInsert,
     infer TGet
   >
     ? PK extends never
@@ -37,46 +36,49 @@ export type DBTables<
         : never
       : Auto extends true
       ? never
-      : KeyPathTable<TName, T, PK, Indices, TInsert, TGet>
+      : KeyPathTable<TName, T, PK, Indices, TGet>
     : never;
 };
 
-type IndexPath<T, I extends DexieIndex<T>> = I extends SingleIndex<T, infer P>
+type IndexPath<T, I extends DexieIndexPath<T>> = I extends SingleIndexPath<
+  T,
+  infer P
+>
   ? I["path"]
-  : I extends MultiIndex<T, infer P>
+  : I extends MultiIndexPath<T, infer P>
   ? I["path"]
-  : I extends CompoundIndex<T, infer Ps>
+  : I extends CompoundIndexPaths<T, infer Ps>
   ? I["paths"]
   : never;
 
 export type KeyForIndex<T, P> =
   // Single: key is the value stored at the path
-  P extends SingleIndex<T, infer Path>
+  P extends SingleIndexPath<T, infer Path>
     ? KeyPathValue<T, Path>
     : // Multi: the index points to an array field; collection key should be the element type
-    P extends MultiIndex<T, infer Path>
+    P extends MultiIndexPath<T, infer Path>
     ? KeyPathValue<T, Path> extends readonly (infer Elem)[]
       ? Elem
       : KeyPathValue<T, Path>
     : // Compound: tuple of the per-path key values
-    P extends CompoundIndex<T, infer Paths>
+    P extends CompoundIndexPaths<T, infer Paths>
     ? { [K in keyof Paths]: KeyPathValue<T, Paths[K] & string> } // keeps path order
     : never;
 
 type ExtractSelectedIndex<
   T,
-  TIndexes extends readonly DexieIndex<T>[],
+  TIndexes extends readonly DexieIndexPath<T>[],
   Path
 > = TIndexes[number] extends infer I
-  ? I extends SingleIndex<T, infer P>
+  ? I extends SingleIndexPath<T, infer P>
     ? Path extends P
       ? I
       : never
-    : I extends MultiIndex<T, infer P>
+    : I extends MultiIndexPath<T, infer P>
     ? Path extends P
       ? I
       : never
-    : I extends CompoundIndex<T, infer Ps>
+    : I extends CompoundIndexPaths<T, infer Ps>
     ? Path extends Ps
       ? I
       : never
@@ -85,16 +87,26 @@ type ExtractSelectedIndex<
 
 export type PrimaryKey<
   T,
-  TKey extends DexiePlainKey<T>
-> = TKey extends readonly any[]
-  ? { [I in keyof TKey]: KeyPathValue<T, TKey[I] & keyof T> }
-  : KeyPathValue<T, TKey & keyof T>;
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<T>
+> = TPKeyPathOrPaths extends readonly any[]
+  ? {
+      [I in keyof TPKeyPathOrPaths]: KeyPathValue<
+        T,
+        TPKeyPathOrPaths[I] & keyof T
+      >;
+    }
+  : KeyPathValue<T, TPKeyPathOrPaths & keyof T>;
 
 export type PrimaryKeyCollection<
   T,
-  TKey extends DexiePlainKey<T>,
-  TIndexes extends DexieIndexes<T>
-> = Collection<T, PrimaryKey<T, TKey>, PrimaryKey<T, TKey>, TIndexes>;
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<T>,
+  TIndexes extends DexieIndexPaths<T>
+> = Collection<
+  T,
+  PrimaryKey<T, TPKeyPathOrPaths>,
+  PrimaryKey<T, TPKeyPathOrPaths>,
+  TIndexes
+>;
 
 /*
   missing the table methods:
@@ -109,75 +121,91 @@ export type PrimaryKeyCollection<
 
 export interface TableBase<
   TName extends string,
-  T,
-  TKey extends DexiePlainKey<T>,
-  TIndexes extends DexieIndexes<T>
+  TInsert,
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TInsert>,
+  TIndexPaths extends DexieIndexPaths<TInsert>
 > {
   //db: Dexie;
   name: TName;
   schema: TableSchema;
-  hook: TableHooks<T, TKey>;
+  hook: TableHooks<TInsert, TPKeyPathOrPaths>;
   core: DBCoreTable;
 
   // filter(fn: (obj: T) => boolean): PrimaryKeyCollection<T, TKey, TIndexes>;
   // this.toCollection().and(filterFunction);
-  filter: PrimaryKeyCollection<T, TKey, TIndexes>["and"];
+  filter: PrimaryKeyCollection<TInsert, TPKeyPathOrPaths, TIndexPaths>["and"];
   count(): PromiseExtended<number>;
 
-  offset(n: number): PrimaryKeyCollection<T, TKey, TIndexes>;
-  limit(n: number): PrimaryKeyCollection<T, TKey, TIndexes>;
+  offset(
+    n: number
+  ): PrimaryKeyCollection<TInsert, TPKeyPathOrPaths, TIndexPaths>;
+  limit(
+    n: number
+  ): PrimaryKeyCollection<TInsert, TPKeyPathOrPaths, TIndexPaths>;
 
   // this.toCollection().each(callback);
-  each: PrimaryKeyCollection<T, TKey, TIndexes>["each"];
+  each: PrimaryKeyCollection<TInsert, TPKeyPathOrPaths, TIndexPaths>["each"];
 
   // this.toCollection().toArray(thenShortcut);
   // toArray(): PromiseExtended<Array<T>>;
-  toArray: PrimaryKeyCollection<T, TKey, TIndexes>["toArray"];
-  toCollection(): PrimaryKeyCollection<T, TKey, TIndexes>;
-  orderBy<Path extends IndexPath<T, TIndexes[number]>>(
+  toArray: PrimaryKeyCollection<
+    TInsert,
+    TPKeyPathOrPaths,
+    TIndexPaths
+  >["toArray"];
+  toCollection(): PrimaryKeyCollection<TInsert, TPKeyPathOrPaths, TIndexPaths>;
+  orderBy<Path extends IndexPath<TInsert, TIndexPaths[number]>>(
     index: Path
   ): Collection<
-    T,
-    KeyPathValue<T, TKey>,
-    KeyForIndex<T, ExtractSelectedIndex<T, TIndexes, Path>>,
-    TIndexes
+    TInsert,
+    KeyPathValue<TInsert, TPKeyPathOrPaths>,
+    KeyForIndex<TInsert, ExtractSelectedIndex<TInsert, TIndexPaths, Path>>,
+    TIndexPaths
   >;
-  reverse(): PrimaryKeyCollection<T, TKey, TIndexes>;
+  reverse(): PrimaryKeyCollection<TInsert, TPKeyPathOrPaths, TIndexPaths>;
   mapToClass(constructor: Function): Function;
 
-  delete(key: PrimaryKey<T, TKey>): PromiseExtended<void>;
-  bulkDelete(keys: PrimaryKey<T, TKey>[]): PromiseExtended<void>;
+  delete(key: PrimaryKey<TInsert, TPKeyPathOrPaths>): PromiseExtended<void>;
+  bulkDelete(
+    keys: PrimaryKey<TInsert, TPKeyPathOrPaths>[]
+  ): PromiseExtended<void>;
   clear(): PromiseExtended<void>;
 }
 
 type PrimaryKeyPaths<
   T,
-  TKey extends DexiePlainKey<T>
-> = TKey extends readonly (infer U)[]
+  TPKeyPathOrPths extends DexiePrimaryKeyPathOrPaths<T>
+> = TPKeyPathOrPths extends readonly (infer U)[]
   ? U extends string
     ? U
     : never
-  : TKey extends string
-  ? TKey
+  : TPKeyPathOrPths extends string
+  ? TPKeyPathOrPths
   : never;
-interface BulkUpdate<T, TKey extends DexiePlainKey<T>> {
-  key: PrimaryKey<T, TKey>;
-  changes: Omit<UpdateSpec<T>, PrimaryKeyPaths<T, TKey>>;
+interface BulkUpdate<
+  T,
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<T>
+> {
+  key: PrimaryKey<T, TPKeyPathOrPaths>;
+  changes: Omit<UpdateSpec<T>, PrimaryKeyPaths<T, TPKeyPathOrPaths>>;
 }
 
 type KeyPathTable<
   TName extends string,
-  T,
-  TKey extends DexiePlainKey<T>,
-  TIndexes extends DexieIndexes<T>,
-  TInsert = T,
-  TGet = T
-> = TableBase<TName, T, TKey, TIndexes> & {
+  TInsert,
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TInsert>,
+  TIndexPaths extends DexieIndexPaths<TInsert>,
+  TGet
+> = TableBase<TName, TInsert, TPKeyPathOrPaths, TIndexPaths> & {
   // todo object overload
-  get(key: PrimaryKey<T, TKey>): PromiseExtended<TGet | undefined>;
-  bulkGet(keys: KeyPathValue<T, TKey>[]): PromiseExtended<(TGet | undefined)[]>;
+  get(
+    key: PrimaryKey<TInsert, TPKeyPathOrPaths>
+  ): PromiseExtended<TGet | undefined>;
+  bulkGet(
+    keys: KeyPathValue<TInsert, TPKeyPathOrPaths>[]
+  ): PromiseExtended<(TGet | undefined)[]>;
 
-  add(item: TInsert): PromiseExtended<PrimaryKey<T, TKey>>;
+  add(item: TInsert): PromiseExtended<PrimaryKey<TInsert, TPKeyPathOrPaths>>;
   // can probably remove this overload - this table entries already have the primary key
   bulkAdd<B extends boolean>(
     items: readonly TInsert[],
@@ -185,10 +213,14 @@ type KeyPathTable<
       allKeys: B;
     }
   ): PromiseExtended<
-    B extends true ? PrimaryKey<T, TKey>[] : PrimaryKey<T, TKey>
+    B extends true
+      ? PrimaryKey<TInsert, TPKeyPathOrPaths>[]
+      : PrimaryKey<TInsert, TPKeyPathOrPaths>
   >;
-  bulkAdd(items: readonly TInsert[]): PromiseExtended<PrimaryKey<T, TKey>>;
-  put(item: TInsert): PromiseExtended<PrimaryKey<T, TKey>>;
+  bulkAdd(
+    items: readonly TInsert[]
+  ): PromiseExtended<PrimaryKey<TInsert, TPKeyPathOrPaths>>;
+  put(item: TInsert): PromiseExtended<PrimaryKey<TInsert, TPKeyPathOrPaths>>;
   // can probably remove this overload - this table entries already have the primary key
   bulkPut<B extends boolean>(
     items: readonly TInsert[],
@@ -196,23 +228,32 @@ type KeyPathTable<
       allKeys: B;
     }
   ): PromiseExtended<
-    B extends true ? PrimaryKey<T, TKey>[] : PrimaryKey<T, TKey>
+    B extends true
+      ? PrimaryKey<TInsert, TPKeyPathOrPaths>[]
+      : PrimaryKey<TInsert, TPKeyPathOrPaths>
   >;
-  bulkPut(items: readonly TInsert[]): PromiseExtended<PrimaryKey<T, TKey>>;
+  bulkPut(
+    items: readonly TInsert[]
+  ): PromiseExtended<PrimaryKey<TInsert, TPKeyPathOrPaths>>;
 
   // https://dexie.org/docs/Table/Table.update()
   update(
-    key: PrimaryKey<T, TKey>,
+    key: PrimaryKey<TInsert, TPKeyPathOrPaths>,
     changes: UpdateSpec<TInsert>
   ): PromiseExtended<0 | 1>;
   update(
-    key: PrimaryKey<T, TKey>,
+    key: PrimaryKey<TInsert, TPKeyPathOrPaths>,
     changes: ChangeCallback<TInsert>
   ): PromiseExtended<0 | 1>;
   // note that docs do not mention this ( as the key must exist on the object - so ok for this table type )
-  update(object: T, changes: UpdateSpec<TInsert>): PromiseExtended<0 | 1>;
-  update(object: T, changes: ChangeCallback<TInsert>): PromiseExtended<0 | 1>;
-  bulkUpdate(changes: BulkUpdate<T, TKey>[]): PromiseExtended<number>;
+  update(object: TInsert, changes: UpdateSpec<TInsert>): PromiseExtended<0 | 1>;
+  update(
+    object: TInsert,
+    changes: ChangeCallback<TInsert>
+  ): PromiseExtended<0 | 1>;
+  bulkUpdate(
+    changes: BulkUpdate<TInsert, TPKeyPathOrPaths>[]
+  ): PromiseExtended<number>;
   /*
     dexie typescript incorrectly allows T for the key
     upsert(key: TKey | T, changes: UpdateSpec<TInsertType>): PromiseExtended<boolean>;
@@ -225,16 +266,23 @@ type KeyPathTable<
     todo look at typing with dotted paths too
   */
   upsert(
-    key: PrimaryKey<T, TKey>,
-    spec: UpsertSpec<T, TKey>
+    key: PrimaryKey<TInsert, TPKeyPathOrPaths>,
+    spec: UpsertSpec<TInsert, TPKeyPathOrPaths>
   ): PromiseExtended<boolean>;
-} & WhereClausesFromIndexes<T, KeyPathValue<T, TKey>, TIndexes>;
+} & WhereClausesFromIndexes<
+    TInsert,
+    KeyPathValue<TInsert, TPKeyPathOrPaths>,
+    TIndexPaths
+  >;
 
-type UpsertSpec<T, TKey extends DexiePlainKey<T>> = DeletePrimaryKeys<
+type UpsertSpec<
+  T,
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<T>
+> = DeletePrimaryKeys<
   {
     [K in keyof RequiredOnlyDeep<T>]:
       | RequiredOnlyDeep<T>[K]
       | PropModification<RequiredOnlyDeep<T>[K]>;
   },
-  TKey
+  TPKeyPathOrPaths
 >;

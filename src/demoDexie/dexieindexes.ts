@@ -1,32 +1,27 @@
-import type { ValidIndexedDBKeyPaths } from "./ValidIndexedDBKeyPaths";
+import type { ValidIndexedDBKeyPath } from "./ValidIndexedDBKeyPaths";
 
-export type SingleIndex<T, P extends ValidIndexedDBKeyPaths<T>> = {
+export type CompoundKeyPaths<T> = ValidIndexedDBKeyPath<T>[];
+
+export type SingleIndexPath<T, P extends ValidIndexedDBKeyPath<T>> = {
   kind: "single";
   path: P;
   multi: false;
 };
 
-export type MultiIndex<T, P extends ValidIndexedDBKeyPaths<T>> = {
+export type MultiIndexPath<T, P extends ValidIndexedDBKeyPath<T>> = {
   kind: "multi";
   path: P;
   multi: true;
 };
 
-export type CompoundIndex<
-  T,
-  PS extends readonly ValidIndexedDBKeyPaths<T>[]
-> = {
+export type CompoundIndexPaths<T, PS extends CompoundKeyPaths<T>> = {
   kind: "compound";
   paths: PS;
 };
 
-export type DexieIndex<T> =
-  | SingleIndex<T, any>
-  | MultiIndex<T, any>
-  | CompoundIndex<T, any>;
+export type DexieIndexPath<T> =
+  | SingleIndexPath<T, any>
+  | MultiIndexPath<T, any>
+  | CompoundIndexPaths<T, any>;
 
-export type DexieIndexes<T> = readonly DexieIndex<T>[];
-
-export type DexiePlainKey<T> =
-  | ValidIndexedDBKeyPaths<T>
-  | readonly ValidIndexedDBKeyPaths<T>[];
+export type DexieIndexPaths<T> = readonly DexieIndexPath<T>[];
