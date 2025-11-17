@@ -3,9 +3,11 @@ import type {
   KeyPathValue,
   PromiseExtended,
   PropModification,
-  TableHooks,
+  DexieEvent,
+  DexieEventSet,
   TableSchema,
   UpdateSpec,
+  Transaction,
 } from "dexie";
 import type { ChangeCallback, Collection } from "./Collection";
 import type {
@@ -119,8 +121,68 @@ export type PrimaryKeyCollection<
 
 */
 
+export interface CreatingHookContext<TPKey> {
+  onsuccess?: (primKey: TPKey) => void;
+  onerror?: (err: any) => void;
+}
+export interface UpdatingHookContext<T> {
+  onsuccess?: (updatedObj: T) => void;
+  onerror?: (err: any) => void;
+}
+export interface DeletingHookContext<TPKey> {
+  onsuccess?: (primKey: TPKey) => void;
+  onerror?: (err: any) => void;
+}
+
+/*
+  considerations
+  add, put, update, delete result in these hooks
+  when not add dexie does DBCoreTable.getMany for existing object.
+*/
+export interface TableHooks<TInsert, TExisting, TPKey> extends DexieEventSet {
+  (
+    eventName: "creating",
+    subscriber: (
+      this: CreatingHookContext<TPKey>,
+      primKey: TPKey,
+      insert: TInsert,
+      transaction: Transaction
+    ) => void | undefined | TPKey
+  ): void;
+  (eventName: "reading", subscriber: (obj: any) => any): void;
+  (
+    eventName: "updating",
+    /* 
+       dexie merges the return value into the modifications for the
+       next subscriber in the chain
+       keyPaths are used on the return value but isn't that an issue with merging ?
+    */
+    subscriber: (
+      this: UpdatingHookContext<TExisting>,
+      modifications: Object,
+      primKey: TPKey,
+      existing: TExisting,
+      transaction: Transaction
+    ) => any
+  ): void;
+  (
+    eventName: "deleting",
+    subscriber: (
+      this: DeletingHookContext<TPKey>,
+      primKey: TPKey,
+      existing: TExisting,
+      transaction: Transaction
+    ) => any
+  ): void;
+  creating: DexieEvent;
+  reading: DexieEvent;
+  updating: DexieEvent;
+  deleting: DexieEvent;
+}
+
 export interface TableBase<
   TName extends string,
+  TGet,
   TInsert,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TInsert>,
   TIndexPaths extends DexieIndexPaths<TInsert>
@@ -128,7 +190,8 @@ export interface TableBase<
   //db: Dexie;
   name: TName;
   schema: TableSchema;
-  hook: TableHooks<TInsert, TPKeyPathOrPaths>;
+  // todo TGet needs to be mapped to TExisting - TGet if entity class is incorrect
+  hook: TableHooks<TInsert, TGet, PrimaryKey<TInsert, TPKeyPathOrPaths>>;
   core: DBCoreTable;
 
   // filter(fn: (obj: T) => boolean): PrimaryKeyCollection<T, TKey, TIndexes>;
@@ -196,7 +259,7 @@ type KeyPathTable<
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TInsert>,
   TIndexPaths extends DexieIndexPaths<TInsert>,
   TGet
-> = TableBase<TName, TInsert, TPKeyPathOrPaths, TIndexPaths> & {
+> = TableBase<TName, TGet, TInsert, TPKeyPathOrPaths, TIndexPaths> & {
   // todo object overload
   get(
     key: PrimaryKey<TInsert, TPKeyPathOrPaths>
