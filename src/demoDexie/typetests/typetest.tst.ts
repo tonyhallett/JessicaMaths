@@ -91,6 +91,13 @@ describe("index path typing", () => {
     expect(builder.multi).type.not.toBeCallableWith("notAMultiEntry");
     expect(builder.multi).type.not.toBeCallableWith("notAMultiEntryArray");
   });
+
+  it("should allow compound keys", () => {
+    expect(builder.compound).type.toBeCallableWith("index", "nested.index");
+    expect(builder.compound).type.not.toBeCallableWith("index", "doesnotexist");
+    expect(builder.compound).type.not.toBeCallableWith("index");
+    expect(builder.compound).type.not.toBeCallableWith();
+  });
 });
 
 describe("table get primary key type argument is typed correctly", () => {
