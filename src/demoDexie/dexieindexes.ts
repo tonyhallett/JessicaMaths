@@ -1,10 +1,7 @@
-import type { ValidIndexedDBKeyPath } from "./ValidIndexedDBKeyPaths";
-
-export type CompoundKeyPaths<T> = [
-  ValidIndexedDBKeyPath<T>,
-  ValidIndexedDBKeyPath<T>,
-  ...ValidIndexedDBKeyPath<T>[]
-];
+import type {
+  CompoundKeyPaths,
+  ValidIndexedDBKeyPath,
+} from "./ValidIndexedDBKeyPaths";
 
 export type SingleIndexPath<T, P extends ValidIndexedDBKeyPath<T>> = {
   kind: "single";

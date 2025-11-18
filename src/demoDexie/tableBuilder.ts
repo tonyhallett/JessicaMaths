@@ -4,10 +4,10 @@ import type {
   SingleIndexPath,
   MultiIndexPath,
   CompoundIndexPaths,
-  CompoundKeyPaths,
 } from "./dexieindexes";
 import type {
   AllowedKeyLeaf,
+  CompoundKeyPaths,
   ValidIndexedDBKeyPath,
 } from "./ValidIndexedDBKeyPaths";
 

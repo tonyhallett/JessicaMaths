@@ -2,7 +2,7 @@
 
 import type { StringKey } from "./utilitytypes";
 
-export type IsValidKey<T> = T extends AllowedKeyLeaf
+type IsValidKey<T> = T extends AllowedKeyLeaf
   ? true
   : T extends readonly any[]
   ? ArrayElement<T> extends infer Elem
@@ -17,13 +17,13 @@ export type AllowedKeyLeaf =
   | ArrayBufferView
   | DataView;
 export type IsAllowedLeaf<T> = [T] extends [AllowedKeyLeaf] ? true : false;
-export type IsArray<T> = T extends readonly (infer E)[] ? true : false;
-export type ArrayElement<T> = T extends readonly (infer E)[] ? E : never;
-export type IsFile<T> = T extends File ? true : false;
-export type IsBlob<T> = T extends Blob ? true : false;
+type IsArray<T> = T extends readonly (infer E)[] ? true : false;
+type ArrayElement<T> = T extends readonly (infer E)[] ? E : never;
+type IsFile<T> = T extends File ? true : false;
+type IsBlob<T> = T extends Blob ? true : false;
 
-export type NoPefix = "";
-export type WithSuffix<
+type NoPefix = "";
+type WithSuffix<
   TPossiblePrefix extends string,
   TSuffix extends string
 > = TPossiblePrefix extends NoPefix ? TSuffix : `${TPossiblePrefix}.${TSuffix}`;
@@ -41,7 +41,7 @@ type WithTypeSpecificPropertyPaths<
     : never
   : never;
 
-export type WithKeyAndTypeSpecificPropertyPaths<
+type WithKeyAndTypeSpecificPropertyPaths<
   TPossiblePrefix extends string,
   TKey extends string,
   TProperties extends readonly string[],
@@ -55,7 +55,7 @@ export type WithKeyAndTypeSpecificPropertyPaths<
     >
   | WithSuffix<TPossiblePrefix, TKey>;
 
-export type LeafPath<
+type LeafPath<
   PossiblePrefix extends string,
   TLeafType,
   TKey extends string,
@@ -69,7 +69,7 @@ export type LeafPath<
     >
   : WithSuffix<PossiblePrefix, TKey>;
 
-export type BlobPathProperties<
+type BlobPathProperties<
   TPossiblePrefix extends string,
   TKey extends string,
   TAllowTypeSpecificProperties extends boolean
@@ -80,7 +80,7 @@ export type BlobPathProperties<
   TAllowTypeSpecificProperties
 >;
 
-export type FilePathProperties<
+type FilePathProperties<
   TPossiblePrefix extends string,
   TKey extends string,
   TAllowTypeSpecificProperties extends boolean
@@ -93,13 +93,6 @@ export type FilePathProperties<
     >
   | BlobPathProperties<TPossiblePrefix, TKey, TAllowTypeSpecificProperties>;
 
-export type IsValidKeyArrayElement<T> = IsAllowedLeaf<T> extends true
-  ? true
-  : IsArray<T> extends true
-  ? ArrayElement<T> extends infer Elem
-    ? IsValidKeyArrayElement<Elem>
-    : false
-  : false;
 // ---------- Main recursive type ----------
 
 export type ValidIndexedDBKeyPath<
@@ -134,3 +127,9 @@ export type ValidIndexedDBKeyPath<
       >
     : never;
 }[StringKey<T>];
+
+export type CompoundKeyPaths<T> = [
+  ValidIndexedDBKeyPath<T>,
+  ValidIndexedDBKeyPath<T>,
+  ...ValidIndexedDBKeyPath<T>[]
+];
