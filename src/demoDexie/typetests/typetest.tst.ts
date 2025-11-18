@@ -2,6 +2,7 @@ import { e } from "mathjs";
 import { dexieFactory } from "../dexieFactory";
 import { tableBuilder } from "../tablebuilder";
 import { expect, describe, it } from "tstyche";
+import type { IsAllowedLeaf } from "../ValidIndexedDBKeyPaths";
 
 interface DexieDataItem {
   id: number;
@@ -42,6 +43,8 @@ describe("index path typing", () => {
   const builder = tableBuilder<{
     id: string;
     index: string;
+    unionAllowed: string | number;
+    unionDisallowed: string | { obj: number };
     number: number;
     date: Date;
     arrayBuffer: ArrayBuffer;
@@ -49,9 +52,11 @@ describe("index path typing", () => {
     dataView: DataView;
     indexableArray: string[];
     indexableArray2: string[][];
+    indexableArray3: (string | number)[];
+    notIndexableArray: (string | { obj: number })[];
     multiEntry: string[];
     notAMultiEntry: string;
-    notAMultiEntryArray: Array<{ obj: string }>;
+    notAMultiEntryArray: string[][];
     nested: { index: string };
     notAnIndex: { obj: string };
   }>().primaryKey("id");
@@ -68,14 +73,17 @@ describe("index path typing", () => {
 
   it("should allow valid key types", () => {
     expect(builder.index).type.not.toBeCallableWith("notAnIndex");
-    expect(builder.index).type.not.toBeCallableWith("notAMultiEntryArray");
+    expect(builder.index).type.not.toBeCallableWith("unionDisallowed");
+    expect(builder.index).type.not.toBeCallableWith("notIndexableArray");
     expect(builder.index).type.toBeCallableWith("number");
     expect(builder.index).type.toBeCallableWith("date");
     expect(builder.index).type.toBeCallableWith("arrayBuffer");
     expect(builder.index).type.toBeCallableWith("arrayBufferView");
     expect(builder.index).type.toBeCallableWith("dataView");
+    expect(builder.index).type.toBeCallableWith("unionAllowed");
     expect(builder.index).type.toBeCallableWith("indexableArray");
     expect(builder.index).type.toBeCallableWith("indexableArray2");
+    expect(builder.index).type.toBeCallableWith("indexableArray3");
   });
 
   it("should type multiEntry correctly", () => {

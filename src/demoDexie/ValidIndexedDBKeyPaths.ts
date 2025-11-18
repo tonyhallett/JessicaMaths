@@ -2,6 +2,13 @@
 
 import type { StringKey } from "./utilitytypes";
 
+export type IsValidKey<T> = T extends AllowedKeyLeaf
+  ? true
+  : T extends readonly any[]
+  ? ArrayElement<T> extends infer Elem
+    ? IsValidKey<Elem>
+    : false
+  : false;
 export type AllowedKeyLeaf =
   | string
   | number
@@ -100,7 +107,7 @@ export type ValidIndexedDBKeyPath<
   Prefix extends string = NoPefix,
   TAllowTypeSpecificProperties extends boolean = true
 > = {
-  [P in StringKey<T>]: IsAllowedLeaf<T[P]> extends true // Case A: Allowed leaf type
+  [P in StringKey<T>]: IsAllowedLeaf<T[P]> extends true
     ? LeafPath<Prefix, T[P], P, TAllowTypeSpecificProperties>
     : IsFile<T[P]> extends true
     ? FilePathProperties<Prefix, P, TAllowTypeSpecificProperties>
@@ -108,21 +115,15 @@ export type ValidIndexedDBKeyPath<
     ? BlobPathProperties<Prefix, P, TAllowTypeSpecificProperties>
     : IsArray<T[P]> extends true
     ? ArrayElement<T[P]> extends infer Elem
-      ? Elem extends AllowedKeyLeaf
-        ? WithSuffix<Prefix, P>
-        : Elem extends string
-        ? WithKeyAndTypeSpecificPropertyPaths<
-            Prefix,
-            P,
-            ["length"],
-            TAllowTypeSpecificProperties
-          >
-        : Elem extends object
-        ? ValidIndexedDBKeyPath<
-            Elem,
-            WithSuffix<Prefix, P>,
-            TAllowTypeSpecificProperties
-          >
+      ? IsValidKey<Elem> extends true
+        ? Elem extends string
+          ? WithKeyAndTypeSpecificPropertyPaths<
+              Prefix,
+              P,
+              ["length"],
+              TAllowTypeSpecificProperties
+            >
+          : WithSuffix<Prefix, P>
         : never
       : never
     : T[P] extends object
