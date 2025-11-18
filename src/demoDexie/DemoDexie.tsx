@@ -43,9 +43,6 @@ const db = dexieFactory(
   "DemoDexie"
 );
 
-// get is typed to the primary key type
-// db.data.get("string"); // error
-
 // typed transaction
 db.on("populate", (tx) => {
   tx.data.add({
@@ -96,27 +93,6 @@ db.data.hook("reading", function (value) {
   return value;
 });
 
-// typed transaction
-/* db.transaction("rw", db.data, db.other, (tx) => {
-  const dataTable = tx.data;
-  const otherTable = tx.other;
-  //const notInTxTable = tx.notInTx; error
-});
-
-// typed transaction
-db.transaction("rw", db.data, "other", (tx) => {
-  const dataTable = tx.data;
-  const otherTable = tx.other;
-  //const notInTxTable = tx.notInTx; error
-});
-
-// typed transaction
-db.transaction("rw", [db.data, "other"], (tx) => {
-  const dataTable = tx.data;
-  const otherTable = tx.other;
-  //const notInTxTable = tx.notInTx; error
-}); */
-
 /* db.data.upsert(1, {
   arrayKey: ["a", "b", "c"],
   numberValue: 100,
@@ -130,7 +106,6 @@ db.transaction("rw", [db.data, "other"], (tx) => {
     },
   },
 }); */
-// todo - support db.transaction("rw", [db.data, "other"],"else", (tx) => {
 
 export const DemoDexie = () => {
   return (

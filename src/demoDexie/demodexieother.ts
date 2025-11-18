@@ -1,11 +1,12 @@
 import { dexieFactory } from "./dexieFactory";
-import Dexie, { add, Entity, type EntityTable, type UpdateSpec } from "dexie";
+import Dexie, { add, Entity, type EntityTable } from "dexie";
 import {
   tableBuilder,
   tableClassBuilder,
   tableClassBuilderExcluded,
 } from "./tablebuilder";
 import { ObjectPropModification, safeRemove } from "./ObjectPropModification";
+import type { UpdateSpec } from "./tabletypes";
 
 interface DexieDataItem {
   id: number;

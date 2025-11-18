@@ -2,7 +2,10 @@
   "name": "jessicamaths",
   "version": "1.0.0",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "testdexietypings": "tsd -t tsd/testit.d.ts"
+  },
+  "tsd": {
+    "directory": "tsd/tests"
   },
   "author": "",
   "license": "ISC",
@@ -37,6 +40,7 @@
     "jest-environment-jsdom": "^30.2.0",
     "parcel": "^2.16.0",
     "ts-jest": "^29.4.5",
+    "tstyche": "^5.0.1",
     "typescript": "^5.9.3"
   }
 }

@@ -1,6 +1,6 @@
-import { PropModification } from "dexie";
+import { PropModificationTyped } from "./tabletypes";
 
-export class ObjectPropModification<T> extends PropModification<T> {
+export class ObjectPropModification<T> extends PropModificationTyped<T> {
   executor: (value: T) => T;
   constructor(executor: (value: T) => T) {
     super(null as any);

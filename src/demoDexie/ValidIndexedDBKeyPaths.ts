@@ -86,6 +86,13 @@ export type FilePathProperties<
     >
   | BlobPathProperties<TPossiblePrefix, TKey, TAllowTypeSpecificProperties>;
 
+export type IsValidKeyArrayElement<T> = IsAllowedLeaf<T> extends true
+  ? true
+  : IsArray<T> extends true
+  ? ArrayElement<T> extends infer Elem
+    ? IsValidKeyArrayElement<Elem>
+    : false
+  : false;
 // ---------- Main recursive type ----------
 
 export type ValidIndexedDBKeyPath<
