@@ -28,6 +28,7 @@ describe("tableBuilder", () => {
       expect(builder.compoundKey).type.not.toBeCallableWith("id");
       expect(builder.compoundKey).type.not.toBeCallableWith();
     });
+
     it("should not be possible to complete the chain when duplicate keys are used", () => {
       const builder = tableBuilder<{ id: string; nested: { id2: number } }>();
       expect(builder.compoundKey("id", "id")).type.toBe<DuplicateKeysError>();
@@ -74,6 +75,7 @@ describe("index path typing", () => {
   it("should not allow primary key as unique index", () => {
     expect(builder.unique).type.not.toBeCallableWith("id");
   });
+
   it("should allow component of compound primary key as index", () => {
     const builder = tableBuilder<{
       id: string;
@@ -84,6 +86,7 @@ describe("index path typing", () => {
     expect(builder.index).type.toBeCallableWith("id");
     expect(builder.index).type.toBeCallableWith("id2");
   });
+
   it("should not allow compound key to be compound primary key", () => {
     const builder = tableBuilder<{
       id: string;
@@ -91,6 +94,7 @@ describe("index path typing", () => {
       index: string;
     }>().compoundKey("id", "id2");
     expect(builder.compound).type.toBeCallableWith("id2", "id");
+    expect(builder.compound).type.toBeCallableWith("id", "id2", "index");
     expect(builder.compound).type.not.toBeCallableWith("id", "id2");
   });
 
