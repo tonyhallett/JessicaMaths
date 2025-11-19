@@ -1,25 +1,11 @@
-import { e } from "mathjs";
+import { e, exp } from "mathjs";
 import { dexieFactory } from "../dexieFactory";
-import { tableBuilder } from "../tablebuilder";
+import {
+  tableBuilder,
+  type DuplicateIndexError,
+  type DuplicateKeysError,
+} from "../tablebuilder";
 import { expect, describe, it } from "tstyche";
-import type { IsAllowedLeaf } from "../ValidIndexedDBKeyPaths";
-
-interface DexieDataItem {
-  id: number;
-  numberValue: number;
-  stringValue: string;
-  optional?: string;
-  optional2?: number;
-  multiEntry: string[];
-  arrayKey: string[];
-  nested: {
-    level1: {
-      numberValue: number;
-      stringValue: string;
-      optional1?: string;
-    };
-  };
-}
 
 describe("tableBuilder", () => {
   describe("primary key selection", () => {
@@ -35,6 +21,17 @@ describe("tableBuilder", () => {
       expect(builder.primaryKey).type.not.toBeCallableWith(
         "nested.doesnotexist"
       );
+    });
+
+    it("should allow compound primary key", () => {
+      const builder = tableBuilder<{ id: string; nested: { id2: number } }>();
+      expect(builder.compoundKey).type.toBeCallableWith("id", "nested.id2");
+      expect(builder.compoundKey).type.not.toBeCallableWith("id");
+      expect(builder.compoundKey).type.not.toBeCallableWith();
+    });
+    it("should not be possible to complete the chain when duplicate keys are used", () => {
+      const builder = tableBuilder<{ id: string; nested: { id2: number } }>();
+      expect(builder.compoundKey("id", "id")).type.toBe<DuplicateKeysError>();
     });
   });
 });
@@ -71,6 +68,14 @@ describe("index path typing", () => {
     expect(builder.index).type.not.toBeCallableWith("nested.doesnotexist");
   });
 
+  it("should not allow primary key as index", () => {
+    expect(builder.index).type.not.toBeCallableWith("id");
+  });
+
+  it("should not allow primary key as unique index", () => {
+    expect(builder.unique).type.not.toBeCallableWith("id");
+  });
+
   it("should allow valid key types", () => {
     expect(builder.index).type.not.toBeCallableWith("notAnIndex");
     expect(builder.index).type.not.toBeCallableWith("unionDisallowed");
@@ -97,6 +102,16 @@ describe("index path typing", () => {
     expect(builder.compound).type.not.toBeCallableWith("index", "doesnotexist");
     expect(builder.compound).type.not.toBeCallableWith("index");
     expect(builder.compound).type.not.toBeCallableWith();
+  });
+
+  it("should not be possible to complete the chain when duplicate compound indexes are used", () => {
+    expect(builder.compound("index", "index")).type.toBe<DuplicateKeysError>();
+  });
+
+  it("should not be possible to complete the chain when duplicate indexes are used", () => {
+    expect(
+      builder.index("index").index("index")
+    ).type.toBe<DuplicateIndexError>();
   });
 });
 

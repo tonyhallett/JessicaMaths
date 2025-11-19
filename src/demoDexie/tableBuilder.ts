@@ -46,6 +46,91 @@ export type MultiEntryKeyPath<T> = ValidIndexedDBKeyPath<
     : never
   : never;
 
+type NonPrimaryKeyPath<T, PkPathOrPaths> =
+  PkPathOrPaths extends readonly string[]
+    ? ValidIndexedDBKeyPath<T> // Compound PK: allow any single index
+    : ValidIndexedDBKeyPath<T> extends infer P
+    ? P extends PkPathOrPaths
+      ? never
+      : P
+    : never;
+
+type NoDuplicates<T extends readonly any[]> = T extends readonly [
+  infer First,
+  ...infer Rest
+]
+  ? First extends Rest[number]
+    ? never
+    : Rest extends readonly any[]
+    ? readonly [First, ...NoDuplicates<Rest>]
+    : T
+  : T;
+
+export type DuplicateKeysError = {
+  readonly error: "Duplicate keys in compound key are not allowed";
+};
+
+const duplicateKeysErrorInstance: DuplicateKeysError = {
+  error: "Duplicate keys in compound key are not allowed",
+};
+
+export type DuplicateIndexError = {
+  readonly error: "Duplicate index name is not allowed";
+};
+
+const duplicateIndexErrorInstance: DuplicateIndexError = {
+  error: "Duplicate index name is not allowed",
+};
+
+// Helper to extract index path identifier
+type IndexName<TIndexPath> = TIndexPath extends SingleIndexPath<any, infer P>
+  ? P
+  : TIndexPath extends MultiIndexPath<any, infer P>
+  ? P
+  : TIndexPath extends CompoundIndexPaths<any, infer Paths>
+  ? Paths
+  : never;
+
+// Extract all used index names as a union
+type UsedIndexNames<TIndexPaths extends DexieIndexPaths<any>> =
+  TIndexPaths extends readonly []
+    ? never
+    : TIndexPaths extends readonly [infer First, ...infer Rest]
+    ? Rest extends DexieIndexPaths<any>
+      ? IndexName<First> | UsedIndexNames<Rest>
+      : IndexName<First>
+    : never;
+
+// union
+type Test = UsedIndexNames<
+  [
+    SingleIndexPath<{ id: string; index: string }, "index">,
+    SingleIndexPath<{ id: string; index: string }, "id">
+  ]
+>;
+type TestIndexPaths = [SingleIndexPath<{ id: string; index: string }, "index">];
+
+type IsIndexDuplicateTest = IsIndexDuplicate<"index", TestIndexPaths>;
+type TestIndexPaths2 = [
+  SingleIndexPath<{ id: string; index: string }, "index">,
+  SingleIndexPath<{ id: string; index: string }, "id">
+];
+type IsIndexDuplicateTest2 = IsIndexDuplicate<"index", TestIndexPaths>;
+type IsIndexDuplicateTest3 = IsIndexDuplicate<"!", TestIndexPaths>;
+
+type IsIndexDuplicate<
+  TIndexPath,
+  TIndexPaths extends DexieIndexPaths<any>
+> = UsedIndexNames<TIndexPaths> extends never
+  ? false
+  : UsedIndexNames<TIndexPaths> extends infer U
+  ? U extends never
+    ? false
+    : TIndexPath extends U
+    ? true
+    : false
+  : false;
+
 export interface IndexMethods<
   TInsert,
   PkPathOrPaths extends DexiePrimaryKeyPathOrPaths<TInsert>,
@@ -53,38 +138,52 @@ export interface IndexMethods<
   TIndexPaths extends DexieIndexPaths<TInsert>,
   TGet = TInsert
 > {
-  index<TIndexPath extends ValidIndexedDBKeyPath<TInsert>>(
+  index<
+    TIndexPath extends NonPrimaryKeyPath<TInsert, PkPathOrPaths> &
+      ValidIndexedDBKeyPath<TInsert>
+  >(
     indexPath: TIndexPath
-  ): IndexMethods<
-    TInsert,
-    PkPathOrPaths,
-    Auto,
-    [...TIndexPaths, SingleIndexPath<TInsert, TIndexPath>]
-  >;
-  unique<TIndexPath extends ValidIndexedDBKeyPath<TInsert>>(
+  ): IsIndexDuplicate<TIndexPath, TIndexPaths> extends true
+    ? DuplicateIndexError
+    : IndexMethods<
+        TInsert,
+        PkPathOrPaths,
+        Auto,
+        [...TIndexPaths, SingleIndexPath<TInsert, TIndexPath>]
+      >;
+  unique<
+    TIndexPath extends NonPrimaryKeyPath<TInsert, PkPathOrPaths> &
+      ValidIndexedDBKeyPath<TInsert>
+  >(
     indexPath: TIndexPath
-  ): IndexMethods<
-    TInsert,
-    PkPathOrPaths,
-    Auto,
-    [...TIndexPaths, SingleIndexPath<TInsert, TIndexPath>]
-  >;
+  ): IsIndexDuplicate<TIndexPath, TIndexPaths> extends true
+    ? DuplicateIndexError
+    : IndexMethods<
+        TInsert,
+        PkPathOrPaths,
+        Auto,
+        [...TIndexPaths, SingleIndexPath<TInsert, TIndexPath>]
+      >;
   multi<TIndexPath extends MultiEntryKeyPath<TInsert>>(
     indexPath: TIndexPath
-  ): IndexMethods<
-    TInsert,
-    PkPathOrPaths,
-    Auto,
-    [...TIndexPaths, MultiIndexPath<TInsert, TIndexPath>]
-  >;
+  ): IsIndexDuplicate<TIndexPath, TIndexPaths> extends true
+    ? DuplicateIndexError
+    : IndexMethods<
+        TInsert,
+        PkPathOrPaths,
+        Auto,
+        [...TIndexPaths, MultiIndexPath<TInsert, TIndexPath>]
+      >;
   compound<TCompoundIndexPaths extends CompoundKeyPaths<TInsert>>(
     ...indexPaths: TCompoundIndexPaths
-  ): IndexMethods<
-    TInsert,
-    PkPathOrPaths,
-    Auto,
-    [...TIndexPaths, CompoundIndexPaths<TInsert, TCompoundIndexPaths>]
-  >;
+  ): NoDuplicates<TCompoundIndexPaths> extends never
+    ? DuplicateKeysError
+    : IndexMethods<
+        TInsert,
+        PkPathOrPaths,
+        Auto,
+        [...TIndexPaths, CompoundIndexPaths<TInsert, TCompoundIndexPaths>]
+      >;
   build(): TableConfig<TInsert, PkPathOrPaths, Auto, TIndexPaths, TGet>;
 }
 
@@ -111,6 +210,9 @@ function createTableBuilder<T, TGet>(mapToClass?: MapToClass<T>) {
   ): IndexMethods<T, TPkeyPathOrPaths, TAuto, TIndexPaths, TGet> {
     return {
       index(indexKey) {
+        if (indexParts.includes(indexKey)) {
+          return duplicateIndexErrorInstance as any;
+        }
         indexParts.push(indexKey);
         return createIndexMethods(key, auto, [
           ...indices,
@@ -118,31 +220,34 @@ function createTableBuilder<T, TGet>(mapToClass?: MapToClass<T>) {
         ]);
       },
       unique(indexKey) {
+        if (indexParts.includes(indexKey)) {
+          return duplicateIndexErrorInstance as any;
+        }
         indexParts.push(`&${indexKey}`);
         return createIndexMethods(key, auto, [
           ...indices,
           { kind: "single", path: indexKey, multi: false },
-        ]);
+        ]) as any;
       },
       multi(indexKey) {
+        if (indexParts.includes(indexKey)) {
+          return duplicateIndexErrorInstance as any;
+        }
         indexParts.push(`*${indexKey}`);
         return createIndexMethods(key, auto, [
           ...indices,
           { kind: "multi", path: indexKey, multi: true },
-        ]);
+        ]) as any;
       },
       compound(...keys) {
         if (!isDistinctArray(keys)) {
-          throw new Error("Duplicate keys in compound index are not allowed");
-        }
-        if (keys.length < 2) {
-          throw new Error("Compound index must have at least two keys");
+          return duplicateKeysErrorInstance;
         }
         indexParts.push(`[${keys.join("+")}]`);
         return createIndexMethods(key, auto, [
           ...indices,
           { kind: "compound", paths: keys },
-        ]);
+        ]) as any;
       },
       build() {
         if (!isDistinctArray(indexParts)) {
@@ -182,19 +287,24 @@ function createTableBuilder<T, TGet>(mapToClass?: MapToClass<T>) {
 
   return {
     autoIncrement<K extends ValidIndexedDBKeyPath<T, "", false>>(key: K) {
-      return createIndexMethods(key, true, []);
+      return createIndexMethods(key, true, [] as const);
     },
     primaryKey<K extends ValidIndexedDBKeyPath<T>>(key: K) {
-      return createIndexMethods(key, false, []);
+      return createIndexMethods(key, false, [] as const);
     },
-    compoundKey<const K extends CompoundKeyPaths<T>>(keys: K) {
-      return createIndexMethods(keys, false, []);
+    compoundKey<const K extends CompoundKeyPaths<T>>(
+      ...keys: K
+    ): NoDuplicates<K> extends never
+      ? DuplicateKeysError
+      : IndexMethods<T, K, false, [], TGet> {
+      return createIndexMethods(keys, false, [] as const) as any;
     },
+
     hiddenAuto() {
-      return createIndexMethods(null as never, true, []);
+      return createIndexMethods(null as never, true, [] as const);
     },
     hiddenExplicit<K>() {
-      return createIndexMethods(null as never, false, []);
+      return createIndexMethods(null as never, false, [] as const);
     },
   };
 }
