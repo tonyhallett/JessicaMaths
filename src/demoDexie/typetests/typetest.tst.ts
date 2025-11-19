@@ -74,6 +74,25 @@ describe("index path typing", () => {
   it("should not allow primary key as unique index", () => {
     expect(builder.unique).type.not.toBeCallableWith("id");
   });
+  it("should allow component of compound primary key as index", () => {
+    const builder = tableBuilder<{
+      id: string;
+      id2: number;
+      index: string;
+    }>().compoundKey("id", "id2");
+
+    expect(builder.index).type.toBeCallableWith("id");
+    expect(builder.index).type.toBeCallableWith("id2");
+  });
+  it("should not allow compound key to be compound primary key", () => {
+    const builder = tableBuilder<{
+      id: string;
+      id2: number;
+      index: string;
+    }>().compoundKey("id", "id2");
+    expect(builder.compound).type.toBeCallableWith("id2", "id");
+    expect(builder.compound).type.not.toBeCallableWith("id", "id2");
+  });
 
   it("should allow valid key types", () => {
     expect(builder.index).type.not.toBeCallableWith("notAnIndex");
@@ -94,6 +113,13 @@ describe("index path typing", () => {
     expect(builder.multi).type.toBeCallableWith("multiEntry");
     expect(builder.multi).type.not.toBeCallableWith("notAMultiEntry");
     expect(builder.multi).type.not.toBeCallableWith("notAMultiEntryArray");
+  });
+
+  it("should not allow multi on primary key", () => {
+    const builder = tableBuilder<{
+      id: string[];
+    }>().primaryKey("id");
+    expect(builder.multi).type.not.toBeCallableWith("id");
   });
 
   it("should allow compound keys", () => {

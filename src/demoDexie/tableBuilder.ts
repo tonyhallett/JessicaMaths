@@ -34,11 +34,7 @@ type IsMultiEntryArray<T> = T extends readonly (infer E)[]
     : false
   : false;
 
-export type MultiEntryKeyPath<T> = ValidIndexedDBKeyPath<
-  T,
-  "",
-  false
-> extends infer P
+type MultiEntryKeyPath<T> = ValidIndexedDBKeyPath<T, "", false> extends infer P
   ? P extends string
     ? IsMultiEntryArray<KeyPathValue<T, P>> extends true
       ? P
@@ -128,7 +124,21 @@ type IsIndexDuplicate<
   ? true
   : false;
 
-export interface IndexMethods<
+type CompoundMatchesPK<TCompound, PK> = PK extends readonly any[]
+  ? TCompound extends readonly any[]
+    ? PK["length"] extends TCompound["length"]
+      ? TCompound["length"] extends PK["length"]
+        ? PK extends readonly [...TCompound]
+          ? TCompound extends readonly [...PK]
+            ? true
+            : false
+          : false
+        : false
+      : false
+    : false
+  : false;
+
+interface IndexMethods<
   TInsert,
   PkPathOrPaths extends DexiePrimaryKeyPathOrPaths<TInsert>,
   Auto extends boolean,
@@ -161,7 +171,10 @@ export interface IndexMethods<
         Auto,
         [...TIndexPaths, SingleIndexPath<TInsert, TIndexPath>]
       >;
-  multi<TIndexPath extends MultiEntryKeyPath<TInsert>>(
+  multi<
+    TIndexPath extends NonPrimaryKeyPath<TInsert, PkPathOrPaths> &
+      MultiEntryKeyPath<TInsert>
+  >(
     indexPath: TIndexPath
   ): IsIndexDuplicate<TIndexPath, TIndexPaths> extends true
     ? DuplicateIndexError
@@ -171,8 +184,13 @@ export interface IndexMethods<
         Auto,
         [...TIndexPaths, MultiIndexPath<TInsert, TIndexPath>]
       >;
-  compound<TCompoundIndexPaths extends CompoundKeyPaths<TInsert>>(
-    ...indexPaths: TCompoundIndexPaths
+  compound<const TCompoundIndexPaths extends CompoundKeyPaths<TInsert>>(
+    ...indexPaths: CompoundMatchesPK<
+      TCompoundIndexPaths,
+      PkPathOrPaths
+    > extends true
+      ? never
+      : TCompoundIndexPaths
   ): NoDuplicates<TCompoundIndexPaths> extends never
     ? DuplicateKeysError
     : IsIndexDuplicate<TCompoundIndexPaths, TIndexPaths> extends true
@@ -246,7 +264,7 @@ function createTableBuilder<T, TGet>(mapToClass?: MapToClass<T>) {
           return duplicateKeysErrorInstance;
         }
         return (
-          addIfNotDuplicate(`[${keys.join("+")}]`) ||
+          addIfNotDuplicate(`[${(keys as string[]).join("+")}]`) ||
           (createIndexMethods(key, auto, [
             ...indices,
             { kind: "compound", paths: keys },
