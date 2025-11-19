@@ -1,4 +1,3 @@
-import { e, exp } from "mathjs";
 import { dexieFactory } from "../dexieFactory";
 import {
   tableBuilder,
