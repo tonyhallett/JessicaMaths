@@ -225,7 +225,7 @@ function createTableBuilder<T, TGet>(mapToClass?: MapToClass<T>) {
     auto: TAuto,
     indices: TIndexPaths
   ): IndexMethods<T, TPkeyPathOrPaths, TAuto, TIndexPaths, TGet> {
-    const addIfNotDuplicate = (part: string) => {
+    const addIfNotDuplicatePart = (part: string) => {
       if (indexParts.includes(part)) {
         return duplicateIndexErrorInstance;
       }
@@ -234,7 +234,7 @@ function createTableBuilder<T, TGet>(mapToClass?: MapToClass<T>) {
     return {
       index(indexKey) {
         return (
-          addIfNotDuplicate(indexKey) ||
+          addIfNotDuplicatePart(indexKey) ||
           (createIndexMethods(key, auto, [
             ...indices,
             { kind: "single", path: indexKey, multi: false },
@@ -243,7 +243,7 @@ function createTableBuilder<T, TGet>(mapToClass?: MapToClass<T>) {
       },
       unique(indexKey) {
         return (
-          addIfNotDuplicate(`&${indexKey}`) ||
+          addIfNotDuplicatePart(`&${indexKey}`) ||
           (createIndexMethods(key, auto, [
             ...indices,
             { kind: "single", path: indexKey, multi: false },
@@ -252,7 +252,7 @@ function createTableBuilder<T, TGet>(mapToClass?: MapToClass<T>) {
       },
       multi(indexKey) {
         return (
-          addIfNotDuplicate(`*${indexKey}`) ||
+          addIfNotDuplicatePart(`*${indexKey}`) ||
           (createIndexMethods(key, auto, [
             ...indices,
             { kind: "multi", path: indexKey, multi: true },
@@ -264,7 +264,7 @@ function createTableBuilder<T, TGet>(mapToClass?: MapToClass<T>) {
           return duplicateKeysErrorInstance;
         }
         return (
-          addIfNotDuplicate(`[${(keys as string[]).join("+")}]`) ||
+          addIfNotDuplicatePart(`[${(keys as string[]).join("+")}]`) ||
           (createIndexMethods(key, auto, [
             ...indices,
             { kind: "compound", paths: keys },
