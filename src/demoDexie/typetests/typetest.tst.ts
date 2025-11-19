@@ -112,6 +112,10 @@ describe("index path typing", () => {
     expect(
       builder.index("index").index("index")
     ).type.toBe<DuplicateIndexError>();
+
+    expect(
+      builder.compound("index", "date").compound("index", "date")
+    ).type.toBe<DuplicateIndexError>();
   });
 });
 

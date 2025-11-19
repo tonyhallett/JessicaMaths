@@ -88,47 +88,44 @@ type IndexName<TIndexPath> = TIndexPath extends SingleIndexPath<any, infer P>
   : TIndexPath extends MultiIndexPath<any, infer P>
   ? P
   : TIndexPath extends CompoundIndexPaths<any, infer Paths>
-  ? Paths
+  ? Paths // Keep the tuple for compound indexes
   : never;
 
 // Extract all used index names as a union
 type UsedIndexNames<TIndexPaths extends DexieIndexPaths<any>> =
-  TIndexPaths extends readonly []
-    ? never
-    : TIndexPaths extends readonly [infer First, ...infer Rest]
+  TIndexPaths extends readonly [infer First, ...infer Rest]
     ? Rest extends DexieIndexPaths<any>
       ? IndexName<First> | UsedIndexNames<Rest>
       : IndexName<First>
     : never;
 
-// union
-type Test = UsedIndexNames<
-  [
-    SingleIndexPath<{ id: string; index: string }, "index">,
-    SingleIndexPath<{ id: string; index: string }, "id">
-  ]
->;
-type TestIndexPaths = [SingleIndexPath<{ id: string; index: string }, "index">];
+// Helper to check if two tuples are equal
+type TuplesEqual<A, B> = A extends readonly [...infer AItems]
+  ? B extends readonly [...infer BItems]
+    ? AItems["length"] extends BItems["length"]
+      ? A extends B
+        ? B extends A
+          ? true
+          : false
+        : false
+      : false
+    : false
+  : false;
 
-type IsIndexDuplicateTest = IsIndexDuplicate<"index", TestIndexPaths>;
-type TestIndexPaths2 = [
-  SingleIndexPath<{ id: string; index: string }, "index">,
-  SingleIndexPath<{ id: string; index: string }, "id">
-];
-type IsIndexDuplicateTest2 = IsIndexDuplicate<"index", TestIndexPaths>;
-type IsIndexDuplicateTest3 = IsIndexDuplicate<"!", TestIndexPaths>;
-
+// Check if an index name is already used
 type IsIndexDuplicate<
   TIndexPath,
   TIndexPaths extends DexieIndexPaths<any>
 > = UsedIndexNames<TIndexPaths> extends never
   ? false
-  : UsedIndexNames<TIndexPaths> extends infer U
-  ? U extends never
-    ? false
-    : TIndexPath extends U
-    ? true
+  : TIndexPath extends readonly any[] // Is it a compound index?
+  ? UsedIndexNames<TIndexPaths> extends infer Used
+    ? Used extends readonly any[] // Check against other compound indexes
+      ? TuplesEqual<TIndexPath, Used>
+      : false
     : false
+  : TIndexPath extends UsedIndexNames<TIndexPaths> // Single index check
+  ? true
   : false;
 
 export interface IndexMethods<
@@ -178,6 +175,8 @@ export interface IndexMethods<
     ...indexPaths: TCompoundIndexPaths
   ): NoDuplicates<TCompoundIndexPaths> extends never
     ? DuplicateKeysError
+    : IsIndexDuplicate<TCompoundIndexPaths, TIndexPaths> extends true
+    ? DuplicateIndexError
     : IndexMethods<
         TInsert,
         PkPathOrPaths,
@@ -208,51 +207,53 @@ function createTableBuilder<T, TGet>(mapToClass?: MapToClass<T>) {
     auto: TAuto,
     indices: TIndexPaths
   ): IndexMethods<T, TPkeyPathOrPaths, TAuto, TIndexPaths, TGet> {
+    const addIfNotDuplicate = (part: string) => {
+      if (indexParts.includes(part)) {
+        return duplicateIndexErrorInstance;
+      }
+      indexParts.push(part);
+    };
     return {
       index(indexKey) {
-        if (indexParts.includes(indexKey)) {
-          return duplicateIndexErrorInstance as any;
-        }
-        indexParts.push(indexKey);
-        return createIndexMethods(key, auto, [
-          ...indices,
-          { kind: "single", path: indexKey, multi: false },
-        ]);
+        return (
+          addIfNotDuplicate(indexKey) ||
+          (createIndexMethods(key, auto, [
+            ...indices,
+            { kind: "single", path: indexKey, multi: false },
+          ]) as any)
+        );
       },
       unique(indexKey) {
-        if (indexParts.includes(indexKey)) {
-          return duplicateIndexErrorInstance as any;
-        }
-        indexParts.push(`&${indexKey}`);
-        return createIndexMethods(key, auto, [
-          ...indices,
-          { kind: "single", path: indexKey, multi: false },
-        ]) as any;
+        return (
+          addIfNotDuplicate(`&${indexKey}`) ||
+          (createIndexMethods(key, auto, [
+            ...indices,
+            { kind: "single", path: indexKey, multi: false },
+          ]) as any)
+        );
       },
       multi(indexKey) {
-        if (indexParts.includes(indexKey)) {
-          return duplicateIndexErrorInstance as any;
-        }
-        indexParts.push(`*${indexKey}`);
-        return createIndexMethods(key, auto, [
-          ...indices,
-          { kind: "multi", path: indexKey, multi: true },
-        ]) as any;
+        return (
+          addIfNotDuplicate(`*${indexKey}`) ||
+          (createIndexMethods(key, auto, [
+            ...indices,
+            { kind: "multi", path: indexKey, multi: true },
+          ]) as any)
+        );
       },
       compound(...keys) {
         if (!isDistinctArray(keys)) {
           return duplicateKeysErrorInstance;
         }
-        indexParts.push(`[${keys.join("+")}]`);
-        return createIndexMethods(key, auto, [
-          ...indices,
-          { kind: "compound", paths: keys },
-        ]) as any;
+        return (
+          addIfNotDuplicate(`[${keys.join("+")}]`) ||
+          (createIndexMethods(key, auto, [
+            ...indices,
+            { kind: "compound", paths: keys },
+          ]) as any)
+        );
       },
       build() {
-        if (!isDistinctArray(indexParts)) {
-          throw new Error("Duplicate indexes are not allowed");
-        }
         if (mapToClass) {
           const tableConfig: TableConfig<
             T,
