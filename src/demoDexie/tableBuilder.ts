@@ -255,7 +255,7 @@ function createTableBuilder<T, TGet>(mapToClass?: MapToClass<T>) {
       },
       build() {
         if (mapToClass) {
-          const tableConfig: TableConfig<
+          const mapToClasstableConfig: TableConfig<
             T,
             TPkeyPathOrPaths,
             TAuto,
@@ -267,10 +267,10 @@ function createTableBuilder<T, TGet>(mapToClass?: MapToClass<T>) {
             mapToClass: mapToClass.ctor,
             excludedKeys: mapToClass.excludedKeys,
           };
-          return tableConfig;
+          return mapToClasstableConfig;
         }
 
-        const tableConfig2: TableConfig<
+        const tableConfig: TableConfig<
           T,
           TPkeyPathOrPaths,
           TAuto,
@@ -281,7 +281,7 @@ function createTableBuilder<T, TGet>(mapToClass?: MapToClass<T>) {
           indicesSchema: indexParts.join(", "),
           excludedKeys: undefined,
         };
-        return tableConfig2;
+        return tableConfig;
       },
     };
   }
