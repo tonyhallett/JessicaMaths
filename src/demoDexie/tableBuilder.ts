@@ -20,7 +20,8 @@ export interface TableConfig<
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<T>,
   TAuto extends boolean,
   TIndexPaths extends DexieIndexPaths<T>,
-  TGet = T
+  TGet = T,
+  TDatabase = T
 > {
   readonly pk: { key: TPKeyPathOrPaths; auto: TAuto };
   readonly indicesSchema: string;

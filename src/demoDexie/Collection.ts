@@ -41,22 +41,24 @@ export type DotKey<T> = DotNestedKeys<T>;
 
 export type AndFilter<
   TGet,
+  TDatabase,
   TInsert,
   TPkey,
   TKey,
   TIndexPaths extends DexieIndexPaths<TInsert>
 > = (
-  filter: (x: TInsert) => boolean
-) => Collection<TGet, TInsert, TPkey, TKey, TIndexPaths>;
+  filter: (x: TDatabase) => boolean
+) => Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
 
 export type Collection<
   TGet,
+  TDatabase,
   TInsert,
   PKey,
   TKey,
   TIndexPaths extends DexieIndexPaths<TInsert>
-> = CollectionBase<TGet, TInsert, PKey, TKey, TIndexPaths> &
-  WhereClausesFromIndexes<TGet, TInsert, PKey, TIndexPaths, "or">;
+> = CollectionBase<TGet, TDatabase, TInsert, PKey, TKey, TIndexPaths> &
+  WhereClausesFromIndexes<TGet, TDatabase, TInsert, PKey, TIndexPaths, "or">;
 
 export interface Cursor<TKey, TPkey> {
   key: TKey;
@@ -73,6 +75,7 @@ export interface ChangeCallback<T> {
 
 interface CollectionBase<
   TGet,
+  TDatabase,
   TInsert,
   TPkey,
   TKey,
@@ -88,7 +91,9 @@ interface CollectionBase<
   // sortBy<R>(keyPath: string, thenShortcut: ThenShortcut<T[], R>): PromiseExtended<R>
   // toArray<R>(thenShortcut: ThenShortcut<T[], R>): PromiseExtended<R>
   // uniqueKeys<R>(thenShortcut: ThenShortcut<IndexableTypeArray, R>): PromiseExtended<R>
-  clone(props?: Object): Collection<TGet, TInsert, TPkey, TKey, TIndexPaths>;
+  clone(
+    props?: Object
+  ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
 
   count(): PromiseExtended<number>;
 
@@ -124,17 +129,21 @@ interface CollectionBase<
 
   first(): PromiseExtended<TInsert | undefined>;
   last(): PromiseExtended<TInsert | undefined>;
-  limit(n: number): Collection<TGet, TInsert, TPkey, TKey, TIndexPaths>;
+  limit(
+    n: number
+  ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
   // https://dexie.org/docs/Collection/Collection.until()  works similar to limit
   until(
-    filter: (value: TInsert) => boolean,
+    filter: (value: TDatabase) => boolean,
     includeStopEntry?: boolean
-  ): Collection<TGet, TInsert, TPkey, TKey, TIndexPaths>;
-  offset(n: number): Collection<TGet, TInsert, TPkey, TKey, TIndexPaths>;
-  and: AndFilter<TGet, TInsert, TPkey, TKey, TIndexPaths>;
-  filter: AndFilter<TGet, TInsert, TPkey, TKey, TIndexPaths>;
-  distinct(): Collection<TGet, TInsert, TPkey, TKey, TIndexPaths>;
-  reverse(): Collection<TGet, TInsert, TPkey, TKey, TIndexPaths>;
+  ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
+  offset(
+    n: number
+  ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
+  and: AndFilter<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
+  filter: AndFilter<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
+  distinct(): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
+  reverse(): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
   sortBy(keyPath: DotKeyComparable<TInsert>): PromiseExtended<TInsert[]>;
 
   // Mutating methods
@@ -145,5 +154,5 @@ interface CollectionBase<
 
   // Other methods
   // https://dexie.org/docs/Collection/Collection.raw()
-  raw(): Collection<TGet, TInsert, TPkey, TKey, TIndexPaths>;
+  raw(): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
 }

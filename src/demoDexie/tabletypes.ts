@@ -115,7 +115,8 @@ export type DBTables<
     infer PK,
     infer Auto,
     infer Indices,
-    infer TGet
+    infer TGet,
+    infer TDatabase
   >
     ? PK extends never
       ? Auto extends true
@@ -123,7 +124,7 @@ export type DBTables<
         : never
       : Auto extends true
       ? never
-      : KeyPathTable<TName, T, PK, Indices, TGet>
+      : KeyPathTable<TName, T, PK, Indices, TGet, TDatabase>
     : never;
 };
 
@@ -186,11 +187,13 @@ export type PrimaryKey<
 
 export type PrimaryKeyCollection<
   TGet,
+  TDatabase,
   TInsert,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TInsert>,
   TIndexes extends DexieIndexPaths<TInsert>
 > = Collection<
   TGet,
+  TDatabase,
   TInsert,
   PrimaryKey<TInsert, TPKeyPathOrPaths>,
   PrimaryKey<TInsert, TPKeyPathOrPaths>,
@@ -270,6 +273,7 @@ export interface TableHooks<TInsert, TExisting, TPKey> extends DexieEventSet {
 export interface TableBase<
   TName extends string,
   TGet,
+  TDatabase,
   TInsert,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TInsert>,
   TIndexPaths extends DexieIndexPaths<TInsert>
@@ -285,6 +289,7 @@ export interface TableBase<
   // this.toCollection().and(filterFunction);
   filter: PrimaryKeyCollection<
     TGet,
+    TDatabase,
     TInsert,
     TPKeyPathOrPaths,
     TIndexPaths
@@ -293,14 +298,27 @@ export interface TableBase<
 
   offset(
     n: number
-  ): PrimaryKeyCollection<TGet, TInsert, TPKeyPathOrPaths, TIndexPaths>;
+  ): PrimaryKeyCollection<
+    TGet,
+    TDatabase,
+    TInsert,
+    TPKeyPathOrPaths,
+    TIndexPaths
+  >;
   limit(
     n: number
-  ): PrimaryKeyCollection<TGet, TInsert, TPKeyPathOrPaths, TIndexPaths>;
+  ): PrimaryKeyCollection<
+    TGet,
+    TDatabase,
+    TInsert,
+    TPKeyPathOrPaths,
+    TIndexPaths
+  >;
 
   // this.toCollection().each(callback);
   each: PrimaryKeyCollection<
     TGet,
+    TDatabase,
     TInsert,
     TPKeyPathOrPaths,
     TIndexPaths
@@ -310,12 +328,14 @@ export interface TableBase<
   // toArray(): PromiseExtended<Array<T>>;
   toArray: PrimaryKeyCollection<
     TGet,
+    TDatabase,
     TInsert,
     TPKeyPathOrPaths,
     TIndexPaths
   >["toArray"];
   toCollection(): PrimaryKeyCollection<
     TGet,
+    TDatabase,
     TInsert,
     TPKeyPathOrPaths,
     TIndexPaths
@@ -324,12 +344,19 @@ export interface TableBase<
     index: Path
   ): Collection<
     TGet,
+    TDatabase,
     TInsert,
     KeyPathValue<TInsert, TPKeyPathOrPaths>,
     KeyForIndex<TInsert, ExtractSelectedIndex<TInsert, TIndexPaths, Path>>,
     TIndexPaths
   >;
-  reverse(): PrimaryKeyCollection<TGet, TInsert, TPKeyPathOrPaths, TIndexPaths>;
+  reverse(): PrimaryKeyCollection<
+    TGet,
+    TDatabase,
+    TInsert,
+    TPKeyPathOrPaths,
+    TIndexPaths
+  >;
   mapToClass(constructor: Function): Function;
 
   delete(key: PrimaryKey<TInsert, TPKeyPathOrPaths>): PromiseExtended<void>;
@@ -362,8 +389,16 @@ type KeyPathTable<
   TInsert,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TInsert>,
   TIndexPaths extends DexieIndexPaths<TInsert>,
-  TGet
-> = TableBase<TName, TGet, TInsert, TPKeyPathOrPaths, TIndexPaths> & {
+  TGet,
+  TDatabase
+> = TableBase<
+  TName,
+  TGet,
+  TDatabase,
+  TInsert,
+  TPKeyPathOrPaths,
+  TIndexPaths
+> & {
   // todo object overload
   get(
     key: PrimaryKey<TInsert, TPKeyPathOrPaths>
@@ -438,6 +473,7 @@ type KeyPathTable<
   ): PromiseExtended<boolean>;
 } & WhereClausesFromIndexes<
     TGet,
+    TDatabase,
     TInsert,
     KeyPathValue<TInsert, TPKeyPathOrPaths>,
     TIndexPaths
