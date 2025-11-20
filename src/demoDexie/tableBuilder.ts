@@ -16,16 +16,16 @@ export type DexiePrimaryKeyPathOrPaths<T> =
   | CompoundKeyPaths<T>;
 
 export interface TableConfig<
-  T,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<T>,
+  TDatabase,
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TAuto extends boolean,
-  TIndexPaths extends DexieIndexPaths<T>,
-  TGet = T,
-  TDatabase = T
+  TIndexPaths extends DexieIndexPaths<TDatabase>,
+  TGet = TDatabase,
+  TInsert = TDatabase
 > {
   readonly pk: { key: TPKeyPathOrPaths; auto: TAuto };
   readonly indicesSchema: string;
-  readonly mapToClass?: ConstructorOf<T>;
+  readonly mapToClass?: ConstructorOf<TDatabase>;
   excludedKeys: string[] | undefined;
 }
 
@@ -140,52 +140,52 @@ type CompoundMatchesPK<TCompound, PK> = PK extends readonly any[]
   : false;
 
 interface IndexMethods<
-  TInsert,
-  PkPathOrPaths extends DexiePrimaryKeyPathOrPaths<TInsert>,
+  TDatabase,
+  PkPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   Auto extends boolean,
-  TIndexPaths extends DexieIndexPaths<TInsert>,
-  TGet = TInsert
+  TIndexPaths extends DexieIndexPaths<TDatabase>,
+  TGet = TDatabase
 > {
   index<
-    TIndexPath extends NonPrimaryKeyPath<TInsert, PkPathOrPaths> &
-      ValidIndexedDBKeyPath<TInsert>
+    TIndexPath extends NonPrimaryKeyPath<TDatabase, PkPathOrPaths> &
+      ValidIndexedDBKeyPath<TDatabase>
   >(
     indexPath: TIndexPath
   ): IsIndexDuplicate<TIndexPath, TIndexPaths> extends true
     ? DuplicateIndexError
     : IndexMethods<
-        TInsert,
+        TDatabase,
         PkPathOrPaths,
         Auto,
-        [...TIndexPaths, SingleIndexPath<TInsert, TIndexPath>]
+        [...TIndexPaths, SingleIndexPath<TDatabase, TIndexPath>]
       >;
   unique<
-    TIndexPath extends NonPrimaryKeyPath<TInsert, PkPathOrPaths> &
-      ValidIndexedDBKeyPath<TInsert>
+    TIndexPath extends NonPrimaryKeyPath<TDatabase, PkPathOrPaths> &
+      ValidIndexedDBKeyPath<TDatabase>
   >(
     indexPath: TIndexPath
   ): IsIndexDuplicate<TIndexPath, TIndexPaths> extends true
     ? DuplicateIndexError
     : IndexMethods<
-        TInsert,
+        TDatabase,
         PkPathOrPaths,
         Auto,
-        [...TIndexPaths, SingleIndexPath<TInsert, TIndexPath>]
+        [...TIndexPaths, SingleIndexPath<TDatabase, TIndexPath>]
       >;
   multi<
-    TIndexPath extends NonPrimaryKeyPath<TInsert, PkPathOrPaths> &
-      MultiEntryKeyPath<TInsert>
+    TIndexPath extends NonPrimaryKeyPath<TDatabase, PkPathOrPaths> &
+      MultiEntryKeyPath<TDatabase>
   >(
     indexPath: TIndexPath
   ): IsIndexDuplicate<TIndexPath, TIndexPaths> extends true
     ? DuplicateIndexError
     : IndexMethods<
-        TInsert,
+        TDatabase,
         PkPathOrPaths,
         Auto,
-        [...TIndexPaths, MultiIndexPath<TInsert, TIndexPath>]
+        [...TIndexPaths, MultiIndexPath<TDatabase, TIndexPath>]
       >;
-  compound<const TCompoundIndexPaths extends CompoundKeyPaths<TInsert>>(
+  compound<const TCompoundIndexPaths extends CompoundKeyPaths<TDatabase>>(
     ...indexPaths: CompoundMatchesPK<
       TCompoundIndexPaths,
       PkPathOrPaths
@@ -197,12 +197,13 @@ interface IndexMethods<
     : IsIndexDuplicate<TCompoundIndexPaths, TIndexPaths> extends true
     ? DuplicateIndexError
     : IndexMethods<
-        TInsert,
+        TDatabase,
         PkPathOrPaths,
         Auto,
-        [...TIndexPaths, CompoundIndexPaths<TInsert, TCompoundIndexPaths>]
+        [...TIndexPaths, CompoundIndexPaths<TDatabase, TCompoundIndexPaths>]
       >;
-  build(): TableConfig<TInsert, PkPathOrPaths, Auto, TIndexPaths, TGet>;
+  // todo
+  build(): TableConfig<TDatabase, PkPathOrPaths, Auto, TIndexPaths, TGet, any>;
 }
 
 const isDistinctArray = (arr: readonly any[]): boolean => {
@@ -214,18 +215,20 @@ interface MapToClass<T> {
   excludedKeys: string[];
 }
 
-function createTableBuilder<T, TGet>(mapToClass?: MapToClass<T>) {
+function createTableBuilder<TDatabase, TGet>(
+  mapToClass?: MapToClass<TDatabase>
+) {
   const indexParts: string[] = [];
 
   function createIndexMethods<
-    TPkeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<T>,
+    TPkeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
     TAuto extends boolean,
-    TIndexPaths extends DexieIndexPaths<T>
+    TIndexPaths extends DexieIndexPaths<TDatabase>
   >(
     key: TPkeyPathOrPaths,
     auto: TAuto,
     indices: TIndexPaths
-  ): IndexMethods<T, TPkeyPathOrPaths, TAuto, TIndexPaths, TGet> {
+  ): IndexMethods<TDatabase, TPkeyPathOrPaths, TAuto, TIndexPaths, TGet> {
     const addIfNotDuplicatePart = (part: string) => {
       if (indexParts.includes(part)) {
         return duplicateIndexErrorInstance;
@@ -275,7 +278,7 @@ function createTableBuilder<T, TGet>(mapToClass?: MapToClass<T>) {
       build() {
         if (mapToClass) {
           const mapToClasstableConfig: TableConfig<
-            T,
+            TDatabase,
             TPkeyPathOrPaths,
             TAuto,
             TIndexPaths,
@@ -290,7 +293,7 @@ function createTableBuilder<T, TGet>(mapToClass?: MapToClass<T>) {
         }
 
         const tableConfig: TableConfig<
-          T,
+          TDatabase,
           TPkeyPathOrPaths,
           TAuto,
           TIndexPaths,
@@ -306,17 +309,19 @@ function createTableBuilder<T, TGet>(mapToClass?: MapToClass<T>) {
   }
 
   return {
-    autoIncrement<K extends ValidIndexedDBKeyPath<T, "", false>>(key: K) {
+    autoIncrement<K extends ValidIndexedDBKeyPath<TDatabase, "", false>>(
+      key: K
+    ) {
       return createIndexMethods(key, true, [] as const);
     },
-    primaryKey<K extends ValidIndexedDBKeyPath<T>>(key: K) {
+    primaryKey<K extends ValidIndexedDBKeyPath<TDatabase>>(key: K) {
       return createIndexMethods(key, false, [] as const);
     },
-    compoundKey<const K extends CompoundKeyPaths<T>>(
+    compoundKey<const K extends CompoundKeyPaths<TDatabase>>(
       ...keys: K
     ): NoDuplicates<K> extends never
       ? DuplicateKeysError
-      : IndexMethods<T, K, false, [], TGet> {
+      : IndexMethods<TDatabase, K, false, [], TGet> {
       return createIndexMethods(keys, false, [] as const) as any;
     },
 
@@ -350,9 +355,9 @@ export function tableClassBuilderExcluded<
       excludedKeys: readonly [...TExcludeProps]
     ) {
       type T = Omit<TEntity, TExcludeProps[number]>;
-      type TInsert = InsertType<T, never>;
+      type TDatabase = InsertType<T, never>;
 
-      return createTableBuilder<TInsert, TEntity>({
+      return createTableBuilder<TDatabase, TEntity>({
         ctor,
         excludedKeys: excludedKeys ? [...excludedKeys] : [],
       });

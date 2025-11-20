@@ -111,12 +111,12 @@ export type DBTables<
   TConfig extends Record<string, TableConfig<any, any, any, any, any>>
 > = {
   [TName in keyof TConfig & string]: TConfig[TName] extends TableConfig<
-    infer T,
+    infer TDatabase,
     infer PK,
     infer Auto,
     infer Indices,
     infer TGet,
-    infer TDatabase
+    infer TInsert
   >
     ? PK extends never
       ? Auto extends true
@@ -124,7 +124,7 @@ export type DBTables<
         : never
       : Auto extends true
       ? never
-      : KeyPathTable<TName, T, PK, Indices, TGet, TDatabase>
+      : KeyPathTable<TName, TDatabase, PK, Indices, TGet, TInsert>
     : never;
 };
 
@@ -189,14 +189,14 @@ export type PrimaryKeyCollection<
   TGet,
   TDatabase,
   TInsert,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TInsert>,
-  TIndexes extends DexieIndexPaths<TInsert>
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TIndexes extends DexieIndexPaths<TDatabase>
 > = Collection<
   TGet,
   TDatabase,
   TInsert,
-  PrimaryKey<TInsert, TPKeyPathOrPaths>,
-  PrimaryKey<TInsert, TPKeyPathOrPaths>,
+  PrimaryKey<TDatabase, TPKeyPathOrPaths>,
+  PrimaryKey<TDatabase, TPKeyPathOrPaths>,
   TIndexes
 >;
 
@@ -275,14 +275,14 @@ export interface TableBase<
   TGet,
   TDatabase,
   TInsert,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TInsert>,
-  TIndexPaths extends DexieIndexPaths<TInsert>
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TIndexPaths extends DexieIndexPaths<TDatabase>
 > {
   //db: Dexie;
   name: TName;
   schema: TableSchema;
   // todo TGet needs to be mapped to TExisting - TGet if entity class is incorrect
-  hook: TableHooks<TInsert, TGet, PrimaryKey<TInsert, TPKeyPathOrPaths>>;
+  hook: TableHooks<TDatabase, TGet, PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
   core: DBCoreTable;
 
   // filter(fn: (obj: T) => boolean): PrimaryKeyCollection<T, TKey, TIndexes>;
@@ -359,9 +359,9 @@ export interface TableBase<
   >;
   mapToClass(constructor: Function): Function;
 
-  delete(key: PrimaryKey<TInsert, TPKeyPathOrPaths>): PromiseExtended<void>;
+  delete(key: PrimaryKey<TDatabase, TPKeyPathOrPaths>): PromiseExtended<void>;
   bulkDelete(
-    keys: PrimaryKey<TInsert, TPKeyPathOrPaths>[]
+    keys: PrimaryKey<TDatabase, TPKeyPathOrPaths>[]
   ): PromiseExtended<void>;
   clear(): PromiseExtended<void>;
 }
@@ -386,11 +386,11 @@ interface BulkUpdate<
 
 type KeyPathTable<
   TName extends string,
-  TInsert,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TInsert>,
-  TIndexPaths extends DexieIndexPaths<TInsert>,
+  TDatabase,
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet,
-  TDatabase
+  TInsert
 > = TableBase<
   TName,
   TGet,
@@ -401,60 +401,67 @@ type KeyPathTable<
 > & {
   // todo object overload
   get(
-    key: PrimaryKey<TInsert, TPKeyPathOrPaths>
+    key: PrimaryKey<TDatabase, TPKeyPathOrPaths>
   ): PromiseExtended<TGet | undefined>;
   bulkGet(
-    keys: KeyPathValue<TInsert, TPKeyPathOrPaths>[]
+    keys: KeyPathValue<TDatabase, TPKeyPathOrPaths>[]
   ): PromiseExtended<(TGet | undefined)[]>;
 
-  add(item: TInsert): PromiseExtended<PrimaryKey<TInsert, TPKeyPathOrPaths>>;
+  add(
+    item: TDatabase
+  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
   // can probably remove this overload - this table entries already have the primary key
   bulkAdd<B extends boolean>(
-    items: readonly TInsert[],
+    items: readonly TDatabase[],
     options: {
       allKeys: B;
     }
   ): PromiseExtended<
     B extends true
-      ? PrimaryKey<TInsert, TPKeyPathOrPaths>[]
-      : PrimaryKey<TInsert, TPKeyPathOrPaths>
+      ? PrimaryKey<TDatabase, TPKeyPathOrPaths>[]
+      : PrimaryKey<TDatabase, TPKeyPathOrPaths>
   >;
   bulkAdd(
-    items: readonly TInsert[]
-  ): PromiseExtended<PrimaryKey<TInsert, TPKeyPathOrPaths>>;
-  put(item: TInsert): PromiseExtended<PrimaryKey<TInsert, TPKeyPathOrPaths>>;
+    items: readonly TDatabase[]
+  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+  put(
+    item: TDatabase
+  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
   // can probably remove this overload - this table entries already have the primary key
   bulkPut<B extends boolean>(
-    items: readonly TInsert[],
+    items: readonly TDatabase[],
     options: {
       allKeys: B;
     }
   ): PromiseExtended<
     B extends true
-      ? PrimaryKey<TInsert, TPKeyPathOrPaths>[]
-      : PrimaryKey<TInsert, TPKeyPathOrPaths>
+      ? PrimaryKey<TDatabase, TPKeyPathOrPaths>[]
+      : PrimaryKey<TDatabase, TPKeyPathOrPaths>
   >;
   bulkPut(
-    items: readonly TInsert[]
-  ): PromiseExtended<PrimaryKey<TInsert, TPKeyPathOrPaths>>;
+    items: readonly TDatabase[]
+  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
 
   // https://dexie.org/docs/Table/Table.update()
   update(
-    key: PrimaryKey<TInsert, TPKeyPathOrPaths>,
-    changes: UpdateSpec<TInsert>
+    key: PrimaryKey<TDatabase, TPKeyPathOrPaths>,
+    changes: UpdateSpec<TDatabase>
   ): PromiseExtended<0 | 1>;
   update(
-    key: PrimaryKey<TInsert, TPKeyPathOrPaths>,
-    changes: ChangeCallback<TInsert>
+    key: PrimaryKey<TDatabase, TPKeyPathOrPaths>,
+    changes: ChangeCallback<TDatabase>
   ): PromiseExtended<0 | 1>;
   // note that docs do not mention this ( as the key must exist on the object - so ok for this table type )
-  update(object: TInsert, changes: UpdateSpec<TInsert>): PromiseExtended<0 | 1>;
   update(
-    object: TInsert,
-    changes: ChangeCallback<TInsert>
+    object: TDatabase,
+    changes: UpdateSpec<TDatabase>
+  ): PromiseExtended<0 | 1>;
+  update(
+    object: TDatabase,
+    changes: ChangeCallback<TDatabase>
   ): PromiseExtended<0 | 1>;
   bulkUpdate(
-    changes: BulkUpdate<TInsert, TPKeyPathOrPaths>[]
+    changes: BulkUpdate<TDatabase, TPKeyPathOrPaths>[]
   ): PromiseExtended<number>;
   /*
     dexie typescript incorrectly allows T for the key
@@ -468,14 +475,14 @@ type KeyPathTable<
     todo look at typing with dotted paths too
   */
   upsert(
-    key: PrimaryKey<TInsert, TPKeyPathOrPaths>,
-    spec: UpsertSpec<TInsert, TPKeyPathOrPaths>
+    key: PrimaryKey<TDatabase, TPKeyPathOrPaths>,
+    spec: UpsertSpec<TDatabase, TPKeyPathOrPaths>
   ): PromiseExtended<boolean>;
 } & WhereClausesFromIndexes<
     TGet,
     TDatabase,
-    TInsert,
-    KeyPathValue<TInsert, TPKeyPathOrPaths>,
+    TDatabase,
+    KeyPathValue<TDatabase, TPKeyPathOrPaths>,
     TIndexPaths
   >;
 
