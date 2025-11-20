@@ -633,6 +633,26 @@ describe("table base", () => {
       );
     });
 
+    it("should limit to the same collection type", () => {
+      const collection = db.table.toCollection();
+      expect(collection.limit(5)).type.toBe<typeof collection>();
+    });
+
+    it("should offset to the same collection type", () => {
+      const collection = db.table.toCollection();
+      expect(collection.offset(5)).type.toBe<typeof collection>();
+    });
+
+    it("should reverse to the same collection type", () => {
+      const collection = db.table.toCollection();
+      expect(collection.reverse()).type.toBe<typeof collection>();
+    });
+
+    it("should distinct to the same collection type", () => {
+      const collection = db.table.toCollection();
+      expect(collection.distinct()).type.toBe<typeof collection>();
+    });
+
     describe("filtering", () => {
       const db = dexieFactory(
         1,
