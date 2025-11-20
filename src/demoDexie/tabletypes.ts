@@ -357,7 +357,7 @@ export interface TableBase<
     TPKeyPathOrPaths,
     TIndexPaths
   >;
-  mapToClass(constructor: Function): Function;
+  // remove mapToClass as this is done with the builder / factory
 
   delete(key: PrimaryKey<TDatabase, TPKeyPathOrPaths>): PromiseExtended<void>;
   bulkDelete(

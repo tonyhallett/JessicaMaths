@@ -98,6 +98,8 @@ interface CollectionBase<
   count(): PromiseExtended<number>;
 
   toArray(): PromiseExtended<Array<TGet>>;
+  // is toArray and sorts that
+  sortBy(keyPath: DotKeyComparable<TGet>): PromiseExtended<TGet[]>;
 
   /*
       ***********************
@@ -127,8 +129,8 @@ interface CollectionBase<
 
   primaryKeys(): PromiseExtended<TPkey[]>;
 
-  first(): PromiseExtended<TInsert | undefined>;
-  last(): PromiseExtended<TInsert | undefined>;
+  first(): PromiseExtended<TGet | undefined>;
+  last(): PromiseExtended<TGet | undefined>;
   limit(
     n: number
   ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
@@ -144,7 +146,6 @@ interface CollectionBase<
   filter: AndFilter<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
   distinct(): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
   reverse(): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
-  sortBy(keyPath: DotKeyComparable<TInsert>): PromiseExtended<TInsert[]>;
 
   // Mutating methods
   delete(): PromiseExtended<number>;

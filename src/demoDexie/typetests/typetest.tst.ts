@@ -216,6 +216,7 @@ interface StringId {
 class MappedStringId {
   id!: string;
   other!: number;
+  nested: { sub: number } = { sub: 0 };
   upperId() {
     return this.id.toUpperCase();
   }
@@ -589,16 +590,47 @@ describe("table base", () => {
       },
       ""
     );
-    it("should return collection sortable with property path on the object", async () => {
+
+    it("should return the first TGet or undefined", () => {
+      const db = dexieFactory(
+        1,
+        {
+          table: tableClassBuilder(MappedStringId).primaryKey("id").build(),
+        },
+        "DemoDexie"
+      );
+      expect(db.table.toCollection().first()).type.toBe<
+        PromiseExtended<MappedStringId | undefined>
+      >();
+    });
+
+    it("should return the last TGet or undefined", () => {
+      const db = dexieFactory(
+        1,
+        {
+          table: tableClassBuilder(MappedStringId).primaryKey("id").build(),
+        },
+        "DemoDexie"
+      );
+      expect(db.table.toCollection().last()).type.toBe<
+        PromiseExtended<MappedStringId | undefined>
+      >();
+    });
+
+    it("should be sortable with property path on TGet, returning TGet[]", async () => {
+      const db = dexieFactory(
+        1,
+        {
+          table: tableClassBuilder(MappedStringId).primaryKey("id").build(),
+        },
+        "DemoDexie"
+      );
       const collection = db.table.toCollection();
-      const sorted = await collection.sortBy("notAnIndex");
-      expect(sorted).type.toBe<TableItem[]>();
-      expect(collection.sortBy).type.toBeCallableWith("nestedIndex.subIndex");
+      const sorted = await collection.sortBy("nested.sub");
+      expect(sorted).type.toBe<MappedStringId[]>();
       expect(collection.sortBy).type.not.toBeCallableWith(
         "nestedIndex.badPath"
       );
-
-      // is this TGet or TDatabase ?
     });
 
     describe("filtering", () => {
