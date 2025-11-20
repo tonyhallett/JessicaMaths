@@ -598,7 +598,7 @@ describe("table base", () => {
         "nestedIndex.badPath"
       );
 
-      // is this TGet or TInsert ?
+      // is this TGet or TDatabase ?
     });
 
     describe("filtering", () => {

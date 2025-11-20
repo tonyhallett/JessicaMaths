@@ -133,12 +133,6 @@ export const DemoDexie = () => {
   return (
     <Button
       onClick={async () => {
-        const entityFiltered = await dbEntity.data
-          .filter((item) => {
-            return true;
-          })
-          .toArray();
-
         db.data.add({
           id: 4,
           numberValue: 13,
@@ -159,13 +153,6 @@ export const DemoDexie = () => {
         ]);
         await db.data.delete(4);
 
-        const filtered = await db.data
-          .filter((item) => item.numberValue > 10)
-          .toArray();
-        filtered.forEach((item) => {
-          console.log("Filtered item:", item);
-        });
-
         db.data
           .where("numberValue")
           .between(10, 50)
@@ -181,29 +168,6 @@ export const DemoDexie = () => {
           ])
           .each((item) => {
             console.log("in any range item:", item);
-          });
-
-        // collection operations
-
-        db.data
-          .toCollection()
-          .until((item) => item.numberValue === 13)
-          .each((item) => {
-            console.log("Until collection item:", item.id);
-          });
-
-        db.data
-          .toCollection()
-          .filter((item) => item.id === 2)
-          .each((item) => {
-            console.log("Filtered collection item with id 2:", item.id);
-          });
-
-        db.data
-          .toCollection()
-          .and((item) => item.id === 2)
-          .each((item) => {
-            console.log("Filtered collection item with id 2:", item.id);
           });
       }}
     >
