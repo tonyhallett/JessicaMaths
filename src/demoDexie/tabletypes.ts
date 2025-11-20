@@ -407,12 +407,10 @@ type KeyPathTable<
     keys: KeyPathValue<TDatabase, TPKeyPathOrPaths>[]
   ): PromiseExtended<(TGet | undefined)[]>;
 
-  add(
-    item: TDatabase
-  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+  add(item: TInsert): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
   // can probably remove this overload - this table entries already have the primary key
   bulkAdd<B extends boolean>(
-    items: readonly TDatabase[],
+    items: readonly TInsert[],
     options: {
       allKeys: B;
     }
@@ -422,14 +420,12 @@ type KeyPathTable<
       : PrimaryKey<TDatabase, TPKeyPathOrPaths>
   >;
   bulkAdd(
-    items: readonly TDatabase[]
+    items: readonly TInsert[]
   ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
-  put(
-    item: TDatabase
-  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+  put(item: TInsert): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
   // can probably remove this overload - this table entries already have the primary key
   bulkPut<B extends boolean>(
-    items: readonly TDatabase[],
+    items: readonly TInsert[],
     options: {
       allKeys: B;
     }
@@ -439,7 +435,7 @@ type KeyPathTable<
       : PrimaryKey<TDatabase, TPKeyPathOrPaths>
   >;
   bulkPut(
-    items: readonly TDatabase[]
+    items: readonly TInsert[]
   ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
 
   // https://dexie.org/docs/Table/Table.update()

@@ -10,6 +10,7 @@ import type {
   CompoundKeyPaths,
   ValidIndexedDBKeyPath,
 } from "./ValidIndexedDBKeyPaths";
+import type { OptionalPrimaryKeys } from "./utilitytypes";
 
 export type DexiePrimaryKeyPathOrPaths<T> =
   | ValidIndexedDBKeyPath<T>
@@ -144,7 +145,8 @@ interface IndexMethods<
   PkPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   Auto extends boolean,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
-  TGet = TDatabase
+  TGet = TDatabase,
+  TPkeyOnObject extends boolean = false
 > {
   index<
     TIndexPath extends NonPrimaryKeyPath<TDatabase, PkPathOrPaths> &
@@ -202,8 +204,18 @@ interface IndexMethods<
         Auto,
         [...TIndexPaths, CompoundIndexPaths<TDatabase, TCompoundIndexPaths>]
       >;
-  // todo
-  build(): TableConfig<TDatabase, PkPathOrPaths, Auto, TIndexPaths, TGet, any>;
+  build(): TableConfig<
+    TDatabase,
+    PkPathOrPaths,
+    Auto,
+    TIndexPaths,
+    TGet,
+    TPkeyOnObject extends true
+      ? Auto extends true
+        ? OptionalPrimaryKeys<TDatabase, PkPathOrPaths>
+        : TDatabase
+      : TDatabase
+  >;
 }
 
 const isDistinctArray = (arr: readonly any[]): boolean => {
@@ -223,12 +235,21 @@ function createTableBuilder<TDatabase, TGet>(
   function createIndexMethods<
     TPkeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
     TAuto extends boolean,
-    TIndexPaths extends DexieIndexPaths<TDatabase>
+    TIndexPaths extends DexieIndexPaths<TDatabase>,
+    TPkeyOnObject extends boolean
   >(
     key: TPkeyPathOrPaths,
     auto: TAuto,
-    indices: TIndexPaths
-  ): IndexMethods<TDatabase, TPkeyPathOrPaths, TAuto, TIndexPaths, TGet> {
+    indices: TIndexPaths,
+    pkeyOnObject: TPkeyOnObject
+  ): IndexMethods<
+    TDatabase,
+    TPkeyPathOrPaths,
+    TAuto,
+    TIndexPaths,
+    TGet,
+    TPkeyOnObject
+  > {
     const addIfNotDuplicatePart = (part: string) => {
       if (indexParts.includes(part)) {
         return duplicateIndexErrorInstance;
@@ -239,28 +260,34 @@ function createTableBuilder<TDatabase, TGet>(
       index(indexKey) {
         return (
           addIfNotDuplicatePart(indexKey) ||
-          (createIndexMethods(key, auto, [
-            ...indices,
-            { kind: "single", path: indexKey, multi: false },
-          ]) as any)
+          (createIndexMethods(
+            key,
+            auto,
+            [...indices, { kind: "single", path: indexKey, multi: false }],
+            pkeyOnObject
+          ) as any)
         );
       },
       unique(indexKey) {
         return (
           addIfNotDuplicatePart(`&${indexKey}`) ||
-          (createIndexMethods(key, auto, [
-            ...indices,
-            { kind: "single", path: indexKey, multi: false },
-          ]) as any)
+          (createIndexMethods(
+            key,
+            auto,
+            [...indices, { kind: "single", path: indexKey, multi: false }],
+            pkeyOnObject
+          ) as any)
         );
       },
       multi(indexKey) {
         return (
           addIfNotDuplicatePart(`*${indexKey}`) ||
-          (createIndexMethods(key, auto, [
-            ...indices,
-            { kind: "multi", path: indexKey, multi: true },
-          ]) as any)
+          (createIndexMethods(
+            key,
+            auto,
+            [...indices, { kind: "multi", path: indexKey, multi: true }],
+            pkeyOnObject
+          ) as any)
         );
       },
       compound(...keys) {
@@ -269,10 +296,12 @@ function createTableBuilder<TDatabase, TGet>(
         }
         return (
           addIfNotDuplicatePart(`[${(keys as string[]).join("+")}]`) ||
-          (createIndexMethods(key, auto, [
-            ...indices,
-            { kind: "compound", paths: keys },
-          ]) as any)
+          (createIndexMethods(
+            key,
+            auto,
+            [...indices, { kind: "compound", paths: keys }],
+            pkeyOnObject
+          ) as any)
         );
       },
       build() {
@@ -312,24 +341,24 @@ function createTableBuilder<TDatabase, TGet>(
     autoIncrement<K extends ValidIndexedDBKeyPath<TDatabase, "", false>>(
       key: K
     ) {
-      return createIndexMethods(key, true, [] as const);
+      return createIndexMethods(key, true, [] as const, true);
     },
     primaryKey<K extends ValidIndexedDBKeyPath<TDatabase>>(key: K) {
-      return createIndexMethods(key, false, [] as const);
+      return createIndexMethods(key, false, [] as const, true);
     },
     compoundKey<const K extends CompoundKeyPaths<TDatabase>>(
       ...keys: K
     ): NoDuplicates<K> extends never
       ? DuplicateKeysError
       : IndexMethods<TDatabase, K, false, [], TGet> {
-      return createIndexMethods(keys, false, [] as const) as any;
+      return createIndexMethods(keys, false, [] as const, true) as any;
     },
 
     hiddenAuto() {
-      return createIndexMethods(null as never, true, [] as const);
+      return createIndexMethods(null as never, true, [] as const, false);
     },
     hiddenExplicit<K>() {
-      return createIndexMethods(null as never, false, [] as const);
+      return createIndexMethods(null as never, false, [] as const, false);
     },
   };
 }

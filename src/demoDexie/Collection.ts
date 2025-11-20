@@ -47,7 +47,7 @@ export type AndFilter<
   TKey,
   TIndexPaths extends DexieIndexPaths<TInsert>
 > = (
-  filter: (x: TDatabase) => boolean
+  filter: (item: TDatabase) => boolean
 ) => Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
 
 export type Collection<

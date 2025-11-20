@@ -208,22 +208,24 @@ describe("database typed transaction", () => {
   // todo - support db.transaction("rw", [db.data, "other"],"else", (tx) => {
 });
 
+interface StringId {
+  id: string;
+  other: number;
+}
+
+class MappedStringId {
+  id!: string;
+  other!: number;
+  upperId() {
+    return this.id.toUpperCase();
+  }
+}
+
+interface NumberId {
+  id: number;
+}
+
 describe("table base", () => {
-  interface StringId {
-    id: string;
-  }
-
-  class MappedStringId {
-    id!: string;
-    get upperId() {
-      return this.id.toUpperCase();
-    }
-  }
-
-  interface NumberId {
-    id: number;
-  }
-
   const db = dexieFactory(
     1,
     {
@@ -364,6 +366,19 @@ describe("table base", () => {
     });
     db.table.orderBy("stringIndex").each((item, cursor) => {
       expect(cursor.key).type.toBe<string>();
+    });
+  });
+
+  it("should have the filter method with database item type", () => {
+    db.stringMapped.filter((item) => {
+      expect(item).type.not.toHaveProperty("upperId");
+      expect(item).type.toHaveProperty("other");
+      return true;
+    });
+
+    db.string.filter((item) => {
+      expect(item).type.toBe<StringId>();
+      return true;
     });
   });
 
@@ -574,7 +589,7 @@ describe("table base", () => {
       },
       ""
     );
-    it("should return collection can be sorted by with property path on the object", async () => {
+    it("should return collection sortable with property path on the object", async () => {
       const collection = db.table.toCollection();
       const sorted = await collection.sortBy("notAnIndex");
       expect(sorted).type.toBe<TableItem[]>();
@@ -587,12 +602,50 @@ describe("table base", () => {
     });
 
     describe("filtering", () => {
+      const db = dexieFactory(
+        1,
+        {
+          string: tableBuilder<StringId>().primaryKey("id").build(),
+          stringMapped: tableClassBuilder(MappedStringId)
+            .primaryKey("id")
+            .build(),
+        },
+        "DemoDexie"
+      );
+
       it("should have until method with correct item type", () => {
-        // check the return type of the collection as should not change
+        const stringMappedCollection = db.stringMapped.toCollection();
+        const untilCollection = stringMappedCollection.until((item) => {
+          expect(item).type.not.toHaveProperty("upperId");
+          expect(item).type.toHaveProperty("other");
+          return false;
+        });
+        expect(untilCollection).type.toBe<typeof stringMappedCollection>();
       });
+
       it("should have the filter ( and alias and ) method with correct item type", () => {
-        // check the return type of the collection as should not change
-        // do table.filter in here as well ?
+        const stringMappedCollection = db.stringMapped.toCollection();
+        const filteredStringMappedCollection = stringMappedCollection.filter(
+          (item) => {
+            expect(item).type.not.toHaveProperty("upperId");
+            expect(item).type.toHaveProperty("other");
+            return true;
+          }
+        );
+        expect(filteredStringMappedCollection).type.toBe<
+          typeof stringMappedCollection
+        >();
+
+        stringMappedCollection.and((item) => {
+          expect(item).type.not.toHaveProperty("upperId");
+          expect(item).type.toHaveProperty("other");
+          return true;
+        });
+
+        db.string.toCollection().filter((item) => {
+          expect(item).type.toBe<StringId>();
+          return true;
+        });
       });
     });
   });
