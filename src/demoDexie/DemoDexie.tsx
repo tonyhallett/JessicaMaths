@@ -1,7 +1,7 @@
 import Button from "@mui/material/Button";
 import { dexieFactory } from "./dexieFactory";
 import { add } from "dexie";
-import { tableBuilder } from "./tablebuilder";
+import { tableBuilder, tableClassBuilder } from "./tablebuilder";
 
 interface DexieDataItem {
   id: number;
@@ -93,6 +93,28 @@ db.data.hook("reading", function (value) {
   return value;
 });
 
+class EntityClass {
+  constructor(id: number) {
+    this.id = id;
+  }
+  id: number;
+  str: string = "";
+  method() {}
+}
+
+const dbEntity = dexieFactory(
+  1,
+  {
+    data: tableClassBuilder(EntityClass).primaryKey("id").build(),
+  },
+  "DemoDexieEntity"
+);
+dbEntity.on("populate", (tx) => {
+  tx.data.add({ id: 1, str: "Hello" });
+  tx.data.add(new EntityClass(2));
+  // tx.data.add({ str: "Hello" }); error - id is required
+});
+
 /* db.data.upsert(1, {
   arrayKey: ["a", "b", "c"],
   numberValue: 100,
@@ -111,7 +133,12 @@ export const DemoDexie = () => {
   return (
     <Button
       onClick={async () => {
-        var items = await db.data.toArray();
+        const entityFiltered = await dbEntity.data
+          .filter((item) => {
+            return true;
+          })
+          .toArray();
+
         db.data.add({
           id: 4,
           numberValue: 13,
@@ -131,162 +158,13 @@ export const DemoDexie = () => {
           },
         ]);
         await db.data.delete(4);
-        db.data.each((item, cursor) => {
-          cursor.key.toFixed(2);
-          cursor.primaryKey.toFixed(2);
-          console.log(
-            `Item with key ${cursor.key}, primaryKey ${cursor.primaryKey}:`,
-            item
-          );
-        });
+
         const filtered = await db.data
           .filter((item) => item.numberValue > 10)
           .toArray();
         filtered.forEach((item) => {
           console.log("Filtered item:", item);
         });
-        db.data.limit(2).each((item) => {
-          console.log("Limited item:", item);
-        });
-        db.data.offset(1).each((item) => {
-          console.log("Offset item:", item);
-        });
-
-        db.data.orderBy("stringValue").each((item, cursor) => {
-          console.log("Ordered item:", item);
-        });
-
-        db.data.orderBy("numberValue").each((item, cursor) => {
-          console.log("Ordered item:", item);
-        });
-
-        db.data.reverse().each((item) => {
-          console.log("Reversed item:", item);
-        });
-
-        // where
-        //db.data.where("XXX"); error
-        db.data
-          .where("numberValue")
-          .above(10)
-          .each((item) => {
-            console.log("above 10 item:", item);
-          });
-
-        db.data
-          .where("numberValue")
-          .above(10)
-          .eachPrimaryKey((key, cursor) => {
-            key.toFixed(2);
-            cursor.key.toFixed(2);
-            cursor.primaryKey.toFixed(2);
-          });
-
-        db.data
-          .where("stringValue")
-          .above("H")
-          .eachPrimaryKey((key, cursor) => {
-            key.toFixed(2);
-            cursor.key.includes("H");
-            cursor.primaryKey.toFixed(2);
-          });
-
-        db.data
-          .where("stringValue")
-          .above("Emu")
-          .each((item) => {
-            console.log("above Emu item:", item);
-          });
-
-        db.data
-          .where("stringValue")
-          .above("emu")
-          .each((item) => {
-            console.log("above emu item:", item);
-          });
-
-        db.data
-          .where("numberValue")
-          .notEqual(7)
-          .each((item) => {
-            console.log("Not equal item:", item);
-          });
-
-        db.data
-          .where("numberValue")
-          .noneOf([7, 42])
-          .each((item) => {
-            console.log("None of item:", item);
-          });
-
-        db.data
-          .where("numberValue")
-          .noneOf(7, 42)
-          .each((item) => {
-            console.log("None of item:", item);
-          });
-
-        /* await db.data
-          .where("numberValue")
-          .noneOf("7", 42)  error */
-
-        db.data
-          .where("numberValue")
-          .anyOf([7, 42])
-          .each((item) => {
-            console.log("any of item:", item);
-          });
-
-        db.data
-          .where("stringValue")
-          .anyOfIgnoreCase("hello", "dexie")
-          .each((item) => {
-            console.log("any of ignore case item:", item);
-          });
-
-        db.data
-          .where("stringValue")
-          .anyOfIgnoreCase(["hello", "dexie"])
-          .each((item) => {
-            console.log("any of ignore case item:", item);
-          });
-
-        //db.data.where("numberValue").anyOfIgnoreCase(["hello"]); // error
-
-        db.data
-          .where("stringValue")
-          .equals("World")
-          .each((item) => {
-            console.log("equals item:", item);
-          });
-
-        // db.data.where("stringValue").equals(10); // error
-
-        db.data
-          .where("stringValue")
-          .startsWithAnyOfIgnoreCase(["W", "d"])
-          .each((item) => {
-            console.log("starts with any of ignore case item:", item);
-          });
-
-        db.data
-          .where("stringValue")
-          .startsWithAnyOfIgnoreCase("W", "d")
-          .each((item) => {
-            console.log("starts with any of ignore case item:", item);
-          });
-
-        db.data
-          .where("stringValue")
-          .startsWithAnyOf("W", "d")
-          .each((item) => {
-            console.log("starts with any of item:", item);
-          });
-
-        //db.data.where("numberValue").startsWithAnyOfIgnoreCase("d"); // error";
-        //db.data.where("numberValue").startsWithAnyOfIgnoreCase(["d"]); // error
-        //db.data.where("numberValue").startsWithAnyOf(["1"]);
-        //db.data.where("numberValue").equalsIgnoreCase("42"); // error
 
         db.data
           .where("numberValue")
@@ -307,66 +185,11 @@ export const DemoDexie = () => {
 
         // collection operations
 
-        const tableCount = await db.data.toCollection().count();
-        console.log("Total count of items in data table:", tableCount);
-
-        // typed sortBy
-        const sorted = await db.data
-          .toCollection()
-          .sortBy("nested.level1.numberValue");
-        sorted[0]?.numberValue;
-
-        db.data
-          .toCollection()
-          .reverse()
-          .each((item, cursor) => {
-            cursor.key.toFixed(2);
-            cursor.primaryKey.toFixed(2);
-            console.log("Reversed collection item:", item.id);
-          });
-
-        db.data.reverse().each((item, cursor) => {
-          cursor.key.toFixed(2);
-          cursor.primaryKey.toFixed(2);
-          console.log("Reversed item:", item);
-        });
-
-        db.data
-          .toCollection()
-          .distinct()
-          .each((item) => {
-            console.log("Distinct collection item:", item.id);
-          });
-
-        const limited = await db.data.toCollection().limit(1).toArray();
-        limited[0]?.numberValue;
-
-        db.data
-          .toCollection()
-          .offset(1)
-          .each((item) => {
-            console.log("Offset collection item:", item.id);
-          });
-
         db.data
           .toCollection()
           .until((item) => item.numberValue === 13)
           .each((item) => {
             console.log("Until collection item:", item.id);
-          });
-
-        db.data
-          .toCollection()
-          .first()
-          .then((firstItem) => {
-            console.log("First item in data table:", firstItem?.id);
-          });
-
-        db.data
-          .toCollection()
-          .last()
-          .then((lastItem) => {
-            console.log("Last item in data table:", lastItem?.id);
           });
 
         db.data
@@ -382,107 +205,6 @@ export const DemoDexie = () => {
           .each((item) => {
             console.log("Filtered collection item with id 2:", item.id);
           });
-
-        db.data.toCollection().eachKey((key, cursor) => {
-          // key typed to primary key type (number)
-          cursor.key.toFixed(2);
-          cursor.primaryKey.toFixed(2);
-          console.log("Collection eachKey key:", key);
-        });
-        db.data
-          .where("stringValue")
-          .equals("Hello")
-          .eachKey((key, cursor) => {
-            // key typed to string
-            cursor.key.includes("H");
-            cursor.primaryKey.toFixed(2);
-            console.log("Collection eachKey key:", key);
-          });
-
-        db.data
-          .where("stringValue")
-          .equals("Hello")
-          .each((obj, cursor) => {
-            // key typed to string
-            cursor.key.includes("H");
-            cursor.primaryKey.toFixed(2);
-            console.log("Collection each:", obj);
-          });
-
-        db.data
-          .where("numberValue")
-          .equals(42)
-          .each((obj, cursor) => {
-            cursor.key.toFixed(2);
-            cursor.primaryKey.toFixed(2);
-          });
-        db.data
-          .where("numberValue")
-          .equals(42)
-          .eachKey((key, cursor) => {
-            // key typed to number
-            cursor.key.toFixed(2);
-            cursor.primaryKey.toFixed(2);
-            console.log("Collection eachKey key:", key);
-          });
-
-        db.data
-          .where("numberValue")
-          .equals(42)
-          .eachUniqueKey((key, cursor) => {
-            // key typed to number
-            cursor.key.toFixed(2);
-            cursor.primaryKey.toFixed(2);
-            console.log("Collection eachUniqueKey key:", key);
-          });
-
-        const pKeys = await db.data.toCollection().keys();
-        pKeys[0]?.toFixed(2);
-        const uniquePKeys = await db.data.toCollection().keys();
-        uniquePKeys[0]?.toFixed(2);
-
-        const numberKeys = await db.data.where("numberValue").equals(42).keys();
-        numberKeys[0]?.toFixed(2);
-
-        const stringKeys = await db.data
-          .where("stringValue")
-          .equals("Hello")
-          .keys();
-        stringKeys[0]?.includes("H");
-
-        const uniqueStringKeys = await db.data
-          .where("stringValue")
-          .equals("Hello")
-          .uniqueKeys();
-        uniqueStringKeys[0]?.includes("H");
-
-        const startsWithDCollectionBegin = db.data
-          .where("stringValue")
-          .startsWith("D");
-
-        //db.data.where("numberValue").startsWith("D"); // error
-
-        const startsWithDCollection = startsWithDCollectionBegin.clone();
-        const orCollection = startsWithDCollectionBegin
-          .or("stringValue")
-          .startsWith("H");
-
-        startsWithDCollectionBegin
-          .or("numberValue")
-          //.startsWith("D"); error
-          //.equals("1") error
-          .above(1);
-
-        const startsWithDCount = await startsWithDCollection.count();
-        console.log(
-          "Count of items with stringValue starting with 'D':",
-          startsWithDCount
-        );
-        const orCount = await orCollection.count();
-        console.log(
-          "Count of items with stringValue starting with 'D' or 'H':",
-          orCount
-        );
       }}
     >
       Demo Dexie

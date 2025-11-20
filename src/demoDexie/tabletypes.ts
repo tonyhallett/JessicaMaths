@@ -185,13 +185,15 @@ export type PrimaryKey<
   : KeyPathValue<T, TPKeyPathOrPaths & keyof T>;
 
 export type PrimaryKeyCollection<
-  T,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<T>,
-  TIndexes extends DexieIndexPaths<T>
+  TGet,
+  TInsert,
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TInsert>,
+  TIndexes extends DexieIndexPaths<TInsert>
 > = Collection<
-  T,
-  PrimaryKey<T, TPKeyPathOrPaths>,
-  PrimaryKey<T, TPKeyPathOrPaths>,
+  TGet,
+  TInsert,
+  PrimaryKey<TInsert, TPKeyPathOrPaths>,
+  PrimaryKey<TInsert, TPKeyPathOrPaths>,
   TIndexes
 >;
 
@@ -281,36 +283,53 @@ export interface TableBase<
 
   // filter(fn: (obj: T) => boolean): PrimaryKeyCollection<T, TKey, TIndexes>;
   // this.toCollection().and(filterFunction);
-  filter: PrimaryKeyCollection<TInsert, TPKeyPathOrPaths, TIndexPaths>["and"];
+  filter: PrimaryKeyCollection<
+    TGet,
+    TInsert,
+    TPKeyPathOrPaths,
+    TIndexPaths
+  >["and"];
   count(): PromiseExtended<number>;
 
   offset(
     n: number
-  ): PrimaryKeyCollection<TInsert, TPKeyPathOrPaths, TIndexPaths>;
+  ): PrimaryKeyCollection<TGet, TInsert, TPKeyPathOrPaths, TIndexPaths>;
   limit(
     n: number
-  ): PrimaryKeyCollection<TInsert, TPKeyPathOrPaths, TIndexPaths>;
+  ): PrimaryKeyCollection<TGet, TInsert, TPKeyPathOrPaths, TIndexPaths>;
 
   // this.toCollection().each(callback);
-  each: PrimaryKeyCollection<TInsert, TPKeyPathOrPaths, TIndexPaths>["each"];
+  each: PrimaryKeyCollection<
+    TGet,
+    TInsert,
+    TPKeyPathOrPaths,
+    TIndexPaths
+  >["each"];
 
   // this.toCollection().toArray(thenShortcut);
   // toArray(): PromiseExtended<Array<T>>;
   toArray: PrimaryKeyCollection<
+    TGet,
     TInsert,
     TPKeyPathOrPaths,
     TIndexPaths
   >["toArray"];
-  toCollection(): PrimaryKeyCollection<TInsert, TPKeyPathOrPaths, TIndexPaths>;
+  toCollection(): PrimaryKeyCollection<
+    TGet,
+    TInsert,
+    TPKeyPathOrPaths,
+    TIndexPaths
+  >;
   orderBy<Path extends IndexPath<TInsert, TIndexPaths[number]>>(
     index: Path
   ): Collection<
+    TGet,
     TInsert,
     KeyPathValue<TInsert, TPKeyPathOrPaths>,
     KeyForIndex<TInsert, ExtractSelectedIndex<TInsert, TIndexPaths, Path>>,
     TIndexPaths
   >;
-  reverse(): PrimaryKeyCollection<TInsert, TPKeyPathOrPaths, TIndexPaths>;
+  reverse(): PrimaryKeyCollection<TGet, TInsert, TPKeyPathOrPaths, TIndexPaths>;
   mapToClass(constructor: Function): Function;
 
   delete(key: PrimaryKey<TInsert, TPKeyPathOrPaths>): PromiseExtended<void>;
@@ -418,6 +437,7 @@ type KeyPathTable<
     spec: UpsertSpec<TInsert, TPKeyPathOrPaths>
   ): PromiseExtended<boolean>;
 } & WhereClausesFromIndexes<
+    TGet,
     TInsert,
     KeyPathValue<TInsert, TPKeyPathOrPaths>,
     TIndexPaths

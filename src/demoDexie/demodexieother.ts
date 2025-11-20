@@ -94,7 +94,7 @@ const dbCompoundPrimary = dexieFactory(
   1,
   {
     data: tableBuilder<DexieDataItem>()
-      .compoundKey(["id", "stringValue"])
+      .compoundKey("id", "stringValue")
       .build(),
   },
   "DemoDexieCompoundPrimary"

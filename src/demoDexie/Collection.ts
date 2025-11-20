@@ -40,19 +40,23 @@ export type DotKeyComparable<TValue> = IsAny<TValue> extends true
 export type DotKey<T> = DotNestedKeys<T>;
 
 export type AndFilter<
-  T,
+  TGet,
+  TInsert,
   TPkey,
   TKey,
-  TIndexPaths extends DexieIndexPaths<T>
-> = (filter: (x: T) => boolean) => Collection<T, TPkey, TKey, TIndexPaths>;
+  TIndexPaths extends DexieIndexPaths<TInsert>
+> = (
+  filter: (x: TInsert) => boolean
+) => Collection<TGet, TInsert, TPkey, TKey, TIndexPaths>;
 
 export type Collection<
-  T,
+  TGet,
+  TInsert,
   PKey,
   TKey,
-  TIndexPaths extends DexieIndexPaths<T>
-> = CollectionBase<T, PKey, TKey, TIndexPaths> &
-  WhereClausesFromIndexes<T, PKey, TIndexPaths, "or">;
+  TIndexPaths extends DexieIndexPaths<TInsert>
+> = CollectionBase<TGet, TInsert, PKey, TKey, TIndexPaths> &
+  WhereClausesFromIndexes<TGet, TInsert, PKey, TIndexPaths, "or">;
 
 export interface Cursor<TKey, TPkey> {
   key: TKey;
@@ -68,10 +72,11 @@ export interface ChangeCallback<T> {
 }
 
 interface CollectionBase<
-  T,
+  TGet,
+  TInsert,
   TPkey,
   TKey,
-  TIndexPaths extends DexieIndexPaths<T>
+  TIndexPaths extends DexieIndexPaths<TInsert>
 > {
   //db: Database;
   // then shortcuts
@@ -83,11 +88,11 @@ interface CollectionBase<
   // sortBy<R>(keyPath: string, thenShortcut: ThenShortcut<T[], R>): PromiseExtended<R>
   // toArray<R>(thenShortcut: ThenShortcut<T[], R>): PromiseExtended<R>
   // uniqueKeys<R>(thenShortcut: ThenShortcut<IndexableTypeArray, R>): PromiseExtended<R>
-  clone(props?: Object): Collection<T, TPkey, TKey, TIndexPaths>;
+  clone(props?: Object): Collection<TGet, TInsert, TPkey, TKey, TIndexPaths>;
 
   count(): PromiseExtended<number>;
 
-  toArray(): PromiseExtended<Array<T>>;
+  toArray(): PromiseExtended<Array<TGet>>;
 
   /*
       ***********************
@@ -97,7 +102,7 @@ interface CollectionBase<
     */
   // https://dexie.org/docs/Collection/Collection.each()
   each(
-    callback: (obj: T, cursor: Cursor<TKey, TPkey>) => any
+    callback: (obj: TGet, cursor: Cursor<TKey, TPkey>) => any
   ): PromiseExtended<void>;
   // https://dexie.org/docs/Collection/Collection.eachKey()
   // ***************
@@ -117,29 +122,28 @@ interface CollectionBase<
 
   primaryKeys(): PromiseExtended<TPkey[]>;
 
-  first(): PromiseExtended<T | undefined>;
-  last(): PromiseExtended<T | undefined>;
-  limit(n: number): Collection<T, TPkey, TKey, TIndexPaths>;
+  first(): PromiseExtended<TInsert | undefined>;
+  last(): PromiseExtended<TInsert | undefined>;
+  limit(n: number): Collection<TGet, TInsert, TPkey, TKey, TIndexPaths>;
   // https://dexie.org/docs/Collection/Collection.until()  works similar to limit
   until(
-    filter: (value: T) => boolean,
+    filter: (value: TInsert) => boolean,
     includeStopEntry?: boolean
-  ): Collection<T, TPkey, TKey, TIndexPaths>;
-  offset(n: number): Collection<T, TPkey, TKey, TIndexPaths>;
-  and: AndFilter<T, TPkey, TKey, TIndexPaths>;
-  filter: AndFilter<T, TPkey, TKey, TIndexPaths>;
-  distinct(): Collection<T, TPkey, TKey, TIndexPaths>;
-
-  reverse(): Collection<T, TPkey, TKey, TIndexPaths>;
-  sortBy(keyPath: DotKeyComparable<T>): PromiseExtended<T[]>;
+  ): Collection<TGet, TInsert, TPkey, TKey, TIndexPaths>;
+  offset(n: number): Collection<TGet, TInsert, TPkey, TKey, TIndexPaths>;
+  and: AndFilter<TGet, TInsert, TPkey, TKey, TIndexPaths>;
+  filter: AndFilter<TGet, TInsert, TPkey, TKey, TIndexPaths>;
+  distinct(): Collection<TGet, TInsert, TPkey, TKey, TIndexPaths>;
+  reverse(): Collection<TGet, TInsert, TPkey, TKey, TIndexPaths>;
+  sortBy(keyPath: DotKeyComparable<TInsert>): PromiseExtended<TInsert[]>;
 
   // Mutating methods
   delete(): PromiseExtended<number>;
   // https://dexie.org/docs/Collection/Collection.modify()
-  modify(changeCallback: ChangeCallback<T>): PromiseExtended<number>;
-  modify(changes: UpdateSpec<T>): PromiseExtended<number>;
+  modify(changeCallback: ChangeCallback<TInsert>): PromiseExtended<number>;
+  modify(changes: UpdateSpec<TInsert>): PromiseExtended<number>;
 
   // Other methods
   // https://dexie.org/docs/Collection/Collection.raw()
-  raw(): Collection<T, TPkey, TKey, TIndexPaths>;
+  raw(): Collection<TGet, TInsert, TPkey, TKey, TIndexPaths>;
 }
