@@ -650,3 +650,28 @@ describe("table base", () => {
     });
   });
 });
+
+describe("primary key on object table", () => {
+  interface TableItem {
+    id: string;
+    other: number;
+  }
+  const tableItem: TableItem = { id: "id1", other: 42 };
+  const db = dexieFactory(
+    1,
+    {
+      table: tableBuilder<TableItem>().primaryKey("id").build(),
+    },
+    "DemoDexie"
+  );
+  it("should add without primary key argument", () => {
+    expect(db.table.add).type.toBeCallableWith(tableItem);
+    expect(db.table.add).type.not.toBeCallableWith(tableItem, "id1");
+    expect(db.table.add).type.not.toBeCallableWith({ id: "id1" });
+  });
+  it("should put without primary key argument", () => {
+    expect(db.table.put).type.toBeCallableWith(tableItem);
+    expect(db.table.put).type.not.toBeCallableWith(tableItem, "id1");
+    expect(db.table.put).type.not.toBeCallableWith({ id: "id1" });
+  });
+});
