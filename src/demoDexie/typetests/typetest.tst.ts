@@ -568,6 +568,7 @@ describe("table base", () => {
       expect(whereCompound.equals).type.toBeCallableWith(["a", 1]);
       expect(whereCompound.equals).type.not.toBeCallableWith([1, "a"]);
       expect(whereCompound.equals).type.not.toBeCallableWith("a");
+
       expect(whereCompound.anyOf).type.toBeCallableWith([
         ["a", 1],
         ["b", 2],
