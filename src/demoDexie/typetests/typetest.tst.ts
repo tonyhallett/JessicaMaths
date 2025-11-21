@@ -8,7 +8,6 @@ import {
   type DuplicateKeysError,
 } from "../tablebuilder";
 import { expect, describe, it } from "tstyche";
-import type { string } from "mathjs";
 
 describe("tableBuilder", () => {
   describe("primary key selection", () => {
@@ -525,6 +524,14 @@ describe("table base", () => {
       expect(db.table.where).type.toBeCallableWith("multiEntry");
     });
 
+    it("should accept compound key paths", () => {
+      expect(db.table.where).type.toBeCallableWith(["compound1", "compound2"]);
+      expect(db.table.where).type.not.toBeCallableWith([
+        "compound2",
+        "compound1",
+      ]);
+    });
+
     it("should have methods typed to the index type", () => {
       const whereString = db.table.where("stringIndex");
       expect(whereString.above).type.toBeCallableWith("stringValue");
@@ -556,6 +563,19 @@ describe("table base", () => {
       expect(whereMultiEntry.anyOf).type.toBeCallableWith(["a", "b"]);
       expect(whereMultiEntry.noneOf).type.toBeCallableWith(["a", "b"]);
       expect(whereMultiEntry.equals).type.toBeCallableWith("a");
+
+      const whereCompound = db.table.where(["compound1", "compound2"]);
+      expect(whereCompound.equals).type.toBeCallableWith(["a", 1]);
+      expect(whereCompound.equals).type.not.toBeCallableWith([1, "a"]);
+      expect(whereCompound.equals).type.not.toBeCallableWith("a");
+      expect(whereCompound.anyOf).type.toBeCallableWith([
+        ["a", 1],
+        ["b", 2],
+      ]);
+      expect(whereCompound.anyOf).type.not.toBeCallableWith([
+        ["a", "b"],
+        [1, 2],
+      ]);
 
       // string methods only available if the index type is string
 

@@ -200,17 +200,6 @@ export type PrimaryKeyCollection<
   TIndexes
 >;
 
-/*
-  missing the table methods:
-    get / bulkGet
-    ---
-
-    add / bulkAdd
-
-    put / bulkPut
-
-*/
-
 export interface CreatingHookContext<TPKey> {
   onsuccess?: (primKey: TPKey) => void;
   onerror?: (err: any) => void;

@@ -8,7 +8,10 @@ import type {
   SingleIndexPath,
 } from "./dexieindexes";
 import type { KeyForIndex } from "./tabletypes";
-import type { ValidIndexedDBKeyPath } from "./ValidIndexedDBKeyPaths";
+import type {
+  CompoundKeyPaths,
+  ValidIndexedDBKeyPath,
+} from "./ValidIndexedDBKeyPaths";
 import type { UnionToIntersection } from "./utilitytypes";
 
 export type WhereClausesFromIndexes<
@@ -61,7 +64,16 @@ type WhereClauseFor<
       TMethodName
     >
   : I extends CompoundIndexPaths<TInsert, infer Ps>
-  ? never //WhereForCompound<T, Ps, I>
+  ? WhereForCompound<
+      TGet,
+      TDatabase,
+      TInsert,
+      TPKey,
+      Ps,
+      I,
+      TIndexPaths,
+      TMethodName
+    >
   : never;
 
 type WhereForSingle<
@@ -108,15 +120,27 @@ type WhereForMulti<
   >;
 };
 
-/* 
-
 type WhereForCompound<
-  T,
-  PS extends readonly ValidIndexedDBKeyPaths<T>[],
-  I extends CompoundIndex<T, PS>
+  TGet,
+  TDatabase,
+  TInsert,
+  PKey,
+  P extends CompoundKeyPaths<TInsert>,
+  I extends CompoundIndexPaths<TInsert, P>,
+  TIndexPaths extends DexieIndexPaths<TInsert>,
+  TMethodName extends string
 > = {
-  where(paths: I["paths"]): CompoundWhereClause<T>;
-}; */
+  where(
+    paths: I["paths"]
+  ): WhereClause<
+    TGet,
+    TDatabase,
+    TInsert,
+    PKey,
+    KeyForIndex<TInsert, I>,
+    TIndexPaths
+  >;
+};
 
 interface Prefixes<
   TGet,
@@ -278,11 +302,3 @@ export interface WhereClauseNonStrings<
     }
   ): Collection<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
 }
-
-type MultiWhereClause<T> = {
-  multi(): void;
-};
-
-type CompoundWhereClause<T> = {
-  compound(): void;
-};
