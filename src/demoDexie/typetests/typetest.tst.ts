@@ -3,10 +3,12 @@ import { dexieFactory } from "../dexieFactory";
 import {
   tableBuilder,
   tableClassBuilder,
+  tableClassBuilderExcluded,
   type DuplicateIndexError,
   type DuplicateKeysError,
 } from "../tablebuilder";
 import { expect, describe, it } from "tstyche";
+import type { string } from "mathjs";
 
 describe("tableBuilder", () => {
   describe("primary key selection", () => {
@@ -24,6 +26,26 @@ describe("tableBuilder", () => {
       );
     });
 
+    it("should allow primary key to be allowed properties of leaf object", () => {
+      interface TableItem {
+        stringValue: string;
+        blobValue: Blob;
+        fileValue: File;
+        arrayValue: string[];
+      }
+      const builder = tableBuilder<TableItem>();
+      expect(builder.primaryKey).type.toBeCallableWith("stringValue.length");
+      expect(builder.primaryKey).type.toBeCallableWith("blobValue.size");
+      expect(builder.primaryKey).type.toBeCallableWith("blobValue.type");
+      expect(builder.primaryKey).type.toBeCallableWith("fileValue.size");
+      expect(builder.primaryKey).type.toBeCallableWith("fileValue.type");
+      expect(builder.primaryKey).type.toBeCallableWith("fileValue.name");
+      expect(builder.primaryKey).type.toBeCallableWith(
+        "fileValue.lastModified"
+      );
+      expect(builder.primaryKey).type.toBeCallableWith("arrayValue.length");
+    });
+
     it("should allow compound primary key", () => {
       const builder = tableBuilder<{ id: string; nested: { id2: number } }>();
       expect(builder.compoundKey).type.toBeCallableWith("id", "nested.id2");
@@ -34,6 +56,16 @@ describe("tableBuilder", () => {
     it("should not be possible to complete the chain when duplicate keys are used", () => {
       const builder = tableBuilder<{ id: string; nested: { id2: number } }>();
       expect(builder.compoundKey("id", "id")).type.toBe<DuplicateKeysError>();
+    });
+  });
+
+  describe("autoIncrement typing", () => {
+    it("should not allow autoincrement on leaf type specific property", () => {
+      const builder = tableBuilder<{ stringValue: string }>();
+      expect(builder.autoIncrement).type.not.toBeCallableWith(
+        "stringValue.length"
+      );
+      expect(builder.autoIncrement).type.toBeCallableWith("stringValue");
     });
   });
 
@@ -153,6 +185,26 @@ describe("tableBuilder", () => {
       ).type.toBe<DuplicateIndexError>();
     });
   });
+
+  describe("tableClassBuilderExcluded", () => {
+    it("should exclude properties from primary key / index key selection", () => {
+      class EntityClass {
+        constructor(id: number) {
+          this.id = id;
+        }
+        id: number;
+        str: string = "";
+        other: string = "";
+        method() {}
+      }
+
+      const builder = tableClassBuilderExcluded(EntityClass).excludedKeys([
+        "str",
+      ]);
+      expect(builder.primaryKey).type.not.toBeCallableWith("str");
+      expect(builder.primaryKey("id").index).type.not.toBeCallableWith("str");
+    });
+  });
 });
 
 describe("database typed transaction", () => {
@@ -226,6 +278,11 @@ interface NumberId {
   id: number;
 }
 
+interface Compound {
+  stringPart: string;
+  numberPart: number;
+}
+
 describe("table base", () => {
   const db = dexieFactory(
     1,
@@ -233,6 +290,12 @@ describe("table base", () => {
       string: tableBuilder<StringId>().primaryKey("id").build(),
       stringMapped: tableClassBuilder(MappedStringId).primaryKey("id").build(),
       number: tableBuilder<NumberId>().primaryKey("id").build(),
+      compound: tableBuilder<Compound>()
+        .compoundKey("stringPart", "numberPart")
+        .build(),
+      leafPropertyTable: tableBuilder<StringId>()
+        .primaryKey("id.length")
+        .build(),
     },
     "DemoDexie"
   );
@@ -253,6 +316,10 @@ describe("table base", () => {
     expect(db.stringMapped.get).type.not.toBeCallableWith(123);
     expect(db.number.get).type.toBeCallableWith(123);
     expect(db.number.get).type.not.toBeCallableWith("stringId");
+    expect(db.compound.get).type.toBeCallableWith(["string", 42]);
+    expect(db.compound.get).type.not.toBeCallableWith(["string"]);
+    expect(db.compound.get).type.not.toBeCallableWith([42, "string"]);
+    expect(db.leafPropertyTable.get).type.toBeCallableWith(5);
   });
 
   it("should get the correct type", () => {
@@ -264,6 +331,9 @@ describe("table base", () => {
     >();
     expect(db.number.get(123)).type.toBe<
       PromiseExtended<NumberId | undefined>
+    >();
+    expect(db.compound.get(["string", 42])).type.toBe<
+      PromiseExtended<Compound | undefined>
     >();
   });
 
@@ -286,7 +356,11 @@ describe("table base", () => {
       db.stringMapped.each((item, cursor) => {
         expect(item).type.toBe<MappedStringId>();
       });
+      db.compound.each((item, cursor) => {
+        expect(item).type.toBe<Compound>();
+      });
     });
+
     it("should have cursor key the same as the primaryKey type", () => {
       expect(
         db.number.each((item, cursor) => {
@@ -297,6 +371,10 @@ describe("table base", () => {
       db.string.each((item, cursor) => {
         expect(cursor.key).type.toBe<string>();
         expect(cursor.primaryKey).type.toBe<string>();
+      });
+      db.compound.each((item, cursor) => {
+        expect(cursor.key).type.toBe<[string, number]>();
+        expect(cursor.primaryKey).type.toBe<[string, number]>();
       });
     });
   });
@@ -328,14 +406,32 @@ describe("table base", () => {
       pkCollection.each((item, cursor) => {
         expect(cursor.key).type.toBe<string>();
         expect(cursor.primaryKey).type.toBe<string>();
-        expect(pkCollection.keys()).type.toBe<PromiseExtended<string[]>>();
-        expect(pkCollection.uniqueKeys()).type.toBe<
-          PromiseExtended<string[]>
-        >();
-        expect(pkCollection.primaryKeys()).type.toBe<
-          PromiseExtended<string[]>
-        >();
       });
+      expect(pkCollection.keys()).type.toBe<PromiseExtended<string[]>>();
+      expect(pkCollection.uniqueKeys()).type.toBe<PromiseExtended<string[]>>();
+      expect(pkCollection.primaryKeys()).type.toBe<PromiseExtended<string[]>>();
+    });
+
+    const primaryKeyCompoundCollections = [
+      db.compound.offset(10),
+      db.compound.limit(5),
+      db.compound.toCollection(),
+      db.compound.reverse(),
+    ];
+    primaryKeyCompoundCollections.forEach((pkCollection) => {
+      pkCollection.each((item, cursor) => {
+        expect(cursor.key).type.toBe<[string, number]>();
+        expect(cursor.primaryKey).type.toBe<[string, number]>();
+      });
+      expect(pkCollection.keys()).type.toBe<
+        PromiseExtended<[string, number][]>
+      >();
+      expect(pkCollection.uniqueKeys()).type.toBe<
+        PromiseExtended<[string, number][]>
+      >();
+      expect(pkCollection.primaryKeys()).type.toBe<
+        PromiseExtended<[string, number][]>
+      >();
     });
   });
 
@@ -354,6 +450,7 @@ describe("table base", () => {
           .index("stringIndex")
           .index("numberIndex")
           .index("nestedIndex.subIndex")
+          .compound("stringIndex", "numberIndex")
           .build(),
       },
       ""
@@ -367,6 +464,9 @@ describe("table base", () => {
     });
     db.table.orderBy("stringIndex").each((item, cursor) => {
       expect(cursor.key).type.toBe<string>();
+    });
+    db.table.orderBy(["stringIndex", "numberIndex"]).each((item, cursor) => {
+      expect(cursor.key).type.toBe<[string, number]>();
     });
   });
 
@@ -384,19 +484,21 @@ describe("table base", () => {
   });
 
   describe("where => collection", () => {
+    interface TableItem {
+      id: string;
+      stringIndex: string;
+      numberIndex: number;
+      nestedIndex: { subIndex: number };
+      notAnIndex: number;
+      compound1: string;
+      compound2: number;
+      multiEntry: string[];
+    }
+
     const db = dexieFactory(
       1,
       {
-        table: tableBuilder<{
-          id: string;
-          stringIndex: string;
-          numberIndex: number;
-          nestedIndex: { subIndex: number };
-          notAnIndex: number;
-          compound1: string;
-          compound2: number;
-          multiEntry: string[];
-        }>()
+        table: tableBuilder<TableItem>()
           .primaryKey("id")
           .index("stringIndex")
           .index("numberIndex")
@@ -404,19 +506,24 @@ describe("table base", () => {
           .compound("compound1", "compound2")
           .multi("multiEntry")
           .build(),
+        mappedTable: tableClassBuilder(MappedStringId)
+          .primaryKey("id")
+          .index("other")
+          .build(),
       },
       ""
     );
+
     it("should accept index paths", () => {
       expect(db.table.where).type.toBeCallableWith("stringIndex");
       expect(db.table.where).type.toBeCallableWith("nestedIndex.subIndex");
       expect(db.table.where).type.not.toBeCallableWith("notAnIndex");
       expect(db.table.where).type.not.toBeCallableWith("nestedIndex.badPath");
     });
+
     it("should accept multiEntry index paths", () => {
       expect(db.table.where).type.toBeCallableWith("multiEntry");
     });
-    // it("should accept compound index paths", () => {
 
     it("should have methods typed to the index type", () => {
       const whereString = db.table.where("stringIndex");
@@ -446,6 +553,9 @@ describe("table base", () => {
       const whereMultiEntry = db.table.where("multiEntry");
       expect(whereMultiEntry.above).type.toBeCallableWith("stringValue");
       expect(whereMultiEntry.equals).type.toBeCallableWith("stringValue");
+      expect(whereMultiEntry.anyOf).type.toBeCallableWith(["a", "b"]);
+      expect(whereMultiEntry.noneOf).type.toBeCallableWith(["a", "b"]);
+      expect(whereMultiEntry.equals).type.toBeCallableWith("a");
 
       // string methods only available if the index type is string
 
@@ -561,8 +671,38 @@ describe("table base", () => {
       ).type.not.toBeCallableWith(123);
     });
 
-    // the collection should have the primary key type
-    // item type testing
+    it("should return collection with the primary key type", () => {
+      expect(db.table.where("stringIndex").above("a").primaryKeys()).type.toBe<
+        PromiseExtended<string[]>
+      >();
+      expect(db.table.where("numberIndex").above(1).primaryKeys()).type.toBe<
+        PromiseExtended<string[]>
+      >();
+    });
+
+    it("should return collection with the correct item type", () => {
+      const stringCollection = db.table.where("stringIndex").above("a");
+      const numberCollection = db.table.where("numberIndex").above(1);
+      const mappedCollection = db.mappedTable.where("other").above(1);
+      expect(mappedCollection.toArray()).type.toBe<
+        PromiseExtended<MappedStringId[]>
+      >();
+      expect(stringCollection.toArray()).type.toBe<
+        PromiseExtended<TableItem[]>
+      >();
+      expect(numberCollection.toArray()).type.toBe<
+        PromiseExtended<TableItem[]>
+      >();
+      stringCollection.each((item, cursor) => {
+        expect(item).type.toBe<TableItem>();
+      });
+      numberCollection.each((item, cursor) => {
+        expect(item).type.toBe<TableItem>();
+      });
+      mappedCollection.each((item, cursor) => {
+        expect(item).type.toBe<MappedStringId>();
+      });
+    });
   });
 
   describe("collection", () => {
@@ -648,6 +788,11 @@ describe("table base", () => {
       expect(collection.reverse()).type.toBe<typeof collection>();
     });
 
+    it("should desc to the same collection type", () => {
+      const collection = db.table.toCollection();
+      expect(collection.desc()).type.toBe<typeof collection>();
+    });
+
     it("should distinct to the same collection type", () => {
       const collection = db.table.toCollection();
       expect(collection.distinct()).type.toBe<typeof collection>();
@@ -721,9 +866,40 @@ describe("primary key on object table", () => {
     expect(db.table.add).type.not.toBeCallableWith(tableItem, "id1");
     expect(db.table.add).type.not.toBeCallableWith({ id: "id1" });
   });
+
   it("should put without primary key argument", () => {
     expect(db.table.put).type.toBeCallableWith(tableItem);
     expect(db.table.put).type.not.toBeCallableWith(tableItem, "id1");
     expect(db.table.put).type.not.toBeCallableWith({ id: "id1" });
+  });
+
+  it("should not allow adding with excluded keys", () => {
+    class EntityClass {
+      constructor(id: number) {
+        this.id = id;
+      }
+      id: number;
+      str: string = "";
+      method() {}
+    }
+
+    const dbEntityExclude = dexieFactory(
+      1,
+      {
+        table: tableClassBuilderExcluded(EntityClass)
+          .excludedKeys(["str"])
+          .primaryKey("id")
+          .build(),
+      },
+      "DemoDexieEntityExclude"
+    );
+
+    expect(dbEntityExclude.table.add).type.toBeCallableWith({ id: 1 });
+    expect(dbEntityExclude.table.add).type.not.toBeCallableWith({
+      id: 1,
+      str: "value",
+    });
+    // this is allowed but the addon will remove the excluded property before adding
+    expect(dbEntityExclude.table.add).type.toBeCallableWith(new EntityClass(1));
   });
 });

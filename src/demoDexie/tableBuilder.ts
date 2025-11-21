@@ -159,7 +159,9 @@ interface IndexMethods<
         TDatabase,
         PkPathOrPaths,
         Auto,
-        [...TIndexPaths, SingleIndexPath<TDatabase, TIndexPath>]
+        [...TIndexPaths, SingleIndexPath<TDatabase, TIndexPath>],
+        TGet,
+        TPkeyOnObject
       >;
   unique<
     TIndexPath extends NonPrimaryKeyPath<TDatabase, PkPathOrPaths> &
@@ -172,7 +174,9 @@ interface IndexMethods<
         TDatabase,
         PkPathOrPaths,
         Auto,
-        [...TIndexPaths, SingleIndexPath<TDatabase, TIndexPath>]
+        [...TIndexPaths, SingleIndexPath<TDatabase, TIndexPath>],
+        TGet,
+        TPkeyOnObject
       >;
   multi<
     TIndexPath extends NonPrimaryKeyPath<TDatabase, PkPathOrPaths> &
@@ -185,7 +189,9 @@ interface IndexMethods<
         TDatabase,
         PkPathOrPaths,
         Auto,
-        [...TIndexPaths, MultiIndexPath<TDatabase, TIndexPath>]
+        [...TIndexPaths, MultiIndexPath<TDatabase, TIndexPath>],
+        TGet,
+        TPkeyOnObject
       >;
   compound<const TCompoundIndexPaths extends CompoundKeyPaths<TDatabase>>(
     ...indexPaths: CompoundMatchesPK<
@@ -202,7 +208,9 @@ interface IndexMethods<
         TDatabase,
         PkPathOrPaths,
         Auto,
-        [...TIndexPaths, CompoundIndexPaths<TDatabase, TCompoundIndexPaths>]
+        [...TIndexPaths, CompoundIndexPaths<TDatabase, TCompoundIndexPaths>],
+        TGet,
+        TPkeyOnObject
       >;
   build(): TableConfig<
     TDatabase,
@@ -372,7 +380,7 @@ export type ConstructorOf<T> = new (...args: any[]) => T;
 export function tableClassBuilder<TCtor extends new (...args: any) => any>(
   ctor: TCtor
 ) {
-  return tableClassBuilderExcluded(ctor).excludedKeys([]);
+  return tableClassBuilderExcluded(ctor).excludedKeys([] as const);
 }
 
 export function tableClassBuilderExcluded<

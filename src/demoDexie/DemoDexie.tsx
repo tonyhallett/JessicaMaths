@@ -152,23 +152,6 @@ export const DemoDexie = () => {
           },
         ]);
         await db.data.delete(4);
-
-        db.data
-          .where("numberValue")
-          .between(10, 50)
-          .each((item) => {
-            console.log("between item:", item);
-          });
-
-        db.data
-          .where("numberValue")
-          .inAnyRange([
-            [8, 15],
-            [40, 50],
-          ])
-          .each((item) => {
-            console.log("in any range item:", item);
-          });
       }}
     >
       Demo Dexie

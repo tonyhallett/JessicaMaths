@@ -145,7 +145,10 @@ interface CollectionBase<
   and: AndFilter<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
   filter: AndFilter<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
   distinct(): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
+
+  // alias for desc
   reverse(): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
+  desc(): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
 
   // Mutating methods
   delete(): PromiseExtended<number>;

@@ -183,7 +183,7 @@ export type PrimaryKey<
         TPKeyPathOrPaths[I] & keyof T
       >;
     }
-  : KeyPathValue<T, TPKeyPathOrPaths & keyof T>;
+  : KeyPathValue<T, TPKeyPathOrPaths>;
 
 export type PrimaryKeyCollection<
   TGet,
