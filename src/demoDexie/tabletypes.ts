@@ -4,14 +4,9 @@ import {
   type PromiseExtended,
   type DexieEvent,
   type DexieEventSet,
-  PropModification,
   type TableSchema,
   type Transaction,
   type KeyPathIgnoreObject,
-  type PropModSpec,
-  add as dexieadd,
-  remove as dexieremove,
-  replacePrefix as dexiereplacePrefix,
 } from "dexie";
 import type { ChangeCallback, Collection } from "./Collection";
 import type {
@@ -25,40 +20,8 @@ import type { DexiePrimaryKeyPathOrPaths } from "./tablebuilder";
 import type { WhereClausesFromIndexes } from "./where";
 import type { TableConfig } from "./tablebuilder";
 import type { DeletePrimaryKeys, RequiredOnlyDeep } from "./utilitytypes";
+import type { PropModificationTyped } from "./propmodifications";
 
-export type AddRemoveNumberType = number | bigint;
-export type AddRemoveValueType = AddRemoveNumberType | Array<string | number>;
-export type PropModificationValueType = string | AddRemoveValueType;
-
-export class PropModificationTyped<T> extends PropModification {
-  private readonly __brand!: T;
-  constructor(spec: PropModSpec) {
-    super(spec);
-  }
-  //@ts-expect-error
-  override execute(value: T): T {
-    return super.execute(value) as T;
-  }
-}
-
-export function replacePrefix(
-  prefix: string,
-  replaced: string
-): PropModificationTyped<string> {
-  return dexiereplacePrefix(prefix, replaced) as PropModificationTyped<string>;
-}
-
-export function add<T extends AddRemoveValueType>(
-  value: T
-): PropModificationTyped<T> {
-  return dexieadd(value) as PropModificationTyped<T>;
-}
-
-export function remove<T extends AddRemoveValueType>(
-  value: T
-): PropModificationTyped<T> {
-  return dexieremove(value) as PropModificationTyped<T>;
-}
 type DexieKeyPaths<T, MAXDEPTH = "II", CURRDEPTH extends string = ""> = {
   [P in keyof T]: P extends string
     ? CURRDEPTH extends MAXDEPTH
@@ -374,10 +337,11 @@ type PrimaryKeyPaths<
   : never;
 interface BulkUpdate<
   T,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<T>
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<T>,
+  TMAXDEPTH extends string = "II"
 > {
   key: PrimaryKey<T, TPKeyPathOrPaths>;
-  changes: Omit<UpdateSpec<T>, PrimaryKeyPaths<T, TPKeyPathOrPaths>>;
+  changes: Omit<UpdateSpec<T, TMAXDEPTH>, PrimaryKeyPaths<T, TPKeyPathOrPaths>>;
 }
 
 type KeyPathTable<
@@ -397,7 +361,7 @@ type KeyPathTable<
 > & {
   add(item: TInsert): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
   // can probably remove this overload - this table entries already have the primary key
-  bulkAdd<B extends boolean>(
+  /*   bulkAdd<B extends boolean>(
     items: readonly TInsert[],
     options: {
       allKeys: B;
@@ -406,13 +370,13 @@ type KeyPathTable<
     B extends true
       ? PrimaryKey<TDatabase, TPKeyPathOrPaths>[]
       : PrimaryKey<TDatabase, TPKeyPathOrPaths>
-  >;
+  >; */
   bulkAdd(
     items: readonly TInsert[]
   ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
   put(item: TInsert): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
   // can probably remove this overload - this table entries already have the primary key
-  bulkPut<B extends boolean>(
+  /*   bulkPut<B extends boolean>(
     items: readonly TInsert[],
     options: {
       allKeys: B;
@@ -421,31 +385,31 @@ type KeyPathTable<
     B extends true
       ? PrimaryKey<TDatabase, TPKeyPathOrPaths>[]
       : PrimaryKey<TDatabase, TPKeyPathOrPaths>
-  >;
+  >; */
   bulkPut(
     items: readonly TInsert[]
   ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
 
   // https://dexie.org/docs/Table/Table.update()
-  update(
+  update<TMAXDEPTH extends string = "II">(
     key: PrimaryKey<TDatabase, TPKeyPathOrPaths>,
-    changes: UpdateSpec<TDatabase>
+    changes: UpdateSpec<TDatabase, TMAXDEPTH>
   ): PromiseExtended<0 | 1>;
   update(
     key: PrimaryKey<TDatabase, TPKeyPathOrPaths>,
     changes: ChangeCallback<TDatabase>
   ): PromiseExtended<0 | 1>;
   // note that docs do not mention this ( as the key must exist on the object - so ok for this table type )
-  update(
+  update<TMAXDEPTH extends string = "II">(
     object: TDatabase,
-    changes: UpdateSpec<TDatabase>
+    changes: UpdateSpec<TDatabase, TMAXDEPTH>
   ): PromiseExtended<0 | 1>;
   update(
     object: TDatabase,
     changes: ChangeCallback<TDatabase>
   ): PromiseExtended<0 | 1>;
-  bulkUpdate(
-    changes: BulkUpdate<TDatabase, TPKeyPathOrPaths>[]
+  bulkUpdate<TMAXDEPTH extends string = "II">(
+    changes: BulkUpdate<TDatabase, TPKeyPathOrPaths, TMAXDEPTH>[]
   ): PromiseExtended<number>;
   /*
     dexie typescript incorrectly allows T for the key

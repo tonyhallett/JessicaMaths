@@ -1,75 +1,18 @@
 import Button from "@mui/material/Button";
 import { dexieFactory } from "./dexieFactory";
 import { tableBuilder } from "./tablebuilder";
-import { add } from "./tabletypes";
 
 interface DexieDataItem {
   id: number;
-  numberValue: number;
-  stringValue: string;
-  optional?: string;
-  optional2?: number;
-  multiEntry: string[];
-  arrayKey: string[];
-  nested: {
-    level1: {
-      numberValue: number;
-      stringValue: string;
-      optional1?: string;
-    };
-  };
 }
-
-const nested: DexieDataItem["nested"] = {
-  level1: {
-    numberValue: 100,
-    stringValue: "Nested Level 1",
-  },
-};
 
 const db = dexieFactory(
   1,
   {
-    data: tableBuilder<DexieDataItem>()
-      .primaryKey("id")
-      .index("stringValue")
-      .index("numberValue")
-      .index("arrayKey")
-      .multi("multiEntry") // only arrays allowed
-      .build(),
-    other: tableBuilder<{ id: number }>().primaryKey("id").build(),
-    notInTx: tableBuilder<{ id: number }>().primaryKey("id").build(),
+    data: tableBuilder<DexieDataItem>().primaryKey("id").build(),
   },
   "DemoDexie"
 );
-
-// typed transaction
-db.on("populate", (tx) => {
-  tx.data.add({
-    id: 1,
-    numberValue: 42,
-    stringValue: "Hello",
-    multiEntry: [],
-    arrayKey: [],
-    nested,
-  });
-  tx.data.add({
-    id: 2,
-    numberValue: 7,
-    stringValue: "World",
-    multiEntry: [],
-    arrayKey: [],
-    nested,
-  });
-  tx.data.add({
-    id: 3,
-    numberValue: 13,
-    stringValue: "Dexie",
-    multiEntry: [],
-    arrayKey: [],
-    nested,
-  });
-});
 
 db.data.hook("updating", function (modifications, primKey, obj, transaction) {
   this.onsuccess = function (updateObject) {
@@ -93,46 +36,6 @@ db.data.hook("reading", function (value) {
   return value;
 });
 
-/* db.data.upsert(1, {
-  arrayKey: ["a", "b", "c"],
-  numberValue: 100,
-  stringValue: "Upserted",
-  //id: 1, - not necessary
-  multiEntry: ["x", "y"],
-  nested: {
-    level1: {
-      numberValue: 100,
-      stringValue: "Updated via upsert",
-    },
-  },
-}); */
-
 export const DemoDexie = () => {
-  return (
-    <Button
-      onClick={async () => {
-        db.data.add({
-          id: 4,
-          numberValue: 13,
-          stringValue: "Dexie",
-          multiEntry: [],
-          arrayKey: [],
-          nested,
-        });
-
-        db.data.bulkUpdate([
-          {
-            key: 4,
-            changes: {
-              numberValue: add(0),
-              //id: omitted
-            },
-          },
-        ]);
-        await db.data.delete(4);
-      }}
-    >
-      Demo Dexie
-    </Button>
-  );
+  return <Button onClick={async () => {}}>Demo Dexie</Button>;
 };

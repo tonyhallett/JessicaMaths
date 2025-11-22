@@ -1,4 +1,4 @@
-import type { PromiseExtended } from "dexie";
+import { add as dexieAddPropModHelper, type PromiseExtended } from "dexie";
 import { dexieFactory } from "../dexieFactory";
 import {
   tableBuilder,
@@ -8,6 +8,8 @@ import {
   type DuplicateKeysError,
 } from "../tablebuilder";
 import { expect, describe, it } from "tstyche";
+import type { ChangeCallback } from "../Collection";
+import { add, ObjectPropModification } from "../propmodifications";
 
 describe("tableBuilder", () => {
   describe("primary key selection", () => {
@@ -912,54 +914,241 @@ describe("primary key on object table", () => {
   interface TableItem {
     id: string;
     other: number;
+    nested: {
+      sub: number;
+      deep: {
+        level2: {
+          level3: string;
+        };
+      };
+    };
   }
-  const tableItem: TableItem = { id: "id1", other: 42 };
+
+  class EntityClass {
+    constructor(id: number) {
+      this.id = id;
+    }
+    id: number;
+    excluded: string = "";
+    method() {}
+  }
+
+  const tableItem: TableItem = {
+    id: "id1",
+    other: 42,
+    nested: { sub: 1, deep: { level2: { level3: "level3" } } },
+  };
+
   const db = dexieFactory(
     1,
     {
       table: tableBuilder<TableItem>().primaryKey("id").build(),
+      mappedTable: tableClassBuilderExcluded(EntityClass)
+        .excludedKeys(["excluded"])
+        .primaryKey("id")
+        .build(),
     },
     "DemoDexie"
   );
-  it("should add without primary key argument", () => {
-    expect(db.table.add).type.toBeCallableWith(tableItem);
-    expect(db.table.add).type.not.toBeCallableWith(tableItem, "id1");
-    expect(db.table.add).type.not.toBeCallableWith({ id: "id1" });
-  });
 
-  it("should put without primary key argument", () => {
-    expect(db.table.put).type.toBeCallableWith(tableItem);
-    expect(db.table.put).type.not.toBeCallableWith(tableItem, "id1");
-    expect(db.table.put).type.not.toBeCallableWith({ id: "id1" });
-  });
-
-  it("should not allow adding with excluded keys", () => {
-    class EntityClass {
-      constructor(id: number) {
-        this.id = id;
-      }
-      id: number;
-      str: string = "";
-      method() {}
-    }
-
-    const dbEntityExclude = dexieFactory(
-      1,
-      {
-        table: tableClassBuilderExcluded(EntityClass)
-          .excludedKeys(["str"])
-          .primaryKey("id")
-          .build(),
-      },
-      "DemoDexieEntityExclude"
-    );
-
-    expect(dbEntityExclude.table.add).type.toBeCallableWith({ id: 1 });
-    expect(dbEntityExclude.table.add).type.not.toBeCallableWith({
-      id: 1,
-      str: "value",
+  describe("add, put, bulkAdd, bulkPut", () => {
+    it("should add without primary key argument", () => {
+      expect(db.table.add).type.toBeCallableWith(tableItem);
+      expect(db.table.add).type.not.toBeCallableWith(tableItem, "id1");
+      expect(db.table.add).type.not.toBeCallableWith({ id: "id1" });
     });
-    // this is allowed but the addon will remove the excluded property before adding
-    expect(dbEntityExclude.table.add).type.toBeCallableWith(new EntityClass(1));
+
+    it("should put without primary key argument", () => {
+      expect(db.table.put).type.toBeCallableWith(tableItem);
+      expect(db.table.put).type.not.toBeCallableWith(tableItem, "id1");
+      expect(db.table.put).type.not.toBeCallableWith({ id: "id1" });
+    });
+
+    it("should bulk add without primary keys argument", () => {
+      expect(db.table.bulkAdd).type.toBeCallableWith([tableItem, tableItem]);
+      expect(db.table.bulkAdd).type.not.toBeCallableWith(
+        [tableItem, tableItem],
+        ["id1", "id2"]
+      );
+      expect(db.table.bulkAdd).type.not.toBeCallableWith([{ id: "id1" }]);
+    });
+
+    it("should bulk put without primary keys argument", () => {
+      expect(db.table.bulkPut).type.toBeCallableWith([tableItem, tableItem]);
+      expect(db.table.bulkPut).type.not.toBeCallableWith(
+        [tableItem, tableItem],
+        ["id1", "id2"]
+      );
+      expect(db.table.bulkPut).type.not.toBeCallableWith([{ id: "id1" }]);
+    });
+
+    it("should not allow adding with excluded keys", () => {
+      const dbEntityExclude = dexieFactory(
+        1,
+        {
+          table: tableClassBuilderExcluded(EntityClass)
+            .excludedKeys(["excluded"])
+            .primaryKey("id")
+            .build(),
+        },
+        "DemoDexieEntityExclude"
+      );
+
+      expect(dbEntityExclude.table.add).type.toBeCallableWith({ id: 1 });
+      expect(dbEntityExclude.table.add).type.not.toBeCallableWith({
+        id: 1,
+        excluded: "value",
+      });
+      // this is allowed but the addon will remove the excluded property before adding
+      expect(dbEntityExclude.table.add).type.toBeCallableWith(
+        new EntityClass(1)
+      );
+    });
+  });
+
+  describe("update, upsert", () => {
+    it("should update with primary key argument and change callback - insert type", () => {
+      const changeCallback: ChangeCallback<TableItem> = null as any;
+      expect(db.table.update).type.toBeCallableWith("id1", changeCallback);
+      expect(db.table.update).type.not.toBeCallableWith(1, changeCallback);
+      db.mappedTable.update(1, (tInsert, ctx) => {
+        expect(tInsert).type.not.toHaveProperty("excluded");
+        expect(tInsert).type.toHaveProperty("id");
+        expect(ctx.value).type.not.toHaveProperty("excluded");
+        expect(ctx.value).type.toHaveProperty("id");
+      });
+    });
+
+    it("should update with table entry argument and change callback - insert type", () => {
+      const changeCallback: ChangeCallback<TableItem> = null as any;
+      expect(db.table.update).type.toBeCallableWith(tableItem, changeCallback);
+      expect(db.table.update).type.not.toBeCallableWith(
+        { id: "" },
+        changeCallback
+      );
+    });
+
+    const nested: TableItem["nested"] = {
+      sub: 5,
+      deep: { level2: { level3: "level3" } },
+    };
+
+    it("should update with primary key argument and partial insert type expressed with key paths", () => {
+      expect(db.table.update).type.toBeCallableWith("id1", { "nested.sub": 5 });
+
+      expect(db.table.update).type.toBeCallableWith("id1", {
+        nested,
+      });
+      expect(db.table.update).type.not.toBeCallableWith(1, { "nested.sub": 5 });
+      expect(db.table.update).type.not.toBeCallableWith("id1", {
+        "nested.sub": "incorrect type",
+      });
+      expect(db.table.update).type.not.toBeCallableWith("id1", {
+        "nested.doesnotexist": 1,
+      });
+    });
+
+    it("should update with table entry argument and partial insert type expressed with key paths", () => {
+      expect(db.table.update).type.toBeCallableWith(tableItem, {
+        "nested.sub": 5,
+      });
+      expect(db.table.update).type.not.toBeCallableWith(
+        { id: "" },
+        {
+          "nested.sub": 5,
+        }
+      );
+      expect(db.table.update).type.not.toBeCallableWith(tableItem, {
+        "nested.sub": "incorrect type",
+      });
+      expect(db.table.update).type.not.toBeCallableWith(tableItem, {
+        "nested.doesnotexist": 1,
+      });
+    });
+
+    it("should update using max depth type parameter", () => {
+      expect(db.table.update).type.toBeCallableWith(tableItem, {
+        nested,
+      });
+
+      expect(db.table.update<"Not a max depth">).type.not.toBeCallableWith(
+        tableItem,
+        {
+          nested,
+        }
+      );
+
+      expect(db.table.update<"II">).type.not.toBeCallableWith(tableItem, {
+        "nested.deep.level2.level3": nested.deep.level2.level3,
+      });
+
+      expect(db.table.update<"III">).type.toBeCallableWith(tableItem, {
+        "nested.deep.level2.level3": nested.deep.level2.level3,
+      });
+    });
+
+    it("should update with typed prop modifications", () => {
+      expect(db.table.update).type.toBeCallableWith(tableItem, {
+        nested: new ObjectPropModification<{
+          sub: number;
+          deep: {
+            level2: {
+              level3: string;
+            };
+          };
+        }>((value) => value),
+      });
+
+      expect(db.table.update).type.not.toBeCallableWith(tableItem, {
+        nested: new ObjectPropModification<{ sub: string }>((value) => ({
+          sub: value.sub + 1,
+        })),
+      });
+
+      expect(db.table.update).type.not.toBeCallableWith(tableItem, {
+        "nested.sub": dexieAddPropModHelper([5]),
+      });
+
+      expect(db.table.update).type.toBeCallableWith(tableItem, {
+        "nested.sub": add(1),
+      });
+
+      expect(db.table.update).type.not.toBeCallableWith(tableItem, {
+        "nested.sub": add([1]),
+      });
+    });
+
+    it("should bulkUpdate with objects containing primary key and partial insert type expressed with key paths", () => {
+      expect(db.table.bulkUpdate).type.toBeCallableWith([
+        {
+          key: "id1",
+          changes: { "nested.sub": 5 },
+        },
+        {
+          key: "id2",
+          changes: { other: 10 },
+        },
+      ]);
+      expect(db.table.bulkUpdate).type.not.toBeCallableWith([
+        {
+          key: "id1",
+          changes: { "nested.sub": 5 },
+        },
+        {
+          key: "id2",
+          changes: { other: "incorrect type" },
+        },
+      ]);
+      expect(db.table.bulkUpdate).type.not.toBeCallableWith([
+        {
+          key: "id1",
+          changes: { "nested.sub": 5 },
+        },
+        {
+          key: "id2",
+          changes: { doesNotExist: "" },
+        },
+      ]);
+    });
   });
 });
