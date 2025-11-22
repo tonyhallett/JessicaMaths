@@ -1,7 +1,7 @@
 import Button from "@mui/material/Button";
 import { dexieFactory } from "./dexieFactory";
 import { add } from "dexie";
-import { tableBuilder, tableClassBuilder } from "./tablebuilder";
+import { tableBuilder } from "./tablebuilder";
 
 interface DexieDataItem {
   id: number;
@@ -91,28 +91,6 @@ db.data.hook("creating", function (primKey, obj, transaction) {
 });
 db.data.hook("reading", function (value) {
   return value;
-});
-
-class EntityClass {
-  constructor(id: number) {
-    this.id = id;
-  }
-  id: number;
-  str: string = "";
-  method() {}
-}
-
-const dbEntity = dexieFactory(
-  1,
-  {
-    data: tableClassBuilder(EntityClass).primaryKey("id").build(),
-  },
-  "DemoDexieEntity"
-);
-dbEntity.on("populate", (tx) => {
-  tx.data.add({ id: 1, str: "Hello" });
-  tx.data.add(new EntityClass(2));
-  // tx.data.add({ str: "Hello" }); error - id is required
 });
 
 /* db.data.upsert(1, {

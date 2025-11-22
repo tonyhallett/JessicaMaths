@@ -274,6 +274,14 @@ export interface TableBase<
   hook: TableHooks<TDatabase, TGet, PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
   core: DBCoreTable;
 
+  // todo object overload
+  get(
+    key: PrimaryKey<TDatabase, TPKeyPathOrPaths>
+  ): PromiseExtended<TGet | undefined>;
+  bulkGet(
+    keys: PrimaryKey<TDatabase, TPKeyPathOrPaths>[]
+  ): PromiseExtended<(TGet | undefined)[]>;
+
   // filter(fn: (obj: T) => boolean): PrimaryKeyCollection<T, TKey, TIndexes>;
   // this.toCollection().and(filterFunction);
   filter: PrimaryKeyCollection<
@@ -388,14 +396,6 @@ type KeyPathTable<
   TPKeyPathOrPaths,
   TIndexPaths
 > & {
-  // todo object overload
-  get(
-    key: PrimaryKey<TDatabase, TPKeyPathOrPaths>
-  ): PromiseExtended<TGet | undefined>;
-  bulkGet(
-    keys: KeyPathValue<TDatabase, TPKeyPathOrPaths>[]
-  ): PromiseExtended<(TGet | undefined)[]>;
-
   add(item: TInsert): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
   // can probably remove this overload - this table entries already have the primary key
   bulkAdd<B extends boolean>(

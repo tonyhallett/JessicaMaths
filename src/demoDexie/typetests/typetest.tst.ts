@@ -217,46 +217,56 @@ describe("database typed transaction", () => {
     "DemoDexie"
   );
 
-  it("should work with table types", () => {
-    db.transaction("rw", db.string, db.number, (tx) => {
-      expect(tx).type.toHaveProperty("string");
-      expect(tx).type.toHaveProperty("number");
-      expect(tx).type.not.toHaveProperty("date");
+  it("should include all tables on the transaction to on populate", () => {
+    db.on("populate", (tx) => {
+      expect(tx.string).type.toBe<typeof db.string>();
+      expect(tx.number).type.toBe<typeof db.number>();
+      expect(tx.date).type.toBe<typeof db.date>();
     });
   });
 
-  it("should work with table names", () => {
-    db.transaction("rw", "string", "number", (tx) => {
-      expect(tx).type.toHaveProperty("string");
-      expect(tx).type.toHaveProperty("number");
-      expect(tx).type.not.toHaveProperty("date");
+  describe("db.transaction transaction argument has only tables specified", () => {
+    it("should work with table types", () => {
+      db.transaction("rw", db.string, db.number, (tx) => {
+        expect(tx).type.toHaveProperty("string");
+        expect(tx).type.toHaveProperty("number");
+        expect(tx).type.not.toHaveProperty("date");
+      });
     });
-  });
 
-  it("should work with table names and tables together", () => {
-    db.transaction("rw", "string", db.number, (tx) => {
-      expect(tx).type.toHaveProperty("string");
-      expect(tx).type.toHaveProperty("number");
-      expect(tx).type.not.toHaveProperty("date");
+    it("should work with table names", () => {
+      db.transaction("rw", "string", "number", (tx) => {
+        expect(tx).type.toHaveProperty("string");
+        expect(tx).type.toHaveProperty("number");
+        expect(tx).type.not.toHaveProperty("date");
+      });
     });
-  });
 
-  it("should work with table names and tables together in an array", () => {
-    db.transaction("rw", ["string", db.number], (tx) => {
-      expect(tx).type.toHaveProperty("string");
-      expect(tx).type.toHaveProperty("number");
-      expect(tx).type.not.toHaveProperty("date");
+    it("should work with table names and tables together", () => {
+      db.transaction("rw", "string", db.number, (tx) => {
+        expect(tx).type.toHaveProperty("string");
+        expect(tx).type.toHaveProperty("number");
+        expect(tx).type.not.toHaveProperty("date");
+      });
     });
-  });
 
-  it("should not be callable with names that are not table names", () => {
-    expect(db.transaction).type.not.toBeCallableWith(
-      "rw",
-      "doesnotexist",
-      () => {}
-    );
+    it("should work with table names and tables together in an array", () => {
+      db.transaction("rw", ["string", db.number], (tx) => {
+        expect(tx).type.toHaveProperty("string");
+        expect(tx).type.toHaveProperty("number");
+        expect(tx).type.not.toHaveProperty("date");
+      });
+    });
+
+    it("should not be callable with names that are not table names", () => {
+      expect(db.transaction).type.not.toBeCallableWith(
+        "rw",
+        "doesnotexist",
+        () => {}
+      );
+    });
+    // todo - support db.transaction("rw", [db.data, "other"],"else", (tx) => {
   });
-  // todo - support db.transaction("rw", [db.data, "other"],"else", (tx) => {
 });
 
 interface StringId {
@@ -302,22 +312,39 @@ describe("table base", () => {
   it("should delete with correct primary key type", () => {
     expect(db.string.delete).type.toBeCallableWith("stringId");
     expect(db.string.delete).type.not.toBeCallableWith(123);
+    expect(db.string.bulkDelete).type.toBeCallableWith(["stringId"]);
+    expect(db.string.bulkDelete).type.not.toBeCallableWith("stringId");
     expect(db.stringMapped.delete).type.toBeCallableWith("stringId");
     expect(db.stringMapped.delete).type.not.toBeCallableWith(123);
     expect(db.number.delete).type.toBeCallableWith(123);
     expect(db.number.delete).type.not.toBeCallableWith("stringId");
+    expect(db.number.bulkDelete).type.toBeCallableWith([123]);
+    expect(db.number.bulkDelete).type.not.toBeCallableWith(123);
+
+    // compound
   });
 
   it("should get with correct primary key type", () => {
     expect(db.string.get).type.toBeCallableWith("stringId");
     expect(db.string.get).type.not.toBeCallableWith(123);
+    expect(db.string.bulkGet).type.toBeCallableWith(["stringId1", "stringId2"]);
+    expect(db.string.bulkGet).type.not.toBeCallableWith([1, 2]);
     expect(db.stringMapped.get).type.toBeCallableWith("stringId");
     expect(db.stringMapped.get).type.not.toBeCallableWith(123);
+    expect(db.stringMapped.bulkGet).type.toBeCallableWith([
+      "stringId1",
+      "stringId2",
+    ]);
+    expect(db.stringMapped.bulkGet).type.not.toBeCallableWith([1, 2]);
     expect(db.number.get).type.toBeCallableWith(123);
     expect(db.number.get).type.not.toBeCallableWith("stringId");
+    expect(db.number.bulkGet).type.toBeCallableWith([123]);
+    expect(db.number.bulkGet).type.not.toBeCallableWith(["stringId"]);
     expect(db.compound.get).type.toBeCallableWith(["string", 42]);
     expect(db.compound.get).type.not.toBeCallableWith(["string"]);
     expect(db.compound.get).type.not.toBeCallableWith([42, "string"]);
+    expect(db.compound.bulkGet).type.toBeCallableWith([["string", 42]]);
+    expect(db.compound.bulkGet).type.not.toBeCallableWith([[42, "string"]]);
     expect(db.leafPropertyTable.get).type.toBeCallableWith(5);
   });
 
@@ -325,14 +352,26 @@ describe("table base", () => {
     expect(db.string.get("stringId")).type.toBe<
       PromiseExtended<StringId | undefined>
     >();
+    expect(db.string.bulkGet(["stringId"])).type.toBe<
+      PromiseExtended<(StringId | undefined)[]>
+    >();
     expect(db.stringMapped.get("stringId")).type.toBe<
       PromiseExtended<MappedStringId | undefined>
+    >();
+    expect(db.stringMapped.bulkGet(["stringId"])).type.toBe<
+      PromiseExtended<(MappedStringId | undefined)[]>
     >();
     expect(db.number.get(123)).type.toBe<
       PromiseExtended<NumberId | undefined>
     >();
+    expect(db.number.bulkGet([123])).type.toBe<
+      PromiseExtended<(NumberId | undefined)[]>
+    >();
     expect(db.compound.get(["string", 42])).type.toBe<
       PromiseExtended<Compound | undefined>
+    >();
+    expect(db.compound.bulkGet([["string", 42]])).type.toBe<
+      PromiseExtended<(Compound | undefined)[]>
     >();
   });
 
