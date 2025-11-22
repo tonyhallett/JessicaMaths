@@ -30,9 +30,8 @@ export type AddRemoveNumberType = number | bigint;
 export type AddRemoveValueType = AddRemoveNumberType | Array<string | number>;
 export type PropModificationValueType = string | AddRemoveValueType;
 
-export class PropModificationTyped<
-  T = PropModificationValueType
-> extends PropModification {
+export class PropModificationTyped<T> extends PropModification {
+  private readonly __brand!: T;
   constructor(spec: PropModSpec) {
     super(spec);
   }
@@ -46,19 +45,19 @@ export function replacePrefix(
   prefix: string,
   replaced: string
 ): PropModificationTyped<string> {
-  return dexiereplacePrefix(prefix, replaced);
+  return dexiereplacePrefix(prefix, replaced) as PropModificationTyped<string>;
 }
 
 export function add<T extends AddRemoveValueType>(
   value: T
 ): PropModificationTyped<T> {
-  return dexieadd(value);
+  return dexieadd(value) as PropModificationTyped<T>;
 }
 
 export function remove<T extends AddRemoveValueType>(
   value: T
 ): PropModificationTyped<T> {
-  return dexieremove(value);
+  return dexieremove(value) as PropModificationTyped<T>;
 }
 type DexieKeyPaths<T, MAXDEPTH = "II", CURRDEPTH extends string = ""> = {
   [P in keyof T]: P extends string

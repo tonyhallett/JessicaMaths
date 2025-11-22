@@ -1,7 +1,7 @@
 import Button from "@mui/material/Button";
 import { dexieFactory } from "./dexieFactory";
-import { add } from "dexie";
 import { tableBuilder } from "./tablebuilder";
+import { add } from "./tabletypes";
 
 interface DexieDataItem {
   id: number;
