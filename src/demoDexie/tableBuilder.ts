@@ -146,7 +146,8 @@ interface IndexMethods<
   Auto extends boolean,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet = TDatabase,
-  TPkeyOnObject extends boolean = false
+  // stored on object - https://dexie.org/docs/inbound
+  TPkeyInbound extends boolean = false
 > {
   index<
     TIndexPath extends NonPrimaryKeyPath<TDatabase, PkPathOrPaths> &
@@ -161,7 +162,7 @@ interface IndexMethods<
         Auto,
         [...TIndexPaths, SingleIndexPath<TDatabase, TIndexPath>],
         TGet,
-        TPkeyOnObject
+        TPkeyInbound
       >;
   unique<
     TIndexPath extends NonPrimaryKeyPath<TDatabase, PkPathOrPaths> &
@@ -176,7 +177,7 @@ interface IndexMethods<
         Auto,
         [...TIndexPaths, SingleIndexPath<TDatabase, TIndexPath>],
         TGet,
-        TPkeyOnObject
+        TPkeyInbound
       >;
   multi<
     TIndexPath extends NonPrimaryKeyPath<TDatabase, PkPathOrPaths> &
@@ -191,7 +192,7 @@ interface IndexMethods<
         Auto,
         [...TIndexPaths, MultiIndexPath<TDatabase, TIndexPath>],
         TGet,
-        TPkeyOnObject
+        TPkeyInbound
       >;
   compound<const TCompoundIndexPaths extends CompoundKeyPaths<TDatabase>>(
     ...indexPaths: CompoundMatchesPK<
@@ -210,7 +211,7 @@ interface IndexMethods<
         Auto,
         [...TIndexPaths, CompoundIndexPaths<TDatabase, TCompoundIndexPaths>],
         TGet,
-        TPkeyOnObject
+        TPkeyInbound
       >;
   build(): TableConfig<
     TDatabase,
@@ -218,7 +219,7 @@ interface IndexMethods<
     Auto,
     TIndexPaths,
     TGet,
-    TPkeyOnObject extends true
+    TPkeyInbound extends true
       ? Auto extends true
         ? OptionalPrimaryKeys<TDatabase, PkPathOrPaths>
         : TDatabase
@@ -244,19 +245,19 @@ function createTableBuilder<TDatabase, TGet>(
     TPkeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
     TAuto extends boolean,
     TIndexPaths extends DexieIndexPaths<TDatabase>,
-    TPkeyOnObject extends boolean
+    TPkeyInbound extends boolean
   >(
     key: TPkeyPathOrPaths,
     auto: TAuto,
     indices: TIndexPaths,
-    pkeyOnObject: TPkeyOnObject
+    pkeyInbound: TPkeyInbound
   ): IndexMethods<
     TDatabase,
     TPkeyPathOrPaths,
     TAuto,
     TIndexPaths,
     TGet,
-    TPkeyOnObject
+    TPkeyInbound
   > {
     const addIfNotDuplicatePart = (part: string) => {
       if (indexParts.includes(part)) {
@@ -272,7 +273,7 @@ function createTableBuilder<TDatabase, TGet>(
             key,
             auto,
             [...indices, { kind: "single", path: indexKey, multi: false }],
-            pkeyOnObject
+            pkeyInbound
           ) as any)
         );
       },
@@ -283,7 +284,7 @@ function createTableBuilder<TDatabase, TGet>(
             key,
             auto,
             [...indices, { kind: "single", path: indexKey, multi: false }],
-            pkeyOnObject
+            pkeyInbound
           ) as any)
         );
       },
@@ -294,7 +295,7 @@ function createTableBuilder<TDatabase, TGet>(
             key,
             auto,
             [...indices, { kind: "multi", path: indexKey, multi: true }],
-            pkeyOnObject
+            pkeyInbound
           ) as any)
         );
       },
@@ -308,7 +309,7 @@ function createTableBuilder<TDatabase, TGet>(
             key,
             auto,
             [...indices, { kind: "compound", paths: keys }],
-            pkeyOnObject
+            pkeyInbound
           ) as any)
         );
       },

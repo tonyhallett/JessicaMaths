@@ -910,7 +910,7 @@ describe("table base", () => {
   });
 });
 
-describe("primary key on object table", () => {
+describe("primary key on object table - non auto", () => {
   interface TableItem {
     id: string;
     other: number;
@@ -1007,7 +1007,7 @@ describe("primary key on object table", () => {
   });
 
   describe("update, upsert", () => {
-    it("should update with primary key argument and change callback - insert type", () => {
+    it("should update with primary key argument and change callback - database type", () => {
       const changeCallback: ChangeCallback<TableItem> = null as any;
       expect(db.table.update).type.toBeCallableWith("id1", changeCallback);
       expect(db.table.update).type.not.toBeCallableWith(1, changeCallback);
@@ -1019,7 +1019,7 @@ describe("primary key on object table", () => {
       });
     });
 
-    it("should update with table entry argument and change callback - insert type", () => {
+    it("should update with table entry argument and change callback - database type", () => {
       const changeCallback: ChangeCallback<TableItem> = null as any;
       expect(db.table.update).type.toBeCallableWith(tableItem, changeCallback);
       expect(db.table.update).type.not.toBeCallableWith(
@@ -1033,7 +1033,7 @@ describe("primary key on object table", () => {
       deep: { level2: { level3: "level3" } },
     };
 
-    it("should update with primary key argument and partial insert type expressed with key paths", () => {
+    it("should update with primary key argument and partial database type expressed with key paths", () => {
       expect(db.table.update).type.toBeCallableWith("id1", { "nested.sub": 5 });
 
       expect(db.table.update).type.toBeCallableWith("id1", {
@@ -1048,7 +1048,7 @@ describe("primary key on object table", () => {
       });
     });
 
-    it("should update with table entry argument and partial insert type expressed with key paths", () => {
+    it("should update with table entry argument and partial database type expressed with key paths", () => {
       expect(db.table.update).type.toBeCallableWith(tableItem, {
         "nested.sub": 5,
       });
@@ -1064,6 +1064,10 @@ describe("primary key on object table", () => {
       expect(db.table.update).type.not.toBeCallableWith(tableItem, {
         "nested.doesnotexist": 1,
       });
+    });
+
+    it("should allow delete and add by changing the primary key", () => {
+      expect(db.table.update).type.toBeCallableWith(tableItem, { id: "newid" });
     });
 
     it("should update using max depth type parameter", () => {
@@ -1118,7 +1122,7 @@ describe("primary key on object table", () => {
       });
     });
 
-    it("should bulkUpdate with objects containing primary key and partial insert type expressed with key paths", () => {
+    it("should bulkUpdate with objects containing primary key and partial database type expressed with key paths", () => {
       expect(db.table.bulkUpdate).type.toBeCallableWith([
         {
           key: "id1",
@@ -1150,5 +1154,31 @@ describe("primary key on object table", () => {
         },
       ]);
     });
+
+    it("should upsert with correct primary key type and all required properties deeply", () => {
+      interface UpsertItem {
+        id: string;
+        notOptional: number;
+        optional?: number;
+      }
+      const db = dexieFactory(
+        1,
+        {
+          table: tableBuilder<UpsertItem>().primaryKey("id").build(),
+        },
+        "DemoDexie"
+      );
+      expect(db.table.upsert).type.toBeCallableWith("idValue", {
+        notOptional: 42,
+      });
+
+      expect(db.table.upsert).type.not.toBeCallableWith(1, { notOptional: 42 });
+
+      expect(db.table.upsert).type.not.toBeCallableWith("idValue", {
+        optional: 42,
+      });
+    });
+
+    it("should allow prop modification values of the correct type", () => {});
   });
 });
