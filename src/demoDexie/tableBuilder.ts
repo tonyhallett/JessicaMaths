@@ -27,7 +27,6 @@ export interface TableConfig<
   readonly pk: { key: TPKeyPathOrPaths; auto: TAuto };
   readonly indicesSchema: string;
   readonly mapToClass?: ConstructorOf<TDatabase>;
-  excludedKeys: string[] | undefined;
 }
 
 type IsMultiEntryArray<T> = T extends readonly (infer E)[]
@@ -233,7 +232,6 @@ const isDistinctArray = (arr: readonly any[]): boolean => {
 
 interface MapToClass<T> {
   ctor: ConstructorOf<T>;
-  excludedKeys: string[];
 }
 
 type IncludesNumber<T> = [T] extends [number]
@@ -255,7 +253,7 @@ type InboundAutoIncrementKeyPath<T> = ValidIndexedDBKeyPath<
   : never;
 
 function createTableBuilder<TDatabase, TGet>(
-  mapToClass?: MapToClass<TDatabase>
+  mapToClass?: ConstructorOf<TDatabase>
 ) {
   const indexParts: string[] = [];
 
@@ -342,8 +340,7 @@ function createTableBuilder<TDatabase, TGet>(
           > = {
             pk: { key, auto },
             indicesSchema: indexParts.join(", "),
-            mapToClass: mapToClass.ctor,
-            excludedKeys: mapToClass.excludedKeys,
+            mapToClass,
           };
           return mapToClasstableConfig;
         }
@@ -357,7 +354,6 @@ function createTableBuilder<TDatabase, TGet>(
         > = {
           pk: { key, auto },
           indicesSchema: indexParts.join(", "),
-          excludedKeys: undefined,
         };
         return tableConfig;
       },
@@ -397,7 +393,10 @@ export type ConstructorOf<T> = new (...args: any[]) => T;
 export function tableClassBuilder<TCtor extends new (...args: any) => any>(
   ctor: TCtor
 ) {
-  return tableClassBuilderExcluded(ctor).excludedKeys([] as const);
+  type TEntity = InstanceType<TCtor>;
+  type TDatabase = InsertType<TEntity, never>;
+
+  return createTableBuilder<TDatabase, TEntity>(ctor);
 }
 
 export function tableClassBuilderExcluded<
@@ -405,16 +404,11 @@ export function tableClassBuilderExcluded<
 >(ctor: TCtor) {
   type TEntity = InstanceType<TCtor>;
   return {
-    excludedKeys<TExcludeProps extends (keyof TEntity & string)[]>(
-      excludedKeys: readonly [...TExcludeProps]
-    ) {
-      type T = Omit<TEntity, TExcludeProps[number]>;
+    excludedKeys<TExcludeProps extends keyof TEntity & string>() {
+      type T = Omit<TEntity, TExcludeProps>;
       type TDatabase = InsertType<T, never>;
 
-      return createTableBuilder<TDatabase, TEntity>({
-        ctor,
-        excludedKeys: excludedKeys ? [...excludedKeys] : [],
-      });
+      return createTableBuilder<TDatabase, TEntity>(ctor);
     },
   };
 }

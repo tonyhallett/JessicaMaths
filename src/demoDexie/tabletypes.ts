@@ -418,35 +418,18 @@ type TableInbound<
   TPKeyPathOrPaths,
   TIndexPaths
 > & {
-  add(item: TInsert): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
-  // can probably remove this overload - this table entries already have the primary key
-  /*   bulkAdd<B extends boolean>(
-    items: readonly TInsert[],
-    options: {
-      allKeys: B;
-    }
-  ): PromiseExtended<
-    B extends true
-      ? PrimaryKey<TDatabase, TPKeyPathOrPaths>[]
-      : PrimaryKey<TDatabase, TPKeyPathOrPaths>
-  >; */
-  bulkAdd(
-    items: readonly TInsert[]
+  add<T extends TInsert>(
+    item: NoExcessDataProperties<T, TInsert>
   ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
-  put(item: TInsert): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
-  // can probably remove this overload - this table entries already have the primary key
-  /*   bulkPut<B extends boolean>(
-    items: readonly TInsert[],
-    options: {
-      allKeys: B;
-    }
-  ): PromiseExtended<
-    B extends true
-      ? PrimaryKey<TDatabase, TPKeyPathOrPaths>[]
-      : PrimaryKey<TDatabase, TPKeyPathOrPaths>
-  >; */
-  bulkPut(
-    items: readonly TInsert[]
+  bulkAdd<T extends TInsert>(
+    items: readonly NoExcessDataProperties<T, TInsert>[]
+  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+  put<T extends TInsert>(
+    item: NoExcessDataProperties<T, TInsert>
+  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+
+  bulkPut<T extends TInsert>(
+    items: readonly NoExcessDataProperties<T, TInsert>[]
   ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
 
   // https://dexie.org/docs/Table/Table.update()

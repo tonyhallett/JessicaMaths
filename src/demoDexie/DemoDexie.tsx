@@ -6,6 +6,11 @@ interface DexieDataItem {
   id: number;
   other: number;
 }
+class X implements DexieDataItem {
+  constructor(public id: number) {}
+  other: number = 0;
+  method() {}
+}
 
 const db = dexieFactory(
   1,
@@ -48,13 +53,14 @@ export const DemoDexie = () => {
 
         // otherwise is optional
         const newItem = { other: 1 };
+        await db.data.add(new X(123));
         // allows adding with pkey
         // const newItem2: DexieDataItem = { other: 1, id: 2 };
         //const newItemNotAllowed = { other: 1, id: undefined };
         //db.data.add(newItemNotAllowed);
         await db.data.add(newItem);
-        const withPrimaryKey = await db.data.addObject(newItem);
-        const received = await db.data.get(2);
+        // const withPrimaryKey = await db.data.addObject(newItem);
+        // const received = await db.data.get(2);
       }}
     >
       Demo Dexie

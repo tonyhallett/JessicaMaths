@@ -3,7 +3,6 @@ import { buildStores } from "./buildStores";
 import type { DexieTypedTransaction } from "./DexieTypedTransaction";
 import type { TableConfig } from "./tablebuilder";
 import type { DBTables } from "./tabletypes";
-import { registerExcludedKeys } from "./ExcludedKeysAddOn";
 import { AddAutoReturnObjectAddon } from "./AddAutoReturnObjectAddOn";
 
 Dexie.addons.push(AddAutoReturnObjectAddon);
@@ -21,9 +20,6 @@ export function dexieFactory<
   for (const [name, cfg] of Object.entries(tableConfigs)) {
     if (cfg.mapToClass) {
       db.table(name).mapToClass(cfg.mapToClass);
-    }
-    if (cfg.excludedKeys && cfg.excludedKeys.length > 0) {
-      registerExcludedKeys(name, cfg.excludedKeys);
     }
   }
   return db;

@@ -217,9 +217,10 @@ describe("tableBuilder", () => {
         method() {}
       }
 
-      const builder = tableClassBuilderExcluded(EntityClass).excludedKeys([
+      const builder =
+        tableClassBuilderExcluded(EntityClass).excludedKeys<"str">(/* [
         "str",
-      ]);
+      ] */);
       expect(builder.primaryKey).type.not.toBeCallableWith("str");
       expect(builder.primaryKey("id").index).type.not.toBeCallableWith("str");
     });
@@ -971,12 +972,22 @@ describe("Inbound - non auto", () => {
     nested: { sub: 1, deep: { level2: { level3: "level3" } } },
   };
 
+  class TableItemClass implements TableItem {
+    id: string = "";
+    other: number = 0;
+    additionalProp: string = "";
+    nested: {
+      sub: number;
+      deep: { level2: { level3: string } };
+    } = { sub: 0, deep: { level2: { level3: "" } } };
+  }
+
   const db = dexieFactory(
     1,
     {
       table: tableBuilder<TableItem>().primaryKey("id").build(),
       mappedTable: tableClassBuilderExcluded(EntityClass)
-        .excludedKeys(["excluded"])
+        .excludedKeys<"excluded">()
         .primaryKey("id")
         .build(),
     },
@@ -1003,6 +1014,11 @@ describe("Inbound - non auto", () => {
         ["id1", "id2"]
       );
       expect(db.table.bulkAdd).type.not.toBeCallableWith([{ id: "id1" }]);
+
+      // should prevent excess properties
+      expect(db.table.bulkAdd).type.not.toBeCallableWith([
+        new TableItemClass(),
+      ]);
     });
 
     it("should bulk put without primary keys argument", () => {
@@ -1019,7 +1035,7 @@ describe("Inbound - non auto", () => {
         1,
         {
           table: tableClassBuilderExcluded(EntityClass)
-            .excludedKeys(["excluded"])
+            .excludedKeys<"excluded">()
             .primaryKey("id")
             .build(),
         },
@@ -1031,8 +1047,13 @@ describe("Inbound - non auto", () => {
         id: 1,
         excluded: "value",
       });
-      // this is allowed but the addon will remove the excluded property before adding
-      expect(dbEntityExclude.table.add).type.toBeCallableWith(
+
+      expect(dbEntityExclude.table.add).type.not.toBeCallableWith({
+        id: 1,
+        excessDataProperty: 123,
+      });
+
+      expect(dbEntityExclude.table.add).type.not.toBeCallableWith(
         new EntityClass(1)
       );
     });
@@ -1257,6 +1278,7 @@ describe("Inbound - non auto", () => {
     });
   });
 });
+
 describe("Inbound auto", () => {
   interface TableItem {
     id: number;
