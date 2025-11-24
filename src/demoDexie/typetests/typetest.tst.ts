@@ -1278,6 +1278,14 @@ describe("Inbound auto", () => {
     expect(db.table.add).type.toBeCallableWith({ id: 2, numberValue: 42 });
   });
 
+  it("should put with the primary key not optional, TDatabase, no keys", () => {
+    expect(db.table.put).type.toBeCallableWith({ id: 2, numberValue: 42 });
+    expect(db.table.put).type.not.toBeCallableWith({ id: 2, numberValue: 42 }, [
+      2,
+    ]);
+    expect(db.table.put).type.not.toBeCallableWith({ numberValue: 42 });
+  });
+
   describe("addObject addon method", () => {
     it("should return object with primary key added", async () => {
       const withPk = await db.table.addObject({ numberValue: 42 });
@@ -1292,6 +1300,11 @@ describe("Inbound auto", () => {
       }
       const classWithPk = await db.table.addObject(new InsertType());
       classWithPk.method();
+
+      expect(db.table.addObject).type.not.toBeCallableWith({
+        numberValue: 42,
+        additional: 1,
+      });
     });
   });
 });

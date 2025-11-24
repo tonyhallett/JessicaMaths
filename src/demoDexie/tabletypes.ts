@@ -349,14 +349,23 @@ export interface TableInboundAutoAdd<
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TInsert
 > {
-  addObject<TInserted extends TInsert>(
-    item: TInserted
+  addObject<T extends TInsert>(
+    item: NoExcessDataProperties<T, TInsert>
   ): Promise<
-    TInserted & {
+    T & {
       [K in TPKeyPathOrPaths & string]: PrimaryKey<TDatabase, TPKeyPathOrPaths>;
     }
   >;
 }
+type IsFunction<T> = T extends (...args: any[]) => any ? true : false;
+
+type NoExcessDataProperties<T, U> = {
+  [K in keyof T]: K extends keyof U
+    ? T[K]
+    : IsFunction<T[K]> extends true
+    ? T[K]
+    : never;
+};
 
 export type TableInboundAuto<
   TName extends string,
