@@ -361,11 +361,40 @@ type IsFunction<T> = T extends (...args: any[]) => any ? true : false;
 
 type NoExcessDataProperties<T, U> = {
   [K in keyof T]: K extends keyof U
-    ? T[K]
+    ? IsFunction<T[K]> extends true
+      ? T[K]
+      : T[K] extends object
+      ? U[K] extends object
+        ? NoExcessDataProperties<T[K], U[K]>
+        : T[K]
+      : T[K]
     : IsFunction<T[K]> extends true
     ? T[K]
     : never;
 };
+
+interface TableInboundBase<
+  TName extends string,
+  TDatabase,
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TIndexPaths extends DexieIndexPaths<TDatabase>,
+  TGet,
+  TInsert
+> extends TableBase<
+    TName,
+    TGet,
+    TDatabase,
+    TInsert,
+    TPKeyPathOrPaths,
+    TIndexPaths
+  > {
+  add<T extends TInsert>(
+    item: NoExcessDataProperties<T, TInsert>
+  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+  bulkAdd(
+    items: readonly TInsert[]
+  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+}
 
 export type TableInboundAuto<
   TName extends string,
@@ -374,15 +403,15 @@ export type TableInboundAuto<
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet,
   TInsert
-> = TableBase<TName, TGet, TDatabase, TInsert, TPKeyPathOrPaths, TIndexPaths> &
+> = TableInboundBase<
+  TName,
+  TDatabase,
+  TPKeyPathOrPaths,
+  TIndexPaths,
+  TGet,
+  TInsert
+> &
   TableInboundAutoAdd<TDatabase, TPKeyPathOrPaths, TInsert> & {
-    add(
-      item: TInsert
-    ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
-
-    bulkAdd(
-      items: readonly TInsert[]
-    ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
     bulkAdd<B extends boolean>(
       items: readonly TInsert[],
       options: {
@@ -403,6 +432,44 @@ export type TableInboundAuto<
     ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
   };
 
+type NoExcessDataPropertiesArray<
+  TArr extends readonly any[],
+  TInsert
+> = TArr extends readonly [infer First, ...infer Rest]
+  ? First extends TInsert
+    ? HasNeverProperty<NoExcessDataProperties<First, TInsert>> extends never
+      ? Rest extends readonly []
+        ? readonly [First]
+        : readonly [First, ...NoExcessDataPropertiesArray<Rest, TInsert>]
+      : never
+    : never
+  : readonly [];
+
+type HasNeverProperty<T> = {
+  [K in keyof T]: [T[K]] extends [never]
+    ? K
+    : T[K] extends object
+    ? T[K] extends (...args: any[]) => any
+      ? never
+      : HasNeverProperty<T[K]> extends never
+      ? never
+      : K
+    : never;
+}[keyof T];
+
+export interface TableInboundBulkTuple<
+  TDatabase,
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TInsert
+> {
+  bulkAddTuple<TArr extends readonly [...any[]]>(
+    items: TArr & NoExcessDataPropertiesArray<TArr, TInsert>
+  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+  bulkPutTuple<TArr extends readonly [...any[]]>(
+    items: TArr & NoExcessDataPropertiesArray<TArr, TInsert>
+  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+}
+
 type TableInbound<
   TName extends string,
   TDatabase,
@@ -410,50 +477,44 @@ type TableInbound<
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet,
   TInsert
-> = TableBase<
+> = TableInboundBase<
   TName,
-  TGet,
   TDatabase,
-  TInsert,
   TPKeyPathOrPaths,
-  TIndexPaths
-> & {
-  add<T extends TInsert>(
-    item: NoExcessDataProperties<T, TInsert>
-  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
-  bulkAdd<T extends TInsert>(
-    items: readonly NoExcessDataProperties<T, TInsert>[]
-  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
-  put<T extends TInsert>(
-    item: NoExcessDataProperties<T, TInsert>
-  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+  TIndexPaths,
+  TGet,
+  TInsert
+> &
+  TableInboundBulkTuple<TDatabase, TPKeyPathOrPaths, TInsert> & {
+    put<T extends TInsert>(
+      item: NoExcessDataProperties<T, TInsert>
+    ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+    bulkPut(
+      items: readonly TInsert[]
+    ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
 
-  bulkPut<T extends TInsert>(
-    items: readonly NoExcessDataProperties<T, TInsert>[]
-  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
-
-  // https://dexie.org/docs/Table/Table.update()
-  update<TMAXDEPTH extends string = "II">(
-    key: PrimaryKey<TDatabase, TPKeyPathOrPaths>,
-    changes: UpdateSpec<TDatabase, TMAXDEPTH>
-  ): PromiseExtended<0 | 1>;
-  update(
-    key: PrimaryKey<TDatabase, TPKeyPathOrPaths>,
-    changes: ChangeCallback<TDatabase>
-  ): PromiseExtended<0 | 1>;
-  // note that docs do not mention this ( as the key must exist on the object - so ok for this table type )
-  update<TMAXDEPTH extends string = "II">(
-    object: TDatabase,
-    changes: UpdateSpec<TDatabase, TMAXDEPTH>
-  ): PromiseExtended<0 | 1>;
-  update(
-    object: TDatabase,
-    changes: ChangeCallback<TDatabase>
-  ): PromiseExtended<0 | 1>;
-  bulkUpdate<TMAXDEPTH extends string = "II">(
-    changes: BulkUpdate<TDatabase, TPKeyPathOrPaths, TMAXDEPTH>[]
-  ): PromiseExtended<number>;
-  /*
+    // https://dexie.org/docs/Table/Table.update()
+    update<TMAXDEPTH extends string = "II">(
+      key: PrimaryKey<TDatabase, TPKeyPathOrPaths>,
+      changes: UpdateSpec<TDatabase, TMAXDEPTH>
+    ): PromiseExtended<0 | 1>;
+    update(
+      key: PrimaryKey<TDatabase, TPKeyPathOrPaths>,
+      changes: ChangeCallback<TDatabase>
+    ): PromiseExtended<0 | 1>;
+    // note that docs do not mention this ( as the key must exist on the object - so ok for this table type )
+    update<TMAXDEPTH extends string = "II">(
+      object: TDatabase,
+      changes: UpdateSpec<TDatabase, TMAXDEPTH>
+    ): PromiseExtended<0 | 1>;
+    update(
+      object: TDatabase,
+      changes: ChangeCallback<TDatabase>
+    ): PromiseExtended<0 | 1>;
+    bulkUpdate<TMAXDEPTH extends string = "II">(
+      changes: BulkUpdate<TDatabase, TPKeyPathOrPaths, TMAXDEPTH>[]
+    ): PromiseExtended<number>;
+    /*
     dexie typescript incorrectly allows T for the key
     upsert(key: TKey | T, changes: UpdateSpec<TInsertType>): PromiseExtended<boolean>;
     dexie internal typescript
@@ -464,11 +525,11 @@ type TableInbound<
     we can only insert an item that is valid for the table
     todo look at typing with dotted paths too
   */
-  upsert(
-    key: PrimaryKey<TDatabase, TPKeyPathOrPaths>,
-    spec: UpsertSpec<TDatabase, TPKeyPathOrPaths>
-  ): PromiseExtended<boolean>;
-} & WhereClausesFromIndexes<
+    upsert(
+      key: PrimaryKey<TDatabase, TPKeyPathOrPaths>,
+      spec: UpsertSpec<TDatabase, TPKeyPathOrPaths>
+    ): PromiseExtended<boolean>;
+  } & WhereClausesFromIndexes<
     TGet,
     TDatabase,
     TDatabase,

@@ -1,4 +1,4 @@
-import Dexie, { type PromiseExtended, type Table } from "dexie";
+import Dexie, { type Table } from "dexie";
 import type { TableInboundAutoAdd } from "./tabletypes";
 
 export function AddAutoReturnObjectAddon(db: Dexie) {

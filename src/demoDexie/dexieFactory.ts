@@ -4,7 +4,9 @@ import type { DexieTypedTransaction } from "./DexieTypedTransaction";
 import type { TableConfig } from "./tablebuilder";
 import type { DBTables } from "./tabletypes";
 import { AddAutoReturnObjectAddon } from "./AddAutoReturnObjectAddOn";
+import { TableInboundBulkTupleAddOn } from "./TableInboundBulkTupleAddOn";
 
+Dexie.addons.push(TableInboundBulkTupleAddOn);
 Dexie.addons.push(AddAutoReturnObjectAddon);
 
 type TypedDexie<

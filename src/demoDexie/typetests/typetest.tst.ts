@@ -10,6 +10,7 @@ import {
 import { expect, describe, it } from "tstyche";
 import type { ChangeCallback } from "../Collection";
 import { add, ObjectPropModification } from "../propmodifications";
+import { Table } from "@mui/material";
 
 describe("tableBuilder", () => {
   describe("primary key selection", () => {
@@ -972,7 +973,7 @@ describe("Inbound - non auto", () => {
     nested: { sub: 1, deep: { level2: { level3: "level3" } } },
   };
 
-  class TableItemClass implements TableItem {
+  class TableItemAdditionalPropertyClass implements TableItem {
     id: string = "";
     other: number = 0;
     additionalProp: string = "";
@@ -980,6 +981,16 @@ describe("Inbound - non auto", () => {
       sub: number;
       deep: { level2: { level3: string } };
     } = { sub: 0, deep: { level2: { level3: "" } } };
+  }
+
+  class TableItemWithMethod implements TableItem {
+    id: string = "";
+    other: number = 0;
+    nested: {
+      sub: number;
+      deep: { level2: { level3: string } };
+    } = { sub: 0, deep: { level2: { level3: "" } } };
+    method() {}
   }
 
   const db = dexieFactory(
@@ -997,8 +1008,22 @@ describe("Inbound - non auto", () => {
   describe("add, put, bulkAdd, bulkPut", () => {
     it("should add without primary key argument", () => {
       expect(db.table.add).type.toBeCallableWith(tableItem);
+      expect(db.table.add).type.not.toBeCallableWith({});
       expect(db.table.add).type.not.toBeCallableWith(tableItem, "id1");
       expect(db.table.add).type.not.toBeCallableWith({ id: "id1" });
+      const additionalDeep = {
+        id: "id1",
+        other: 42,
+        nested: {
+          sub: 1,
+          deep: { level2: { level3: "level3" }, additionalProp: "value" },
+        },
+      };
+      expect(db.table.add).type.not.toBeCallableWith(additionalDeep);
+      expect(db.table.add).type.not.toBeCallableWith(
+        new TableItemAdditionalPropertyClass()
+      );
+      expect(db.table.add).type.toBeCallableWith(new TableItemWithMethod());
     });
 
     it("should put without primary key argument", () => {
@@ -1008,16 +1033,41 @@ describe("Inbound - non auto", () => {
     });
 
     it("should bulk add without primary keys argument", () => {
-      expect(db.table.bulkAdd).type.toBeCallableWith([tableItem, tableItem]);
-      expect(db.table.bulkAdd).type.not.toBeCallableWith(
-        [tableItem, tableItem],
-        ["id1", "id2"]
-      );
+      const tableItems = [tableItem, tableItem];
+      expect(db.table.bulkAdd).type.toBeCallableWith(tableItems);
+
+      expect(db.table.bulkAdd).type.toBeCallableWith([
+        tableItem,
+        new TableItemWithMethod(),
+      ]);
+
+      // should prevent primary keys argument
+      expect(db.table.bulkAdd).type.not.toBeCallableWith(tableItems, [
+        "id1",
+        "id2",
+      ]);
+
       expect(db.table.bulkAdd).type.not.toBeCallableWith([{ id: "id1" }]);
 
-      // should prevent excess properties
-      expect(db.table.bulkAdd).type.not.toBeCallableWith([
-        new TableItemClass(),
+      // additional property checks only for bulkAddTuple
+      const additionalDeep = {
+        id: "id1",
+        other: 42,
+        nested: {
+          sub: 1,
+          deep: { level2: { level3: "level3" }, additionalProp: "value" },
+        },
+      };
+      expect(db.table.bulkAdd).type.toBeCallableWith([additionalDeep]);
+      expect(db.table.bulkAddTuple).type.not.toBeCallableWith([additionalDeep]);
+
+      expect(db.table.bulkAdd).type.toBeCallableWith([
+        tableItem,
+        new TableItemAdditionalPropertyClass(),
+      ]);
+      expect(db.table.bulkAddTuple).type.not.toBeCallableWith([
+        tableItem,
+        new TableItemAdditionalPropertyClass(),
       ]);
     });
 
