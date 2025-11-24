@@ -1155,7 +1155,7 @@ describe("primary key on object table - non auto", () => {
       ]);
     });
 
-    it("should upsert with correct primary key type and all required properties deeply", () => {
+    describe("upsert", () => {
       interface UpsertItem {
         id: string;
         notOptional: number;
@@ -1168,17 +1168,34 @@ describe("primary key on object table - non auto", () => {
         },
         "DemoDexie"
       );
-      expect(db.table.upsert).type.toBeCallableWith("idValue", {
-        notOptional: 42,
+
+      it("should upsert with correct primary key type and all required properties deeply", () => {
+        expect(db.table.upsert).type.toBeCallableWith("idValue", {
+          notOptional: 42,
+        });
+
+        expect(db.table.upsert).type.not.toBeCallableWith(1, {
+          notOptional: 42,
+        });
+
+        expect(db.table.upsert).type.not.toBeCallableWith("idValue", {
+          optional: 42,
+        });
+
+        expect(db.table.upsert).type.toBeCallableWith("idValue", {
+          notOptional: 42,
+          optional: 42,
+        });
       });
 
-      expect(db.table.upsert).type.not.toBeCallableWith(1, { notOptional: 42 });
-
-      expect(db.table.upsert).type.not.toBeCallableWith("idValue", {
-        optional: 42,
+      it("should allow prop modification values of the correct type", () => {
+        expect(db.table.upsert).type.toBeCallableWith("idValue", {
+          notOptional: add(5),
+        });
+        expect(db.table.upsert).type.not.toBeCallableWith("idValue", {
+          notOptional: add(["array incorrect type"]),
+        });
       });
     });
-
-    it("should allow prop modification values of the correct type", () => {});
   });
 });

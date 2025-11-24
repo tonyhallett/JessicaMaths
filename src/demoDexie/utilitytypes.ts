@@ -5,16 +5,6 @@ export type UnionToIntersection<U> = (
   : never;
 export type StringKey<T> = keyof T & string;
 
-export type RequiredOnlyDeep<T> = {
-  [K in keyof T as undefined extends T[K] ? never : K]: T[K] extends Function
-    ? T[K] // keep functions as-is
-    : T[K] extends Array<infer U>
-    ? Array<U> // keep arrays as-is (or optionally wrap elements in RequiredOnlyDeep<U>)
-    : T[K] extends object
-    ? RequiredOnlyDeep<T[K]> // recurse for objects
-    : T[K]; // primitive
-};
-
 // Split a dotted key path into tuple
 type Split<Path extends string> = Path extends `${infer Head}.${infer Rest}`
   ? [Head, ...Split<Rest>]

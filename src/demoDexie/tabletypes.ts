@@ -19,7 +19,7 @@ import type {
 import type { DexiePrimaryKeyPathOrPaths } from "./tablebuilder";
 import type { WhereClausesFromIndexes } from "./where";
 import type { TableConfig } from "./tablebuilder";
-import type { DeletePrimaryKeys, RequiredOnlyDeep } from "./utilitytypes";
+import type { DeletePrimaryKeys } from "./utilitytypes";
 import type { PropModificationTyped } from "./propmodifications";
 
 type DexieKeyPaths<T, MAXDEPTH = "II", CURRDEPTH extends string = ""> = {
@@ -85,7 +85,7 @@ export type DBTables<
         ? never
         : never
       : Auto extends true
-      ? never
+      ? KeyPathTableAuto<TName, TDatabase, PK, Indices, TGet, TInsert>
       : KeyPathTable<TName, TDatabase, PK, Indices, TGet, TInsert>
     : never;
 };
@@ -344,6 +344,26 @@ interface BulkUpdate<
   changes: Omit<UpdateSpec<T, TMAXDEPTH>, PrimaryKeyPaths<T, TPKeyPathOrPaths>>;
 }
 
+type KeyPathTableAuto<
+  TName extends string,
+  TDatabase,
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TIndexPaths extends DexieIndexPaths<TDatabase>,
+  TGet,
+  TInsert
+> = TableBase<
+  TName,
+  TGet,
+  TDatabase,
+  TInsert,
+  TPKeyPathOrPaths,
+  TIndexPaths
+> & {
+  add(item: TInsert): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+  addObject(item: TInsert): PromiseExtended<TDatabase>;
+  putObject(item: TInsert): PromiseExtended<TDatabase>;
+};
+
 type KeyPathTable<
   TName extends string,
   TDatabase,
@@ -434,14 +454,26 @@ type KeyPathTable<
     TIndexPaths
   >;
 
+type DeepPropertyOrModification<T> = T extends object
+  ? T extends (...args: any[]) => any // Method
+    ? T
+    : T extends Array<any>
+    ? T | PropModificationTyped<T>
+    : {
+        [K in keyof T]:
+          | DeepPropertyOrModification<T[K]>
+          | PropModificationTyped<T[K]>;
+      }
+  : T | PropModificationTyped<T>;
+
 type UpsertSpec<
   T,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<T>
 > = DeletePrimaryKeys<
   {
-    [K in keyof RequiredOnlyDeep<T>]:
-      | RequiredOnlyDeep<T>[K]
-      | PropModificationTyped<RequiredOnlyDeep<T>[K]>;
+    [K in keyof T]:
+      | DeepPropertyOrModification<T[K]>
+      | PropModificationTyped<T[K]>;
   },
   TPKeyPathOrPaths
 >;
