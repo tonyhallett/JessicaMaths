@@ -158,5 +158,5 @@ interface CollectionBase<
 
   // Other methods
   // https://dexie.org/docs/Collection/Collection.raw()
-  raw(): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
+  raw(): Collection<TDatabase, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
 }

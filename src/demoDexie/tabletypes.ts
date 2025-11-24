@@ -85,8 +85,8 @@ export type DBTables<
         ? never
         : never
       : Auto extends true
-      ? KeyPathTableAuto<TName, TDatabase, PK, Indices, TGet, TInsert>
-      : KeyPathTable<TName, TDatabase, PK, Indices, TGet, TInsert>
+      ? TableInboundAuto<TName, TDatabase, PK, Indices, TGet, TInsert>
+      : TableInbound<TName, TDatabase, PK, Indices, TGet, TInsert>
     : never;
 };
 
@@ -344,27 +344,57 @@ interface BulkUpdate<
   changes: Omit<UpdateSpec<T, TMAXDEPTH>, PrimaryKeyPaths<T, TPKeyPathOrPaths>>;
 }
 
-type KeyPathTableAuto<
+export interface TableInboundAutoAdd<
+  TDatabase,
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TInsert
+> {
+  addObject<TInserted extends TInsert>(
+    item: TInserted
+  ): Promise<
+    TInserted & {
+      [K in TPKeyPathOrPaths & string]: PrimaryKey<TDatabase, TPKeyPathOrPaths>;
+    }
+  >;
+}
+
+export type TableInboundAuto<
   TName extends string,
   TDatabase,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet,
   TInsert
-> = TableBase<
-  TName,
-  TGet,
-  TDatabase,
-  TInsert,
-  TPKeyPathOrPaths,
-  TIndexPaths
-> & {
-  add(item: TInsert): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
-  addObject(item: TInsert): PromiseExtended<TDatabase>;
-  putObject(item: TInsert): PromiseExtended<TDatabase>;
-};
+> = TableBase<TName, TGet, TDatabase, TInsert, TPKeyPathOrPaths, TIndexPaths> &
+  TableInboundAutoAdd<TDatabase, TPKeyPathOrPaths, TInsert> & {
+    add(
+      item: TInsert
+    ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
 
-type KeyPathTable<
+    bulkAdd(
+      items: readonly TInsert[]
+    ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+    bulkAdd<B extends boolean>(
+      items: readonly TInsert[],
+      options: {
+        allKeys: B;
+      }
+    ): PromiseExtended<
+      B extends true
+        ? PrimaryKey<TDatabase, TPKeyPathOrPaths>[]
+        : PrimaryKey<TDatabase, TPKeyPathOrPaths>
+    >;
+
+    put(
+      item: TDatabase
+    ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+    // no need for other overloads as the primary key is already present on TDatabase
+    bulkPut(
+      items: readonly TDatabase[]
+    ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+  };
+
+type TableInbound<
   TName extends string,
   TDatabase,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,

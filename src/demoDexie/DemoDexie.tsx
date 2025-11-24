@@ -54,8 +54,6 @@ export const DemoDexie = () => {
         //db.data.add(newItemNotAllowed);
         await db.data.add(newItem);
         const withPrimaryKey = await db.data.addObject(newItem);
-        // why would you use put if you did not have a pkey ???????????????
-        const withPrimaryKey2 = await db.data.putObject({ other: 2 });
         const received = await db.data.get(2);
       }}
     >

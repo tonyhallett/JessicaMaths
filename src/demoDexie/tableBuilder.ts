@@ -236,6 +236,24 @@ interface MapToClass<T> {
   excludedKeys: string[];
 }
 
+type IncludesNumber<T> = [T] extends [number]
+  ? true // exact number
+  : Extract<T, number> extends never
+  ? false
+  : true; // number in union
+
+type InboundAutoIncrementKeyPath<T> = ValidIndexedDBKeyPath<
+  T,
+  "",
+  false
+> extends infer K
+  ? K extends string
+    ? IncludesNumber<KeyPathValue<T, K>> extends true
+      ? K
+      : never
+    : never
+  : never;
+
 function createTableBuilder<TDatabase, TGet>(
   mapToClass?: MapToClass<TDatabase>
 ) {
@@ -347,9 +365,7 @@ function createTableBuilder<TDatabase, TGet>(
   }
 
   return {
-    autoIncrement<K extends ValidIndexedDBKeyPath<TDatabase, "", false>>(
-      key: K
-    ) {
+    autoIncrement<K extends InboundAutoIncrementKeyPath<TDatabase>>(key: K) {
       return createIndexMethods(key, true, [] as const, true);
     },
     primaryKey<K extends ValidIndexedDBKeyPath<TDatabase>>(key: K) {

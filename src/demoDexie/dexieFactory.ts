@@ -4,9 +4,9 @@ import type { DexieTypedTransaction } from "./DexieTypedTransaction";
 import type { TableConfig } from "./tablebuilder";
 import type { DBTables } from "./tabletypes";
 import { registerExcludedKeys } from "./ExcludedKeysAddOn";
-import { AddPutAutoReturnObjectAddon } from "./AddPutAutoReturnObjectAddOn";
+import { AddAutoReturnObjectAddon } from "./AddAutoReturnObjectAddOn";
 
-Dexie.addons.push(AddPutAutoReturnObjectAddon);
+Dexie.addons.push(AddAutoReturnObjectAddon);
 
 type TypedDexie<
   TConfig extends Record<string, TableConfig<any, any, any, any>>

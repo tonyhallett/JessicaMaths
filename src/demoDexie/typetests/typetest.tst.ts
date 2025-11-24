@@ -66,7 +66,25 @@ describe("tableBuilder", () => {
       expect(builder.autoIncrement).type.not.toBeCallableWith(
         "stringValue.length"
       );
-      expect(builder.autoIncrement).type.toBeCallableWith("stringValue");
+    });
+
+    // otherwise have to supply the key every time as key generator is number
+    it("should only allow primary key type number or includes number in a union", () => {
+      const builder = tableBuilder<{ stringPkey: string }>();
+      expect(builder.autoIncrement).type.not.toBeCallableWith("stringPkey");
+
+      const builderNumber = tableBuilder<{ numberPkey: number }>();
+      expect(builderNumber.autoIncrement).type.toBeCallableWith("numberPkey");
+
+      const builderUnion = tableBuilder<{ unionPkey: string | number }>();
+      expect(builderUnion.autoIncrement).type.toBeCallableWith("unionPkey");
+
+      const builderBadUnion = tableBuilder<{
+        badUnion: string | { obj: number };
+      }>();
+      expect(builderBadUnion.autoIncrement).type.not.toBeCallableWith(
+        "badUnion"
+      );
     });
   });
 
@@ -789,6 +807,10 @@ describe("table base", () => {
           .compound("compound1", "compound2")
           .multi("multiEntry")
           .build(),
+        mappedTabled: tableClassBuilder(MappedStringId)
+          .primaryKey("id")
+          .index("other")
+          .build(),
       },
       ""
     );
@@ -907,10 +929,20 @@ describe("table base", () => {
         });
       });
     });
+
+    it("should raw to a collection returning TDatabase and not TGet", () => {
+      const mappedCollection = db.mappedTabled.toCollection();
+      expect(mappedCollection.toArray()).type.toBe<
+        PromiseExtended<MappedStringId[]>
+      >();
+      expect(mappedCollection.raw().toArray()).type.not.toBe<
+        PromiseExtended<MappedStringId[]>
+      >();
+    });
   });
 });
 
-describe("primary key on object table - non auto", () => {
+describe("Inbound - non auto", () => {
   interface TableItem {
     id: string;
     other: number;
@@ -1161,10 +1193,19 @@ describe("primary key on object table - non auto", () => {
         notOptional: number;
         optional?: number;
       }
+      interface CompoundUpsertItem {
+        part1: string;
+        part2: number;
+        notOptional: number;
+        optional?: number;
+      }
       const db = dexieFactory(
         1,
         {
           table: tableBuilder<UpsertItem>().primaryKey("id").build(),
+          compoundTable: tableBuilder<CompoundUpsertItem>()
+            .compoundKey("part1", "part2")
+            .build(),
         },
         "DemoDexie"
       );
@@ -1188,6 +1229,14 @@ describe("primary key on object table - non auto", () => {
         });
       });
 
+      it("should not allow upserting a change to primary key", () => {
+        expect(db.table.upsert).type.not.toBeCallableWith("idValue", {
+          id: "newIdValue",
+          notOptional: 42,
+          optional: 42,
+        });
+      });
+
       it("should allow prop modification values of the correct type", () => {
         expect(db.table.upsert).type.toBeCallableWith("idValue", {
           notOptional: add(5),
@@ -1196,6 +1245,53 @@ describe("primary key on object table - non auto", () => {
           notOptional: add(["array incorrect type"]),
         });
       });
+
+      it("should work with compound primary keys", () => {
+        expect(db.compoundTable.upsert).type.toBeCallableWith(
+          ["part1Value", 2],
+          {
+            notOptional: add(5),
+          }
+        );
+      });
+    });
+  });
+});
+describe("Inbound auto", () => {
+  interface TableItem {
+    id: number;
+    numberValue: number;
+  }
+  const db = dexieFactory(
+    1,
+    {
+      table: tableBuilder<TableItem>().autoIncrement("id").build(),
+    },
+    ""
+  );
+  it("should add without the primary key TInsert, no keys ", () => {
+    expect(db.table.add).type.toBeCallableWith({ numberValue: 42 });
+    expect(db.table.add).type.not.toBeCallableWith({ numberValue: 42 }, [1]);
+  });
+
+  it("should add with the primary key argument TInsert, no keys", () => {
+    expect(db.table.add).type.toBeCallableWith({ id: 2, numberValue: 42 });
+  });
+
+  describe("addObject addon method", () => {
+    it("should return object with primary key added", async () => {
+      const withPk = await db.table.addObject({ numberValue: 42 });
+      expect(withPk).type.toBeAssignableTo<{
+        id: number;
+        numberValue: number;
+      }>();
+      class InsertType {
+        id?: number;
+        numberValue!: number;
+        method() {}
+      }
+      const classWithPk = await db.table.addObject(new InsertType());
+      classWithPk.method();
     });
   });
 });
