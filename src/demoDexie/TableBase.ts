@@ -91,14 +91,14 @@ export interface TableBase<
     TPKeyPathOrPaths,
     TIndexPaths
   >;
-  orderBy<Path extends IndexPath<TInsert, TIndexPaths[number]>>(
+  orderBy<Path extends IndexPath<TDatabase, TIndexPaths[number]>>(
     index: Path
   ): Collection<
     TGet,
     TDatabase,
     TInsert,
     PrimaryKey<TDatabase, TPKeyPathOrPaths>,
-    KeyForIndexPath<TInsert, IndexPathForPath<TInsert, TIndexPaths, Path>>,
+    KeyForIndexPath<TDatabase, IndexPathForPath<TDatabase, TIndexPaths, Path>>,
     TIndexPaths
   >;
   reverse(): PrimaryKeyCollection<
