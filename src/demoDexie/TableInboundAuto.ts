@@ -1,8 +1,8 @@
 import type { PromiseExtended } from "dexie";
 import type { DexieIndexPaths } from "./indexpaths";
 import type { DexiePrimaryKeyPathOrPaths, PrimaryKey } from "./primarykey";
-import type { TableInboundAutoAdd } from "./TableInboundAutoAdd";
 import type { TableInboundBase } from "./TableInboundBase";
+import type { TableInboundAutoAdd } from "./AddAutoReturnObjectAddOn";
 
 export type TableInboundAuto<
   TName extends string,
@@ -30,12 +30,4 @@ export type TableInboundAuto<
         ? PrimaryKey<TDatabase, TPKeyPathOrPaths>[]
         : PrimaryKey<TDatabase, TPKeyPathOrPaths>
     >;
-
-    put(
-      item: TDatabase
-    ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
-    // no need for other overloads as the primary key is already present on TDatabase
-    bulkPut(
-      items: readonly TDatabase[]
-    ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
   };
