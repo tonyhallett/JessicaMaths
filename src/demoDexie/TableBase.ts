@@ -1,9 +1,4 @@
-import type {
-  TableSchema,
-  DBCoreTable,
-  PromiseExtended,
-  KeyPathValue,
-} from "dexie";
+import type { TableSchema, DBCoreTable, PromiseExtended } from "dexie";
 import type { Collection } from "./Collection";
 import type {
   DexieIndexPaths,

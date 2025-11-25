@@ -16,7 +16,7 @@ export type AllowedKeyLeaf =
   | ArrayBuffer
   | ArrayBufferView
   | DataView;
-export type IsAllowedLeaf<T> = [T] extends [AllowedKeyLeaf] ? true : false;
+type IsAllowedLeaf<T> = [T] extends [AllowedKeyLeaf] ? true : false;
 type IsArray<T> = T extends readonly (infer E)[] ? true : false;
 type ArrayElement<T> = T extends readonly (infer E)[] ? E : never;
 type IsFile<T> = T extends File ? true : false;
