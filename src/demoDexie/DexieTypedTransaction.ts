@@ -54,41 +54,42 @@ type TransactionWithTables<
 
 type DexieWithoutTransactions = Omit<Dexie, "transaction" | "on">;
 
-type TypedOn<TConfig extends Record<string, TableConfig<any, any, any, any>>> =
-  {
-    on: DexieEventSet & {
-      // DbEventFns with typed transaction for 'populate' event
-      (
-        eventName: "populate",
-        subscriber: (trans: Transaction & DBTables<TConfig>) => any
-      ): void;
-      (
-        eventName: "blocked",
-        subscriber: (event: IDBVersionChangeEvent) => any
-      ): void;
-      (
-        eventName: "versionchange",
-        subscriber: (event: IDBVersionChangeEvent) => any
-      ): void;
-      (eventName: "close", subscriber: (event: Event) => any): void;
+type TypedOn<
+  TConfig extends Record<string, TableConfig<any, any, any, any, any, any, any>>
+> = {
+  on: DexieEventSet & {
+    // DbEventFns with typed transaction for 'populate' event
+    (
+      eventName: "populate",
+      subscriber: (trans: Transaction & DBTables<TConfig>) => any
+    ): void;
+    (
+      eventName: "blocked",
+      subscriber: (event: IDBVersionChangeEvent) => any
+    ): void;
+    (
+      eventName: "versionchange",
+      subscriber: (event: IDBVersionChangeEvent) => any
+    ): void;
+    (eventName: "close", subscriber: (event: Event) => any): void;
 
-      // from DbEvents
-      (
-        eventName: "ready",
-        subscriber: (vipDb: Dexie) => any,
-        bSticky?: boolean
-      ): void;
-      ready: DexieOnReadyEvent;
-      populate: DexiePopulateEvent; // this is old style.
-      blocked: DexieEvent;
-      versionchange: DexieVersionChangeEvent;
-      close: DexieCloseEvent;
-    };
+    // from DbEvents
+    (
+      eventName: "ready",
+      subscriber: (vipDb: Dexie) => any,
+      bSticky?: boolean
+    ): void;
+    ready: DexieOnReadyEvent;
+    populate: DexiePopulateEvent; // this is old style.
+    blocked: DexieEvent;
+    versionchange: DexieVersionChangeEvent;
+    close: DexieCloseEvent;
   };
+};
 
 // todo - suppport table array, table, table array args
 type TypedTransaction<
-  TConfig extends Record<string, TableConfig<any, any, any, any>>
+  TConfig extends Record<string, TableConfig<any, any, any, any, any, any, any>>
 > = {
   // Array form: transaction(mode, [tables], scope)
   transaction<U, TTables extends readonly TableArg<DBTables<TConfig>>[]>(
@@ -109,5 +110,5 @@ type TypedTransaction<
   ): PromiseExtended<U>;
 };
 export type DexieTypedTransaction<
-  TConfig extends Record<string, TableConfig<any, any, any, any>>
+  TConfig extends Record<string, TableConfig<any, any, any, any, any, any, any>>
 > = DexieWithoutTransactions & TypedTransaction<TConfig> & TypedOn<TConfig>;

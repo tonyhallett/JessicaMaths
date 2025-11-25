@@ -1,4 +1,8 @@
-import { add as dexieAddPropModHelper, type PromiseExtended } from "dexie";
+import {
+  add as dexieAddPropModHelper,
+  type PromiseExtended,
+  type Table,
+} from "dexie";
 import { dexieFactory } from "../dexieFactory";
 import {
   tableBuilder,
@@ -10,6 +14,7 @@ import {
 import { expect, describe, it } from "tstyche";
 import type { ChangeCallback } from "../Collection";
 import { add, ObjectPropModification } from "../propmodifications";
+import { exp } from "mathjs";
 
 describe("tableBuilder", () => {
   describe("primary key selection", () => {
@@ -104,6 +109,23 @@ describe("tableBuilder", () => {
 
     it("should not allow specifying a primary key that does not include number in a union", () => {
       expect(builder.hiddenAuto<string | Date>).type.not.toBeCallableWith();
+    });
+  });
+
+  describe("hidden explicit", () => {
+    const builder = tableBuilder<{ prop: string }>();
+    it("should allow specifying a primary key type that is an IndexableType", () => {
+      builder.hiddenExplicit(); // default to number
+
+      builder.hiddenExplicit<string>();
+      builder.hiddenExplicit<number>();
+      builder.hiddenExplicit<Date>();
+      builder.hiddenExplicit<ArrayBuffer>();
+      builder.hiddenExplicit<string | Date>();
+      // @ts-expect-error Type 'boolean' does not satisfy the constraint 'IndexableType'.
+      builder.hiddenExplicit<boolean>();
+      // @ts-expect-error Type 'string | boolean' does not satisfy the constraint 'IndexableType'....
+      builder.hiddenExplicit<string | boolean>();
     });
   });
 
@@ -1400,5 +1422,141 @@ describe("Inbound auto", () => {
         additional: 1,
       });
     });
+  });
+});
+
+describe("Outbound - non auto", () => {
+  interface TableItem {
+    value: number;
+  }
+  const db = dexieFactory(
+    1,
+    {
+      stringPKeyTable: tableBuilder<TableItem>()
+        .hiddenExplicit<string>()
+        .build(),
+      numberPKeyTable: tableBuilder<TableItem>()
+        .hiddenExplicit<number>()
+        .build(),
+      unionPKeyTable: tableBuilder<TableItem>()
+        .hiddenExplicit<number | string>()
+        .build(),
+    },
+    ""
+  );
+
+  it("should have primary key for TableBase operations typed to the TPKey", () => {
+    expect(db.stringPKeyTable.get).type.toBeCallableWith("stringKey");
+    expect(db.stringPKeyTable.get).type.not.toBeCallableWith(123);
+    expect(db.numberPKeyTable.get).type.toBeCallableWith(123);
+    expect(db.numberPKeyTable.get).type.not.toBeCallableWith("stringKey");
+    expect(db.unionPKeyTable.get).type.toBeCallableWith("stringKey");
+    expect(db.unionPKeyTable.get).type.toBeCallableWith(123);
+    expect(db.unionPKeyTable.get).type.not.toBeCallableWith(new Date());
+
+    expect(db.stringPKeyTable.bulkGet).type.toBeCallableWith(["stringKey"]);
+    expect(db.stringPKeyTable.bulkGet).type.not.toBeCallableWith([123]);
+    expect(db.unionPKeyTable.bulkGet).type.toBeCallableWith(["stringKey", 123]);
+
+    expect(db.stringPKeyTable.delete).type.toBeCallableWith("stringKey");
+    expect(db.stringPKeyTable.delete).type.not.toBeCallableWith(123);
+    expect(db.numberPKeyTable.delete).type.toBeCallableWith(123);
+    expect(db.numberPKeyTable.delete).type.not.toBeCallableWith("stringKey");
+    expect(db.unionPKeyTable.delete).type.toBeCallableWith("stringKey");
+    expect(db.unionPKeyTable.delete).type.toBeCallableWith(123);
+    expect(db.unionPKeyTable.delete).type.not.toBeCallableWith(new Date());
+
+    expect(db.stringPKeyTable.bulkDelete).type.toBeCallableWith(["stringKey"]);
+    expect(db.stringPKeyTable.bulkDelete).type.not.toBeCallableWith([123]);
+  });
+
+  it("should require primary key for add, put", () => {
+    const addItem: TableItem = { value: 42 };
+    expect(db.stringPKeyTable.add).type.toBeCallableWith(addItem, "stringKey");
+    expect(db.stringPKeyTable.add).type.not.toBeCallableWith(addItem, 42);
+    expect(db.stringPKeyTable.add).type.not.toBeCallableWith(addItem);
+
+    expect(db.numberPKeyTable.add).type.toBeCallableWith(addItem, 42);
+    expect(db.numberPKeyTable.add).type.not.toBeCallableWith(
+      addItem,
+      "stringKey"
+    );
+    expect(db.numberPKeyTable.add).type.not.toBeCallableWith(addItem);
+
+    expect(db.stringPKeyTable.put).type.toBeCallableWith(addItem, "stringKey");
+    expect(db.stringPKeyTable.put).type.not.toBeCallableWith(addItem, 42);
+    expect(db.stringPKeyTable.put).type.not.toBeCallableWith(addItem);
+
+    expect(db.numberPKeyTable.put).type.toBeCallableWith(addItem, 42);
+    expect(db.numberPKeyTable.put).type.not.toBeCallableWith(
+      addItem,
+      "stringKey"
+    );
+    expect(db.numberPKeyTable.put).type.not.toBeCallableWith(addItem);
+  });
+});
+
+describe("Outbound auto", () => {
+  interface TableItem {
+    value: number;
+  }
+
+  const db = dexieFactory(
+    1,
+    {
+      numberPKeyTable: tableBuilder<TableItem>().hiddenAuto().build(),
+      unionPKeyTable: tableBuilder<TableItem>()
+        .hiddenAuto<number | string>()
+        .build(),
+    },
+    ""
+  );
+
+  const addItem: TableItem = { value: 42 };
+
+  it("should have primary key for TableBase operations typed to the TPKey", () => {
+    expect(db.numberPKeyTable.get).type.toBeCallableWith(123);
+    expect(db.numberPKeyTable.get).type.not.toBeCallableWith("stringKey");
+    expect(db.unionPKeyTable.get).type.toBeCallableWith("stringKey");
+    expect(db.unionPKeyTable.get).type.toBeCallableWith(123);
+    expect(db.unionPKeyTable.get).type.not.toBeCallableWith(new Date());
+
+    expect(db.numberPKeyTable.bulkGet).type.toBeCallableWith([123]);
+    expect(db.numberPKeyTable.bulkGet).type.not.toBeCallableWith(["stringKey"]);
+
+    expect(db.numberPKeyTable.delete).type.toBeCallableWith(123);
+    expect(db.numberPKeyTable.delete).type.not.toBeCallableWith("stringKey");
+    expect(db.unionPKeyTable.delete).type.toBeCallableWith("stringKey");
+    expect(db.unionPKeyTable.delete).type.toBeCallableWith(123);
+    expect(db.unionPKeyTable.delete).type.not.toBeCallableWith(new Date());
+
+    expect(db.numberPKeyTable.bulkDelete).type.toBeCallableWith([123]);
+    expect(db.numberPKeyTable.bulkDelete).type.not.toBeCallableWith([
+      "stringKey",
+    ]);
+  });
+
+  it("should have optional primary key for add", () => {
+    expect(db.numberPKeyTable.add).type.toBeCallableWith(addItem);
+    expect(db.numberPKeyTable.add).type.toBeCallableWith(addItem, 42);
+    expect(db.numberPKeyTable.add).type.not.toBeCallableWith(
+      addItem,
+      "stringKey"
+    );
+
+    expect(db.unionPKeyTable.add).type.toBeCallableWith(addItem, 42);
+    expect(db.unionPKeyTable.add).type.toBeCallableWith(addItem, "stringKey");
+  });
+
+  it("should require primary key for put", () => {
+    expect(db.numberPKeyTable.put).type.toBeCallableWith(addItem, 42);
+    expect(db.numberPKeyTable.put).type.not.toBeCallableWith(
+      addItem,
+      "stringKey"
+    );
+    expect(db.numberPKeyTable.put).type.not.toBeCallableWith(addItem);
+
+    expect(db.unionPKeyTable.put).type.toBeCallableWith(addItem, 42);
+    expect(db.unionPKeyTable.put).type.toBeCallableWith(addItem, "stringKey");
   });
 });

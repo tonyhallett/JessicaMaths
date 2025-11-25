@@ -265,13 +265,13 @@ function createTableBuilder<TDatabase, TGet>(
     TPkeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
     TAuto extends boolean,
     TIndexPaths extends DexieIndexPaths<TDatabase>,
-    TPkeyInbound extends boolean,
-    TOutboundPKey = never
+    TPkeyIsInbound extends boolean,
+    TOutboundPKey extends IndexableType
   >(
     key: TPkeyPathOrPaths,
     auto: TAuto,
     indices: TIndexPaths,
-    pkeyInbound: TPkeyInbound,
+    pkeyIsInbound: TPkeyIsInbound,
     outboundPKey: TOutboundPKey
   ): IndexMethods<
     TDatabase,
@@ -279,7 +279,8 @@ function createTableBuilder<TDatabase, TGet>(
     TAuto,
     TIndexPaths,
     TGet,
-    TPkeyInbound
+    TPkeyIsInbound,
+    TOutboundPKey
   > {
     const addIfNotDuplicatePart = (part: string) => {
       if (indexParts.includes(part)) {
@@ -295,7 +296,7 @@ function createTableBuilder<TDatabase, TGet>(
             key,
             auto,
             [...indices, { kind: "single", path: indexKey, multi: false }],
-            pkeyInbound,
+            pkeyIsInbound,
             outboundPKey
           ) as any)
         );
@@ -307,7 +308,7 @@ function createTableBuilder<TDatabase, TGet>(
             key,
             auto,
             [...indices, { kind: "single", path: indexKey, multi: false }],
-            pkeyInbound,
+            pkeyIsInbound,
             outboundPKey
           ) as any)
         );
@@ -319,7 +320,7 @@ function createTableBuilder<TDatabase, TGet>(
             key,
             auto,
             [...indices, { kind: "multi", path: indexKey, multi: true }],
-            pkeyInbound,
+            pkeyIsInbound,
             outboundPKey
           ) as any)
         );
@@ -334,7 +335,7 @@ function createTableBuilder<TDatabase, TGet>(
             key,
             auto,
             [...indices, { kind: "compound", paths: keys }],
-            pkeyInbound,
+            pkeyIsInbound,
             outboundPKey
           ) as any)
         );
@@ -410,7 +411,7 @@ function createTableBuilder<TDatabase, TGet>(
         null as unknown as PKey
       );
     },
-    hiddenExplicit<PKey extends IndexableType>() {
+    hiddenExplicit<PKey extends IndexableType = number>() {
       return createIndexMethods(
         null as never,
         false,

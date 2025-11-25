@@ -1,20 +1,17 @@
-import type { IndexableType } from "dexie";
+import type { IndexableType, PromiseExtended } from "dexie";
 import type { DexieIndexPaths } from "./indexpaths";
+import type { NoExcessDataProperties } from "./utilitytypes";
+import type { TableOutboundBase } from "./TableOutboundBase";
 
-export type TableOutbound<
+export interface TableOutboundAuto<
   TName extends string,
   TDatabase,
   TPKey extends IndexableType,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
-  TGet,
-  TInsert
-> = {};
-
-export type TableOutboundAuto<
-  TName extends string,
-  TDatabase,
-  TPKey extends IndexableType,
-  TIndexPaths extends DexieIndexPaths<TDatabase>,
-  TGet,
-  TInsert
-> = {};
+  TGet
+> extends TableOutboundBase<TName, TDatabase, TPKey, TIndexPaths, TGet> {
+  add<T extends TDatabase>(
+    item: NoExcessDataProperties<T, TDatabase>,
+    key?: TPKey
+  ): PromiseExtended<TPKey>;
+}

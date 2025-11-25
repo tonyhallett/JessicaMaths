@@ -1,10 +1,11 @@
 import type { TableConfig } from "./tableBuilder";
 import type { TableInbound } from "./TableInbound";
 import type { TableInboundAuto } from "./TableInboundAuto";
-import type { TableOutbound, TableOutboundAuto } from "./TableOutboundAuto";
+import type { TableOutbound } from "./TableOutbound";
+import type { TableOutboundAuto } from "./TableOutboundAuto";
 
 export type DBTables<
-  TConfig extends Record<string, TableConfig<any, any, any, any, any>>
+  TConfig extends Record<string, TableConfig<any, any, any, any, any, any, any>>
 > = {
   [TName in keyof TConfig & string]: TConfig[TName] extends TableConfig<
     infer TDatabase,
@@ -15,24 +16,10 @@ export type DBTables<
     infer TInsert,
     infer TOutboundKey
   >
-    ? TPKeyPathOrPaths extends never
+    ? [TPKeyPathOrPaths] extends [never]
       ? TAuto extends true
-        ? TableOutboundAuto<
-            TName,
-            TDatabase,
-            TOutboundKey,
-            TIndexPaths,
-            TGet,
-            TInsert
-          >
-        : TableOutbound<
-            TName,
-            TDatabase,
-            TOutboundKey,
-            TIndexPaths,
-            TGet,
-            TInsert
-          >
+        ? TableOutboundAuto<TName, TDatabase, TOutboundKey, TIndexPaths, TGet>
+        : TableOutbound<TName, TDatabase, TOutboundKey, TIndexPaths, TGet>
       : TAuto extends true
       ? TableInboundAuto<
           TName,

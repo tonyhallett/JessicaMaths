@@ -10,11 +10,11 @@ Dexie.addons.push(TableInboundBulkTupleAddOn);
 Dexie.addons.push(AddAutoReturnObjectAddon);
 
 type TypedDexie<
-  TConfig extends Record<string, TableConfig<any, any, any, any>>
+  TConfig extends Record<string, TableConfig<any, any, any, any, any, any, any>>
 > = DBTables<TConfig> & DexieTypedTransaction<TConfig>;
 
 export function dexieFactory<
-  S extends Record<string, TableConfig<any, any, any, any>>
+  S extends Record<string, TableConfig<any, any, any, any, any, any, any>>
 >(version: number, tableConfigs: S, databaseName: string) {
   const db = new Dexie(databaseName) as unknown as TypedDexie<S>;
 

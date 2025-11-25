@@ -98,18 +98,3 @@ export type DeletePrimaryKeys<
   : TKey extends string
   ? DeleteByPath<T, Split<TKey>>
   : T;
-
-export type PrimaryKeyCollection<
-  TGet,
-  TDatabase,
-  TInsert,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
-  TIndexes extends DexieIndexPaths<TDatabase>
-> = Collection<
-  TGet,
-  TDatabase,
-  TInsert,
-  PrimaryKey<TDatabase, TPKeyPathOrPaths>,
-  PrimaryKey<TDatabase, TPKeyPathOrPaths>,
-  TIndexes
->;

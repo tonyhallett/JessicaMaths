@@ -18,7 +18,8 @@ export interface TableInboundBase<
       TDatabase,
       TInsert,
       TPKeyPathOrPaths,
-      TIndexPaths
+      TIndexPaths,
+      PrimaryKey<TDatabase, TPKeyPathOrPaths>
     >,
     TableInboundBulkTuple<TDatabase, TPKeyPathOrPaths, TInsert> {
   add<T extends TInsert>(
@@ -27,8 +28,8 @@ export interface TableInboundBase<
   bulkAdd(
     items: readonly TInsert[]
   ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
-  put(
-    item: TDatabase
+  put<T extends TDatabase>(
+    item: NoExcessDataProperties<T, TDatabase>
   ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
   bulkPut(
     items: readonly TDatabase[]
