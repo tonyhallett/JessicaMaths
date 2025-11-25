@@ -88,6 +88,25 @@ describe("tableBuilder", () => {
     });
   });
 
+  describe("hidden auto", () => {
+    const builder = tableBuilder<{ prop: string }>();
+    it("should default to primary key type number", () => {
+      expect(builder.hiddenAuto).type.toBeCallableWith();
+    });
+
+    it("should allow specifying a primary key type that is number", () => {
+      expect(builder.hiddenAuto<number>).type.toBeCallableWith();
+    });
+
+    it("should allow specifying a primary key that is am IndexableType union with number", () => {
+      expect(builder.hiddenAuto<string | number>).type.toBeCallableWith();
+    });
+
+    it("should not allow specifying a primary key that does not include number in a union", () => {
+      expect(builder.hiddenAuto<string | Date>).type.not.toBeCallableWith();
+    });
+  });
+
   describe("index path typing", () => {
     const builder = tableBuilder<{
       id: string;

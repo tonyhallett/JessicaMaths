@@ -1,4 +1,4 @@
-import type { KeyPathValue, InsertType } from "dexie";
+import type { KeyPathValue, InsertType, IndexableType } from "dexie";
 import type {
   DexieIndexPaths,
   SingleIndexPath,
@@ -21,7 +21,8 @@ export interface TableConfig<
   TAuto extends boolean,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet = TDatabase,
-  TInsert = TDatabase
+  TInsert = TDatabase,
+  TOutboundPKey extends IndexableType = never
 > {
   readonly pk: { key: TPKeyPathOrPaths; auto: TAuto };
   readonly indicesSchema: string;
@@ -145,7 +146,8 @@ interface IndexMethods<
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet = TDatabase,
   // stored on object - https://dexie.org/docs/inbound
-  TPkeyInbound extends boolean = false
+  TPkeyIsInbound extends boolean = false,
+  TPkeyOutbound extends IndexableType = never
 > {
   index<
     TIndexPath extends NonPrimaryKeyPath<TDatabase, PkPathOrPaths> &
@@ -160,7 +162,8 @@ interface IndexMethods<
         Auto,
         [...TIndexPaths, SingleIndexPath<TDatabase, TIndexPath>],
         TGet,
-        TPkeyInbound
+        TPkeyIsInbound,
+        TPkeyOutbound
       >;
   unique<
     TIndexPath extends NonPrimaryKeyPath<TDatabase, PkPathOrPaths> &
@@ -175,7 +178,8 @@ interface IndexMethods<
         Auto,
         [...TIndexPaths, SingleIndexPath<TDatabase, TIndexPath>],
         TGet,
-        TPkeyInbound
+        TPkeyIsInbound,
+        TPkeyOutbound
       >;
   multi<
     TIndexPath extends NonPrimaryKeyPath<TDatabase, PkPathOrPaths> &
@@ -190,7 +194,8 @@ interface IndexMethods<
         Auto,
         [...TIndexPaths, MultiIndexPath<TDatabase, TIndexPath>],
         TGet,
-        TPkeyInbound
+        TPkeyIsInbound,
+        TPkeyOutbound
       >;
   compound<const TCompoundIndexPaths extends CompoundKeyPaths<TDatabase>>(
     ...indexPaths: CompoundMatchesPK<
@@ -209,7 +214,8 @@ interface IndexMethods<
         Auto,
         [...TIndexPaths, CompoundIndexPaths<TDatabase, TCompoundIndexPaths>],
         TGet,
-        TPkeyInbound
+        TPkeyIsInbound,
+        TPkeyOutbound
       >;
   build(): TableConfig<
     TDatabase,
@@ -217,11 +223,12 @@ interface IndexMethods<
     Auto,
     TIndexPaths,
     TGet,
-    TPkeyInbound extends true
+    TPkeyIsInbound extends true
       ? Auto extends true
         ? OptionalPrimaryKeys<TDatabase, PkPathOrPaths>
         : TDatabase
-      : TDatabase
+      : TDatabase,
+    TPkeyOutbound
   >;
 }
 
@@ -247,6 +254,8 @@ type InboundAutoIncrementKeyPath<T> = ValidIndexedDBKeyPath<
     : never
   : never;
 
+type IncludesNumberInUnion<T> = Extract<T, number> extends never ? false : true;
+
 function createTableBuilder<TDatabase, TGet>(
   mapToClass?: ConstructorOf<TDatabase>
 ) {
@@ -256,12 +265,14 @@ function createTableBuilder<TDatabase, TGet>(
     TPkeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
     TAuto extends boolean,
     TIndexPaths extends DexieIndexPaths<TDatabase>,
-    TPkeyInbound extends boolean
+    TPkeyInbound extends boolean,
+    TOutboundPKey = never
   >(
     key: TPkeyPathOrPaths,
     auto: TAuto,
     indices: TIndexPaths,
-    pkeyInbound: TPkeyInbound
+    pkeyInbound: TPkeyInbound,
+    outboundPKey: TOutboundPKey
   ): IndexMethods<
     TDatabase,
     TPkeyPathOrPaths,
@@ -284,7 +295,8 @@ function createTableBuilder<TDatabase, TGet>(
             key,
             auto,
             [...indices, { kind: "single", path: indexKey, multi: false }],
-            pkeyInbound
+            pkeyInbound,
+            outboundPKey
           ) as any)
         );
       },
@@ -295,7 +307,8 @@ function createTableBuilder<TDatabase, TGet>(
             key,
             auto,
             [...indices, { kind: "single", path: indexKey, multi: false }],
-            pkeyInbound
+            pkeyInbound,
+            outboundPKey
           ) as any)
         );
       },
@@ -306,7 +319,8 @@ function createTableBuilder<TDatabase, TGet>(
             key,
             auto,
             [...indices, { kind: "multi", path: indexKey, multi: true }],
-            pkeyInbound
+            pkeyInbound,
+            outboundPKey
           ) as any)
         );
       },
@@ -320,7 +334,8 @@ function createTableBuilder<TDatabase, TGet>(
             key,
             auto,
             [...indices, { kind: "compound", paths: keys }],
-            pkeyInbound
+            pkeyInbound,
+            outboundPKey
           ) as any)
         );
       },
@@ -356,25 +371,53 @@ function createTableBuilder<TDatabase, TGet>(
   }
 
   return {
-    autoIncrement<K extends InboundAutoIncrementKeyPath<TDatabase>>(key: K) {
-      return createIndexMethods(key, true, [] as const, true);
+    autoIncrement<TPkeyPath extends InboundAutoIncrementKeyPath<TDatabase>>(
+      key: TPkeyPath
+    ) {
+      return createIndexMethods(key, true, [] as const, true, null as never);
     },
-    primaryKey<K extends ValidIndexedDBKeyPath<TDatabase>>(key: K) {
-      return createIndexMethods(key, false, [] as const, true);
+    primaryKey<TPkeyPath extends ValidIndexedDBKeyPath<TDatabase>>(
+      key: TPkeyPath
+    ) {
+      return createIndexMethods(key, false, [] as const, true, null as never);
     },
-    compoundKey<const K extends CompoundKeyPaths<TDatabase>>(
-      ...keys: K
-    ): NoDuplicates<K> extends never
+    compoundKey<const TCompoundKeyPaths extends CompoundKeyPaths<TDatabase>>(
+      ...keys: TCompoundKeyPaths
+    ): NoDuplicates<TCompoundKeyPaths> extends never
       ? DuplicateKeysError
-      : IndexMethods<TDatabase, K, false, [], TGet> {
-      return createIndexMethods(keys, false, [] as const, true) as any;
+      : IndexMethods<TDatabase, TCompoundKeyPaths, false, [], TGet> {
+      return createIndexMethods(
+        keys,
+        false,
+        [] as const,
+        true,
+        null as never
+      ) as any;
     },
 
-    hiddenAuto() {
-      return createIndexMethods(null as never, true, [] as const, false);
+    hiddenAuto<PKey extends IndexableType = number>(
+      ...args: IncludesNumberInUnion<PKey> extends false
+        ? PKey extends number
+          ? []
+          : [never] // Error: PKey must include number in union
+        : []
+    ) {
+      return createIndexMethods(
+        null as never,
+        true,
+        [] as const,
+        false,
+        null as unknown as PKey
+      );
     },
-    hiddenExplicit<K>() {
-      return createIndexMethods(null as never, false, [] as const, false);
+    hiddenExplicit<PKey extends IndexableType>() {
+      return createIndexMethods(
+        null as never,
+        false,
+        [] as const,
+        false,
+        null as unknown as PKey
+      );
     },
   };
 }
