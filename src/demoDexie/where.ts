@@ -14,13 +14,15 @@ import type {
 } from "./ValidIndexedDBKeyPaths";
 import type { UnionToIntersection } from "./utilitytypes";
 
+type WhereMethodName = "where" | "or";
+
 export type WhereClausesFromIndexes<
   TGet,
   TDatabase,
   TInsert,
   TPKey,
   TIndexPaths extends DexieIndexPaths<TInsert>,
-  TMethodName extends string = "where"
+  TMethodName extends WhereMethodName = "where"
 > = UnionToIntersection<
   WhereClauseFor<
     TGet,
@@ -40,7 +42,7 @@ type WhereClauseFor<
   TPKey,
   I extends DexieIndexPath<TInsert>,
   TIndexPaths extends DexieIndexPaths<TInsert>,
-  TMethodName extends string
+  TMethodName extends WhereMethodName
 > = I extends SingleIndexPath<TInsert, infer P>
   ? WhereForSingle<
       TGet,
@@ -84,7 +86,7 @@ type WhereForSingle<
   P extends ValidIndexedDBKeyPath<TInsert>,
   I extends SingleIndexPath<TInsert, P>,
   TIndexPaths extends DexieIndexPaths<TInsert>,
-  TMethodName extends string
+  TMethodName extends WhereMethodName
 > = {
   [K in TMethodName]: (
     path: I["path"]
@@ -106,7 +108,7 @@ type WhereForMulti<
   P extends ValidIndexedDBKeyPath<TInsert>,
   I extends MultiIndexPath<TInsert, P>,
   TIndexPaths extends DexieIndexPaths<TInsert>,
-  TMethodName extends string
+  TMethodName extends WhereMethodName
 > = {
   [K in TMethodName]: (
     path: I["path"]
@@ -128,11 +130,11 @@ type WhereForCompound<
   P extends CompoundKeyPaths<TInsert>,
   I extends CompoundIndexPaths<TInsert, P>,
   TIndexPaths extends DexieIndexPaths<TInsert>,
-  TMethodName extends string
+  TMethodName extends WhereMethodName
 > = {
-  where(
+  [K in TMethodName]: (
     paths: I["paths"]
-  ): WhereClause<
+  ) => WhereClause<
     TGet,
     TDatabase,
     TInsert,
@@ -141,6 +143,92 @@ type WhereForCompound<
     TIndexPaths
   >;
 };
+
+export type WhereClause<
+  TGet,
+  TDatabase,
+  TInsert,
+  TPkey,
+  Key,
+  TIndexPaths extends DexieIndexPaths<TInsert>
+> = WhereClauseNonStrings<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths> &
+  (Key extends string
+    ? WhereStringClause<TGet, TDatabase, TInsert, TPkey, TIndexPaths>
+    : {});
+
+export interface WhereClauseNonStrings<
+  TGet,
+  TDatabase,
+  TInsert,
+  TPkey,
+  Key,
+  TIndexPaths extends DexieIndexPaths<TInsert>
+> {
+  /*
+    above, aboveOrEqual, below, belowOrEqual, between and equals all create dexie DBCoreKeyRange
+    which become range property of the Collection ctx
+    DBCoreRange is converted to IDBKeyRange 
+    https://github.com/dexie/Dexie.js/blob/2a4d7b2aff3b4e9050110aa859279c1599f15d26/src/dbcore/dbcore-indexeddb.ts#L99
+    The implementation of dexie's DBCoreTable converts in its query method
+    https://github.com/dexie/Dexie.js/blob/2a4d7b2aff3b4e9050110aa859279c1599f15d26/src/dbcore/dbcore-indexeddb.ts#L296
+    and openCursor method
+
+    DBCoreRange is also used in 
+    https://github.com/dexie/Dexie.js/blob/2a4d7b2aff3b4e9050110aa859279c1599f15d26/src/dbcore/virtual-index-middleware.ts#L95
+
+    Relevant IndexedDB docs
+    https://developer.mozilla.org/en-US/docs/Web/API/IDBIndex/getAll
+    https://developer.mozilla.org/en-US/docs/Web/API/IDBKeyRange 
+    https://w3c.github.io/IndexedDB/#keyrange
+    https://w3c.github.io/IndexedDB/#in
+    https://w3c.github.io/IndexedDB/#compare-two-keys
+  */
+  // https://dexie.org/docs/WhereClause/WhereClause.between()
+  between(
+    lower: Key,
+    upper: Key,
+    includeLower?: boolean,
+    includeUpper?: boolean
+  ): Collection<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
+  // https://dexie.org/docs/WhereClause/WhereClause.above()
+  above(
+    value: Key
+  ): Collection<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
+  // https://dexie.org/docs/WhereClause/WhereClause.aboveOrEqual()
+  aboveOrEqual(
+    value: Key
+  ): Collection<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
+  // https://dexie.org/docs/WhereClause/WhereClause.below()
+  below(
+    value: Key
+  ): Collection<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
+  // https://dexie.org/docs/WhereClause/WhereClause.belowOrEqual()
+  belowOrEqual(
+    key: Key
+  ): Collection<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
+  // https://dexie.org/docs/WhereClause/WhereClause.equals()
+  equals(
+    value: Key
+  ): Collection<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
+  // https://dexie.org/docs/WhereClause/WhereClause.anyOf()
+
+  anyOf: ValuesOf<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
+  // https://dexie.org/docs/WhereClause/WhereClause.notEqual()
+  notEqual(
+    value: Key
+  ): Collection<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
+  // https://dexie.org/docs/WhereClause/WhereClause.noneOf()
+  noneOf: ValuesOf<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
+
+  // https://dexie.org/docs/WhereClause/WhereClause.inAnyRange()
+  inAnyRange(
+    ranges: ReadonlyArray<[Key, Key]>,
+    options?: {
+      includeLowers?: boolean;
+      includeUppers?: boolean;
+    }
+  ): Collection<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
+}
 
 interface Prefixes<
   TGet,
@@ -234,90 +322,4 @@ interface WhereStringClause<
     TPkey,
     TIndexPaths
   >;
-}
-
-export type WhereClause<
-  TGet,
-  TDatabase,
-  TInsert,
-  TPkey,
-  Key,
-  TIndexPaths extends DexieIndexPaths<TInsert>
-> = WhereClauseNonStrings<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths> &
-  (Key extends string
-    ? WhereStringClause<TGet, TDatabase, TInsert, TPkey, TIndexPaths>
-    : {});
-
-export interface WhereClauseNonStrings<
-  TGet,
-  TDatabase,
-  TInsert,
-  TPkey,
-  Key,
-  TIndexPaths extends DexieIndexPaths<TInsert>
-> {
-  /*
-    above, aboveOrEqual, below, belowOrEqual, between and equals all create dexie DBCoreKeyRange
-    which become range property of the Collection ctx
-    DBCoreRange is converted to IDBKeyRange 
-    https://github.com/dexie/Dexie.js/blob/2a4d7b2aff3b4e9050110aa859279c1599f15d26/src/dbcore/dbcore-indexeddb.ts#L99
-    The implementation of dexie's DBCoreTable converts in its query method
-    https://github.com/dexie/Dexie.js/blob/2a4d7b2aff3b4e9050110aa859279c1599f15d26/src/dbcore/dbcore-indexeddb.ts#L296
-    and openCursor method
-
-    DBCoreRange is also used in 
-    https://github.com/dexie/Dexie.js/blob/2a4d7b2aff3b4e9050110aa859279c1599f15d26/src/dbcore/virtual-index-middleware.ts#L95
-
-    Relevant IndexedDB docs
-    https://developer.mozilla.org/en-US/docs/Web/API/IDBIndex/getAll
-    https://developer.mozilla.org/en-US/docs/Web/API/IDBKeyRange 
-    https://w3c.github.io/IndexedDB/#keyrange
-    https://w3c.github.io/IndexedDB/#in
-    https://w3c.github.io/IndexedDB/#compare-two-keys
-  */
-  // https://dexie.org/docs/WhereClause/WhereClause.between()
-  between(
-    lower: Key,
-    upper: Key,
-    includeLower?: boolean,
-    includeUpper?: boolean
-  ): Collection<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
-  // https://dexie.org/docs/WhereClause/WhereClause.above()
-  above(
-    value: Key
-  ): Collection<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
-  // https://dexie.org/docs/WhereClause/WhereClause.aboveOrEqual()
-  aboveOrEqual(
-    value: Key
-  ): Collection<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
-  // https://dexie.org/docs/WhereClause/WhereClause.below()
-  below(
-    value: Key
-  ): Collection<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
-  // https://dexie.org/docs/WhereClause/WhereClause.belowOrEqual()
-  belowOrEqual(
-    key: Key
-  ): Collection<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
-  // https://dexie.org/docs/WhereClause/WhereClause.equals()
-  equals(
-    value: Key
-  ): Collection<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
-  // https://dexie.org/docs/WhereClause/WhereClause.anyOf()
-
-  anyOf: ValuesOf<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
-  // https://dexie.org/docs/WhereClause/WhereClause.notEqual()
-  notEqual(
-    value: Key
-  ): Collection<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
-  // https://dexie.org/docs/WhereClause/WhereClause.noneOf()
-  noneOf: ValuesOf<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
-
-  // https://dexie.org/docs/WhereClause/WhereClause.inAnyRange()
-  inAnyRange(
-    ranges: ReadonlyArray<[Key, Key]>,
-    options?: {
-      includeLowers?: boolean;
-      includeUppers?: boolean;
-    }
-  ): Collection<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths>;
 }

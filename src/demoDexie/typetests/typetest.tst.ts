@@ -750,6 +750,10 @@ describe("table base", () => {
       expect(
         numberCollectionKey.or("stringIndex").above
       ).type.not.toBeCallableWith(123);
+
+      expect(
+        stringCollectionKey.or(["compound1", "compound2"]).equals
+      ).type.toBeCallableWith(["a", 1]);
     });
 
     it("should return collection with the primary key type", () => {
