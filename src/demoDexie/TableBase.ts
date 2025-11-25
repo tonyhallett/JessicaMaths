@@ -1,4 +1,9 @@
-import type { TableSchema, DBCoreTable, PromiseExtended } from "dexie";
+import type {
+  TableSchema,
+  DBCoreTable,
+  PromiseExtended,
+  ThenShortcut,
+} from "dexie";
 import type { Collection } from "./Collection";
 import type {
   DexieIndexPaths,
@@ -32,58 +37,23 @@ export interface TableBase<
   get(
     key: PrimaryKey<TDatabase, TPKeyPathOrPaths>
   ): PromiseExtended<TGet | undefined>;
+  get<R>(
+    key: PrimaryKey<TDatabase, TPKeyPathOrPaths>,
+    thenShortcut: ThenShortcut<TGet | undefined, R>
+  ): PromiseExtended<R>;
   bulkGet(
     keys: PrimaryKey<TDatabase, TPKeyPathOrPaths>[]
   ): PromiseExtended<(TGet | undefined)[]>;
 
-  // filter(fn: (obj: T) => boolean): PrimaryKeyCollection<T, TKey, TIndexes>;
-  // this.toCollection().and(filterFunction);
-  filter: PrimaryKeyCollection<
-    TGet,
-    TDatabase,
-    TInsert,
-    TPKeyPathOrPaths,
-    TIndexPaths
-  >["and"];
-  count(): PromiseExtended<number>;
+  filter: ReturnType<this["toCollection"]>["and"];
+  count: ReturnType<this["toCollection"]>["count"];
 
-  offset(
-    n: number
-  ): PrimaryKeyCollection<
-    TGet,
-    TDatabase,
-    TInsert,
-    TPKeyPathOrPaths,
-    TIndexPaths
-  >;
-  limit(
-    n: number
-  ): PrimaryKeyCollection<
-    TGet,
-    TDatabase,
-    TInsert,
-    TPKeyPathOrPaths,
-    TIndexPaths
-  >;
+  offset: ReturnType<this["toCollection"]>["offset"];
+  limit: ReturnType<this["toCollection"]>["limit"];
 
-  // this.toCollection().each(callback);
-  each: PrimaryKeyCollection<
-    TGet,
-    TDatabase,
-    TInsert,
-    TPKeyPathOrPaths,
-    TIndexPaths
-  >["each"];
+  each: ReturnType<this["toCollection"]>["each"];
 
-  // this.toCollection().toArray(thenShortcut);
-  // toArray(): PromiseExtended<Array<T>>;
-  toArray: PrimaryKeyCollection<
-    TGet,
-    TDatabase,
-    TInsert,
-    TPKeyPathOrPaths,
-    TIndexPaths
-  >["toArray"];
+  toArray: ReturnType<this["toCollection"]>["toArray"];
   toCollection(): PrimaryKeyCollection<
     TGet,
     TDatabase,
@@ -101,13 +71,7 @@ export interface TableBase<
     KeyForIndexPath<TDatabase, IndexPathForPath<TDatabase, TIndexPaths, Path>>,
     TIndexPaths
   >;
-  reverse(): PrimaryKeyCollection<
-    TGet,
-    TDatabase,
-    TInsert,
-    TPKeyPathOrPaths,
-    TIndexPaths
-  >;
+  reverse: ReturnType<this["toCollection"]>["reverse"];
   // remove mapToClass as this is done with the builder / factory
   delete(key: PrimaryKey<TDatabase, TPKeyPathOrPaths>): PromiseExtended<void>;
   bulkDelete(

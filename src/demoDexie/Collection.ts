@@ -1,4 +1,4 @@
-import type { PromiseExtended } from "dexie";
+import type { PromiseExtended, ThenShortcut } from "dexie";
 import type { DexieIndexPaths } from "./indexpaths";
 import type { WhereClausesFromIndexes } from "./where";
 import type { UpdateSpec } from "dexie";
@@ -82,25 +82,21 @@ interface CollectionBase<
   TIndexPaths extends DexieIndexPaths<TInsert>
 > {
   //db: Database;
-  // then shortcuts
-  // count<R>(thenShortcut: ThenShortcut<number, R>): PromiseExtended<R>
-  // first<R>(thenShortcut: ThenShortcut<T | undefined, R>): PromiseExtended<R>
-  // keys<R>(thenShortcut: ThenShortcut<IndexableTypeArray, R>): PromiseExtended<R>
-  // primaryKeys<R>(thenShortcut: ThenShortcut<TKey[], R>): PromiseExtended<R>
-  // last<R>(thenShortcut: ThenShortcut<T | undefined, R>): PromiseExtended<R>
-  // sortBy<R>(keyPath: string, thenShortcut: ThenShortcut<T[], R>): PromiseExtended<R>
-  // toArray<R>(thenShortcut: ThenShortcut<T[], R>): PromiseExtended<R>
-  // uniqueKeys<R>(thenShortcut: ThenShortcut<IndexableTypeArray, R>): PromiseExtended<R>
   clone(
     props?: Object
   ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
 
   count(): PromiseExtended<number>;
+  count<R>(thenShortcut: ThenShortcut<number, R>): PromiseExtended<R>;
 
   toArray(): PromiseExtended<Array<TGet>>;
+  toArray<R>(thenShortcut: ThenShortcut<TGet[], R>): PromiseExtended<R>;
   // is toArray and sorts that
   sortBy(keyPath: DotKeyComparable<TGet>): PromiseExtended<TGet[]>;
-
+  sortBy<R>(
+    keyPath: DotKeyComparable<TGet>,
+    thenShortcut: ThenShortcut<TGet[], R>
+  ): PromiseExtended<R>;
   /*
       ***********************
       from https://dexie.org/docs/Collection/Collection.keys()
@@ -125,12 +121,17 @@ interface CollectionBase<
   ): PromiseExtended<void>;
 
   keys(): PromiseExtended<TKey[]>;
+  keys<R>(thenShortcut: ThenShortcut<TKey[], R>): PromiseExtended<R>;
   uniqueKeys(): PromiseExtended<TKey[]>;
+  uniqueKeys<R>(thenShortcut: ThenShortcut<TKey[], R>): PromiseExtended<R>;
 
   primaryKeys(): PromiseExtended<TPkey[]>;
+  primaryKeys<R>(thenShortcut: ThenShortcut<TPkey[], R>): PromiseExtended<R>;
 
   first(): PromiseExtended<TGet | undefined>;
+  first<R>(thenShortcut: ThenShortcut<TGet | undefined, R>): PromiseExtended<R>;
   last(): PromiseExtended<TGet | undefined>;
+  last<R>(thenShortcut: ThenShortcut<TGet | undefined, R>): PromiseExtended<R>;
   limit(
     n: number
   ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;

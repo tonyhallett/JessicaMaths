@@ -7,18 +7,32 @@ export type DBTables<
 > = {
   [TName in keyof TConfig & string]: TConfig[TName] extends TableConfig<
     infer TDatabase,
-    infer PK,
-    infer Auto,
-    infer Indices,
+    infer TPKeyPathOrPaths,
+    infer TAuto,
+    infer TIndexPaths,
     infer TGet,
     infer TInsert
   >
-    ? PK extends never
-      ? Auto extends true
+    ? TPKeyPathOrPaths extends never
+      ? TAuto extends true
         ? never
         : never
-      : Auto extends true
-      ? TableInboundAuto<TName, TDatabase, PK, Indices, TGet, TInsert>
-      : TableInbound<TName, TDatabase, PK, Indices, TGet, TInsert>
+      : TAuto extends true
+      ? TableInboundAuto<
+          TName,
+          TDatabase,
+          TPKeyPathOrPaths,
+          TIndexPaths,
+          TGet,
+          TInsert
+        >
+      : TableInbound<
+          TName,
+          TDatabase,
+          TPKeyPathOrPaths,
+          TIndexPaths,
+          TGet,
+          TInsert
+        >
     : never;
 };
