@@ -1,5 +1,5 @@
 import type { PromiseExtended } from "dexie";
-import type { DexieIndexPaths } from "./dexieindexes";
+import type { DexieIndexPaths } from "./indexpaths";
 import type { WhereClausesFromIndexes } from "./where";
 import type { UpdateSpec } from "dexie";
 

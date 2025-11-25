@@ -1,8 +1,8 @@
 import { Dexie } from "dexie";
 import { buildStores } from "./buildStores";
 import type { DexieTypedTransaction } from "./DexieTypedTransaction";
-import type { TableConfig } from "./tablebuilder";
-import type { DBTables } from "./tabletypes";
+import type { TableConfig } from "./tableBuilder";
+import type { DBTables } from "./DBTables";
 import { AddAutoReturnObjectAddon } from "./AddAutoReturnObjectAddOn";
 import { TableInboundBulkTupleAddOn } from "./TableInboundBulkTupleAddOn";
 

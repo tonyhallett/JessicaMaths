@@ -10,8 +10,8 @@ import type {
   Transaction,
   TransactionMode,
 } from "dexie";
-import type { TableConfig } from "./tablebuilder";
-import type { DBTables } from "./tabletypes";
+import type { TableConfig } from "./tableBuilder";
+import type { DBTables } from "./DBTables";
 
 // Helper: the union of allowed argument shapes (either a table name key or a table instance)
 type TableArg<TTablesMap extends Record<string, any>> =

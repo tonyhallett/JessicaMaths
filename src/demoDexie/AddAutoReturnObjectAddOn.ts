@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie";
-import type { TableInboundAutoAdd } from "./tabletypes";
+import type { TableInboundAutoAdd } from "./TableInboundAutoAdd";
 
 export function AddAutoReturnObjectAddon(db: Dexie) {
   const tablePrototype = db.Table.prototype as any;

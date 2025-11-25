@@ -1,6 +1,6 @@
 import Button from "@mui/material/Button";
 import { dexieFactory } from "./dexieFactory";
-import { tableBuilder } from "./tablebuilder";
+import { tableBuilder } from "./tableBuilder";
 
 interface DexieDataItem {
   id: number;

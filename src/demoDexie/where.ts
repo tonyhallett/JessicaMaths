@@ -4,10 +4,10 @@ import type {
   CompoundIndexPaths,
   DexieIndexPath,
   DexieIndexPaths,
+  KeyForIndexPath,
   MultiIndexPath,
   SingleIndexPath,
-} from "./dexieindexes";
-import type { KeyForIndex } from "./tabletypes";
+} from "./indexpaths";
 import type {
   CompoundKeyPaths,
   ValidIndexedDBKeyPath,
@@ -115,7 +115,7 @@ type WhereForMulti<
     TDatabase,
     TInsert,
     PKey,
-    KeyForIndex<TInsert, I>,
+    KeyForIndexPath<TInsert, I>,
     TIndexPaths
   >;
 };
@@ -137,7 +137,7 @@ type WhereForCompound<
     TDatabase,
     TInsert,
     PKey,
-    KeyForIndex<TInsert, I>,
+    KeyForIndexPath<TInsert, I>,
     TIndexPaths
   >;
 };

@@ -6,11 +6,10 @@ import {
   tableClassBuilderExcluded,
   type DuplicateIndexError,
   type DuplicateKeysError,
-} from "../tablebuilder";
+} from "../tableBuilder";
 import { expect, describe, it } from "tstyche";
 import type { ChangeCallback } from "../Collection";
 import { add, ObjectPropModification } from "../propmodifications";
-import { Table } from "@mui/material";
 
 describe("tableBuilder", () => {
   describe("primary key selection", () => {

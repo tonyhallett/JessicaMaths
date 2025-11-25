@@ -4,17 +4,16 @@ import type {
   SingleIndexPath,
   MultiIndexPath,
   CompoundIndexPaths,
-} from "./dexieindexes";
+} from "./indexpaths";
 import type {
   AllowedKeyLeaf,
   CompoundKeyPaths,
   ValidIndexedDBKeyPath,
 } from "./ValidIndexedDBKeyPaths";
-import type { OptionalPrimaryKeys } from "./utilitytypes";
-
-export type DexiePrimaryKeyPathOrPaths<T> =
-  | ValidIndexedDBKeyPath<T>
-  | CompoundKeyPaths<T>;
+import type {
+  DexiePrimaryKeyPathOrPaths,
+  OptionalPrimaryKeys,
+} from "./primarykey";
 
 export interface TableConfig<
   TDatabase,
@@ -229,10 +228,6 @@ interface IndexMethods<
 const isDistinctArray = (arr: readonly any[]): boolean => {
   return Array.from(new Set(arr)).length === arr.length;
 };
-
-interface MapToClass<T> {
-  ctor: ConstructorOf<T>;
-}
 
 type IncludesNumber<T> = [T] extends [number]
   ? true // exact number

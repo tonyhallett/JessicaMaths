@@ -1,5 +1,5 @@
 import Dexie, { type PromiseExtended, type Table } from "dexie";
-import type { TableInboundBulkTuple } from "./tabletypes";
+import type { TableInboundBulkTuple } from "./TableInboundBulkTuple";
 
 export function TableInboundBulkTupleAddOn(db: Dexie) {
   const tablePrototype = db.Table.prototype as any;
