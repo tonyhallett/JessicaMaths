@@ -26,7 +26,6 @@ export interface TableBase<
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TPkey
 > {
-  //db: Dexie;
   readonly name: TName;
   schema: TableSchema;
   // todo TGet needs to be mapped to TExisting - TGet if entity class is incorrect
@@ -69,7 +68,7 @@ export interface TableBase<
     TIndexPaths
   >;
   reverse: ReturnType<this["toCollection"]>["reverse"];
-  // remove mapToClass as this is done with the builder / factory
+
   delete(key: TPkey): PromiseExtended<void>;
   bulkDelete(keys: TPkey[]): PromiseExtended<void>;
   clear(): PromiseExtended<void>;
