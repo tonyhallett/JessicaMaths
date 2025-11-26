@@ -48,12 +48,12 @@ export interface TableOutboundBulkTuple<
 > {
   bulkAddTuple<TArr extends readonly [...any[]]>(
     items: TArr & NoExcessDataPropertiesArray<TArr, TDatabase>,
-    keys: TPKey[]
+    keys: readonly TPKey[]
   ): PromiseExtended<TPKey>;
 
   bulkPutTuple<TArr extends readonly [...any[]]>(
     items: TArr & NoExcessDataPropertiesArray<TArr, TDatabase>,
-    keys: TPKey[]
+    keys: readonly TPKey[]
   ): PromiseExtended<TPKey>;
 }
 
@@ -70,7 +70,7 @@ export interface TableOutboundAutoBulkTuple<
 
   bulkAddTuple<TArr extends readonly [...any[]], B extends boolean = false>(
     items: TArr & NoExcessDataPropertiesArray<TArr, TDatabase>,
-    keys: (TPKey | undefined)[],
+    keys: readonly (TPKey | undefined)[],
     options?: {
       allKeys: B;
     }
@@ -78,12 +78,12 @@ export interface TableOutboundAutoBulkTuple<
 
   bulkPutTuple<TArr extends readonly [...any[]]>(
     items: TArr & NoExcessDataPropertiesArray<TArr, TDatabase>,
-    keys: TPKey[]
+    keys: readonly TPKey[]
   ): PromiseExtended<TPKey>;
 
   bulkPutTuple<TArr extends readonly [...any[]], B extends boolean = false>(
     items: TArr & NoExcessDataPropertiesArray<TArr, TDatabase>,
-    keys: (TPKey | undefined)[],
+    keys: readonly (TPKey | undefined)[],
     options: { allKeys: B }
   ): PromiseExtendedPKeyOrKeys<TPKey, B>;
 }

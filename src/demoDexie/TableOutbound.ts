@@ -17,6 +17,12 @@ export interface TableOutbound<
     key: TPKey
   ): PromiseExtended<TPKey>;
   // no need for options overloads here as the keys are always provided
-  bulkAdd(items: TDatabase[], keys: TPKey[]): PromiseExtended<TPKey>;
-  bulkPut(items: TDatabase[], keys: TPKey[]): PromiseExtended<TPKey>;
+  bulkAdd(
+    items: readonly TDatabase[],
+    keys: readonly TPKey[]
+  ): PromiseExtended<TPKey>;
+  bulkPut(
+    items: readonly TDatabase[],
+    keys: readonly TPKey[]
+  ): PromiseExtended<TPKey>;
 }
