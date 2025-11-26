@@ -1,4 +1,3 @@
-import type { PromiseExtended } from "dexie";
 import type { DexieIndexPaths } from "./indexpaths";
 import type {
   DexiePrimaryKeyPathOrPaths,

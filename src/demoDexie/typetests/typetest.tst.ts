@@ -1162,19 +1162,20 @@ describe("Inbound - non auto", () => {
 
   describe("update, upsert", () => {
     it("should update with primary key argument and change callback - database type", () => {
-      const changeCallback: ChangeCallback<TableItem> = null as any;
+      const changeCallback: ChangeCallback<TableItem, TableItem, string> =
+        null as any;
       expect(db.table.update).type.toBeCallableWith("id1", changeCallback);
       expect(db.table.update).type.not.toBeCallableWith(1, changeCallback);
       db.mappedTable.update(1, (tInsert, ctx) => {
         expect(tInsert).type.not.toHaveProperty("excluded");
         expect(tInsert).type.toHaveProperty("id");
-        expect(ctx.value).type.not.toHaveProperty("excluded");
-        expect(ctx.value).type.toHaveProperty("id");
+        delete ctx.value;
       });
     });
 
     it("should update with table entry argument and change callback - database type", () => {
-      const changeCallback: ChangeCallback<TableItem> = null as any;
+      const changeCallback: ChangeCallback<TableItem, TableItem, string> =
+        null as any;
       expect(db.table.update).type.toBeCallableWith(tableItem, changeCallback);
       expect(db.table.update).type.not.toBeCallableWith(
         { id: "" },
@@ -1289,6 +1290,12 @@ describe("Inbound - non auto", () => {
       ]);
       expect(db.table.bulkUpdate).type.not.toBeCallableWith([
         {
+          key: 1,
+          changes: { "nested.sub": 5 },
+        },
+      ]);
+      expect(db.table.bulkUpdate).type.not.toBeCallableWith([
+        {
           key: "id1",
           changes: { "nested.sub": 5 },
         },
@@ -1306,6 +1313,31 @@ describe("Inbound - non auto", () => {
           key: "id2",
           changes: { doesNotExist: "" },
         },
+      ]);
+    });
+
+    it("should not bulkUpdate if primary key path is provided", () => {
+      interface TableItem {
+        primaryKeyParent: {
+          pkey: number;
+        };
+        other: number;
+      }
+      const db = dexieFactory(
+        1,
+        {
+          table: tableBuilder<TableItem>()
+            .primaryKey("primaryKeyParent.pkey")
+            .build(),
+        },
+        "DemoDexie"
+      );
+      expect(db.table.bulkUpdate).type.not.toBeCallableWith([
+        { key: 1, changes: { "primaryKeyParent.pkey": 2 } },
+      ]);
+      // https://github.com/dexie/Dexie.js/issues/2218
+      expect(db.table.bulkUpdate).type.toBeCallableWith([
+        { key: 1, changes: { primaryKeyParent: { pkey: 1 } } },
       ]);
     });
 

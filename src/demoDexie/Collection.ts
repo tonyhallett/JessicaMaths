@@ -1,7 +1,7 @@
 import type { PromiseExtended, ThenShortcut } from "dexie";
 import type { DexieIndexPaths } from "./indexpaths";
 import type { WhereClausesFromIndexes } from "./where";
-import type { UpdateSpec } from "dexie";
+import type { UpdateSpec } from "./UpdateSpec";
 
 type Comparable =
   | number
@@ -69,8 +69,23 @@ export interface EachKeyCallback<TKey, TCursorKey, TPkey> {
   (key: TKey, cursor: Cursor<TCursorKey, TPkey>): any;
 }
 
-export interface ChangeCallback<T> {
-  (obj: T, ctx: { value: T }): void | boolean;
+export interface ChangeContext<TInsert, TPkey> {
+  value?: TInsert;
+  primkey: TPkey;
+}
+
+/*
+  Note that obj is the same as ctx.value - it is what has come from the database
+  but typing ChangeContext to TInsert due to docs "Sample Replacing Object"
+  if you are replacing the object then it needs to be of type TInsert
+  due to deleting value property in the ChangeContext has to be optional
+*/
+export interface ChangeCallback<TDatabase, TInsert, TPkey> {
+  (
+    this: ChangeContext<TInsert, TPkey>,
+    obj: TDatabase,
+    ctx: ChangeContext<TInsert, TPkey>
+  ): void | boolean;
 }
 
 interface CollectionBase<
@@ -154,8 +169,12 @@ interface CollectionBase<
   // Mutating methods
   delete(): PromiseExtended<number>;
   // https://dexie.org/docs/Collection/Collection.modify()
-  modify(changeCallback: ChangeCallback<TInsert>): PromiseExtended<number>;
-  modify(changes: UpdateSpec<TInsert>): PromiseExtended<number>;
+  modify(
+    changeCallback: ChangeCallback<TDatabase, TInsert, TPkey>
+  ): PromiseExtended<number>;
+  modify<TMAXDEPTH extends string = "II">(
+    changes: UpdateSpec<TDatabase, TMAXDEPTH>
+  ): PromiseExtended<number>;
 
   // Other methods
   // https://dexie.org/docs/Collection/Collection.raw()
