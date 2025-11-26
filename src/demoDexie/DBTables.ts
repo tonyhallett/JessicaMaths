@@ -7,7 +7,9 @@ import type { TableOutboundAuto } from "./TableOutboundAuto";
 export type DBTables<
   TConfig extends Record<string, TableConfig<any, any, any, any, any, any, any>>
 > = {
-  [TName in keyof TConfig & string]: TConfig[TName] extends TableConfig<
+  [TName in keyof TConfig as TName extends string
+    ? TName
+    : never]: TConfig[TName] extends TableConfig<
     infer TDatabase,
     infer TPKeyPathOrPaths,
     infer TAuto,
@@ -18,11 +20,23 @@ export type DBTables<
   >
     ? [TPKeyPathOrPaths] extends [never]
       ? TAuto extends true
-        ? TableOutboundAuto<TName, TDatabase, TOutboundKey, TIndexPaths, TGet>
-        : TableOutbound<TName, TDatabase, TOutboundKey, TIndexPaths, TGet>
+        ? TableOutboundAuto<
+            TName & string,
+            TDatabase,
+            TOutboundKey,
+            TIndexPaths,
+            TGet
+          >
+        : TableOutbound<
+            TName & string,
+            TDatabase,
+            TOutboundKey,
+            TIndexPaths,
+            TGet
+          >
       : TAuto extends true
       ? TableInboundAuto<
-          TName,
+          TName & string,
           TDatabase,
           TPKeyPathOrPaths,
           TIndexPaths,
@@ -30,7 +44,7 @@ export type DBTables<
           TInsert
         >
       : TableInbound<
-          TName,
+          TName & string,
           TDatabase,
           TPKeyPathOrPaths,
           TIndexPaths,

@@ -12,22 +12,25 @@ import type {
 } from "dexie";
 import type { TableConfig } from "./tableBuilder";
 import type { DBTables } from "./DBTables";
+import type { StringKeyOf } from "./utilitytypes";
 
 // Helper: the union of allowed argument shapes (either a table name key or a table instance)
 type TableArg<TTablesMap extends Record<string, any>> =
-  | (keyof TTablesMap & string)
-  | TTablesMap[keyof TTablesMap];
+  | StringKeyOf<TTablesMap>
+  | TTablesMap[StringKeyOf<TTablesMap>];
 
 // Extract the literal name for a single TableArg:
 // - If it's a table object with 'name' literal -> use that literal
 // - Otherwise if it's a string literal key -> use it
-type NameOfArg<TTablesMap extends Record<string, any>, A> = A extends {
-  name: infer N extends string;
-}
-  ? N
-  : A extends keyof TTablesMap
-  ? A
-  : never;
+type NameOfArg<TTablesMap extends Record<string, any>, A> =
+  // Require a literal string for name, not just string
+  A extends { name: infer N }
+    ? N extends StringKeyOf<TTablesMap>
+      ? N
+      : never
+    : A extends StringKeyOf<TTablesMap>
+    ? A
+    : never;
 
 // Get the union of names present in the TTables array/tuple
 type TableNamesFromArgs<
@@ -39,18 +42,37 @@ type TableNamesFromArgs<
 type TableInstanceForName<
   TTablesMap extends Record<string, any>,
   Name extends string
-> = Name extends keyof TTablesMap ? TTablesMap[Name] : never;
+> = Name extends StringKeyOf<TTablesMap> ? TTablesMap[Name] : never;
+
+// Selected names limited to actual string keys
+type SelectedNames<
+  TConfig extends Record<
+    string,
+    TableConfig<any, any, any, any, any, any, any>
+  >,
+  TTables extends readonly TableArg<DBTables<TConfig>>[]
+> = TableNamesFromArgs<DBTables<TConfig>, TTables> &
+  StringKeyOf<DBTables<TConfig>>;
+
+// Extract name from a single arg
+type ArgName<A> = A extends { readonly name: infer N extends string }
+  ? N
+  : A extends string
+  ? A
+  : never;
+
+// Union of names from tuple
+type ArgNames<TTables extends readonly any[]> = ArgName<TTables[number]>;
 
 // The result: TransactionWithTables exposes only the named tables from the DBTables mapping
 type TransactionWithTables<
-  TConfig extends Record<string, TableConfig<any, any, any, any>>,
+  TConfig extends Record<
+    string,
+    TableConfig<any, any, any, any, any, any, any>
+  >,
   TTables extends readonly TableArg<DBTables<TConfig>>[]
-> = Omit<Transaction, "table"> & {
-  [N in TableNamesFromArgs<DBTables<TConfig>, TTables>]: TableInstanceForName<
-    DBTables<TConfig>,
-    N
-  >;
-};
+> = Omit<Transaction, "table"> &
+  Pick<DBTables<TConfig>, ArgNames<TTables> & StringKeyOf<DBTables<TConfig>>>;
 
 type DexieWithoutTransactions = Omit<Dexie, "transaction" | "on">;
 

@@ -24,7 +24,7 @@ export interface TableBase<
   TPkey
 > {
   //db: Dexie;
-  name: TName;
+  readonly name: TName;
   schema: TableSchema;
   // todo TGet needs to be mapped to TExisting - TGet if entity class is incorrect
   hook: TableHooks<TDatabase, TGet, TPkey>;

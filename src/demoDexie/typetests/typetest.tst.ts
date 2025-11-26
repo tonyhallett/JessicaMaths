@@ -14,7 +14,6 @@ import {
 import { expect, describe, it } from "tstyche";
 import type { ChangeCallback } from "../Collection";
 import { add, ObjectPropModification } from "../propmodifications";
-import { exp } from "mathjs";
 
 describe("tableBuilder", () => {
   describe("primary key selection", () => {

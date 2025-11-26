@@ -45,3 +45,5 @@ export type NoExcessDataPropertiesArray<
       : never
     : never
   : readonly [];
+
+export type StringKeyOf<T> = Extract<keyof T, string>;
