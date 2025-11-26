@@ -592,6 +592,7 @@ describe("table base", () => {
       compound1: string;
       compound2: number;
       multiEntry: string[];
+      unionIndex: string | number;
     }
 
     const db = dexieFactory(
@@ -602,6 +603,7 @@ describe("table base", () => {
           .index("stringIndex")
           .index("numberIndex")
           .index("nestedIndex.subIndex")
+          .index("unionIndex")
           .compound("compound1", "compound2")
           .multi("multiEntry")
           .build(),
@@ -678,6 +680,10 @@ describe("table base", () => {
         [1, 2],
       ]);
 
+      const whereUnion = db.table.where("unionIndex");
+      expect(whereUnion.equals).type.toBeCallableWith("stringValue");
+      expect(whereUnion.equals).type.toBeCallableWith(123);
+
       // string methods only available if the index type is string
 
       expect(whereString).type.toHaveProperty("anyOfIgnoreCase");
@@ -703,6 +709,8 @@ describe("table base", () => {
       expect(whereString).type.toHaveProperty("startsWithAnyOfIgnoreCase");
       expect(whereMultiEntry).type.toHaveProperty("startsWithAnyOfIgnoreCase");
       expect(whereNumber).type.not.toHaveProperty("startsWithAnyOfIgnoreCase");
+
+      expect(whereUnion).type.toHaveProperty("startsWith");
     });
 
     it("should return collection with key typed to the index type", () => {

@@ -152,9 +152,9 @@ export type WhereClause<
   Key,
   TIndexPaths extends DexieIndexPaths<TInsert>
 > = WhereClauseNonStrings<TGet, TDatabase, TInsert, TPkey, Key, TIndexPaths> &
-  (Key extends string
-    ? WhereStringClause<TGet, TDatabase, TInsert, TPkey, TIndexPaths>
-    : {});
+  (Extract<Key, string> extends never
+    ? {}
+    : WhereStringClause<TGet, TDatabase, TInsert, TPkey, TIndexPaths>);
 
 export interface WhereClauseNonStrings<
   TGet,
