@@ -1410,6 +1410,10 @@ describe("Inbound - non auto", () => {
       });
     });
   });
+
+  it("should have db property typed to the db type", () => {
+    expect(db.table.db).type.toBe<typeof db>();
+  });
 });
 
 describe("Inbound auto", () => {
@@ -1461,6 +1465,10 @@ describe("Inbound auto", () => {
         additional: 1,
       });
     });
+  });
+
+  it("should have db property typed to the db type", () => {
+    expect(db.table.db).type.toBe<typeof db>();
   });
 });
 
@@ -1569,6 +1577,11 @@ describe("Outbound - non auto", () => {
       { value: 43 },
     ]);
   });
+
+  it("should have db property typed to the db type", () => {
+    expect(db.numberPKeyTable.db).type.toBe<typeof db>();
+    expect(db.unionPKeyTable.db).type.toBe<typeof db>();
+  });
 });
 
 describe("Outbound auto", () => {
@@ -1666,5 +1679,10 @@ describe("Outbound auto", () => {
     expect(
       db.numberPKeyTable.bulkPut([addItem], [undefined], { allKeys: false })
     ).type.toBe<PromiseExtended<number>>();
+  });
+
+  it("should have db property typed to the db type", () => {
+    expect(db.numberPKeyTable.db).type.toBe<typeof db>();
+    expect(db.unionPKeyTable.db).type.toBe<typeof db>();
   });
 });

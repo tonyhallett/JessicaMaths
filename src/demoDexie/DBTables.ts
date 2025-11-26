@@ -3,6 +3,7 @@ import type { TableInbound } from "./TableInbound";
 import type { TableInboundAuto } from "./TableInboundAuto";
 import type { TableOutbound } from "./TableOutbound";
 import type { TableOutboundAuto } from "./TableOutboundAuto";
+import type { TypedDexie } from "./TypedDexie";
 
 export type DBTables<
   TConfig extends Record<string, TableConfig<any, any, any, any, any, any, any>>
@@ -26,14 +27,14 @@ export type DBTables<
             TOutboundKey,
             TIndexPaths,
             TGet
-          >
+          > & { db: TypedDexie<TConfig> }
         : TableOutbound<
             TName & string,
             TDatabase,
             TOutboundKey,
             TIndexPaths,
             TGet
-          >
+          > & { db: TypedDexie<TConfig> }
       : TAuto extends true
       ? TableInboundAuto<
           TName & string,
@@ -42,7 +43,7 @@ export type DBTables<
           TIndexPaths,
           TGet,
           TInsert
-        >
+        > & { db: TypedDexie<TConfig> }
       : TableInbound<
           TName & string,
           TDatabase,
@@ -50,6 +51,6 @@ export type DBTables<
           TIndexPaths,
           TGet,
           TInsert
-        >
+        > & { db: TypedDexie<TConfig> }
     : never;
 };

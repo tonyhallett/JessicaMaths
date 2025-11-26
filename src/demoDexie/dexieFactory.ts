@@ -1,17 +1,12 @@
 import { Dexie } from "dexie";
 import { buildStores } from "./buildStores";
-import type { DexieTypedTransaction } from "./DexieTypedTransaction";
 import type { TableConfig } from "./tableBuilder";
-import type { DBTables } from "./DBTables";
 import { AddAutoReturnObjectAddon } from "./AddAutoReturnObjectAddOn";
 import { TableBulkTupleAddOn } from "./TableBulkTupleAddOn";
+import type { TypedDexie } from "./TypedDexie";
 
 Dexie.addons.push(TableBulkTupleAddOn);
 Dexie.addons.push(AddAutoReturnObjectAddon);
-
-type TypedDexie<
-  TConfig extends Record<string, TableConfig<any, any, any, any, any, any, any>>
-> = DBTables<TConfig> & DexieTypedTransaction<TConfig>;
 
 export function dexieFactory<
   S extends Record<string, TableConfig<any, any, any, any, any, any, any>>
