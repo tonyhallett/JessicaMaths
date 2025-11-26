@@ -3,7 +3,7 @@ import type { DexieIndexPaths } from "./indexpaths";
 import type { NoExcessDataProperties } from "./utilitytypes";
 import type { TableOutboundBase } from "./TableOutboundBase";
 import type { PromiseExtendedPKeyOrKeys } from "./primarykey";
-import type { TableOutboundBulkTuple } from "./TableBulkTupleAddOn";
+import type { TableOutboundAutoBulkTuple } from "./TableBulkTupleAddOn";
 
 export interface TableOutboundAuto<
   TName extends string,
@@ -12,7 +12,7 @@ export interface TableOutboundAuto<
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet
 > extends TableOutboundBase<TName, TDatabase, TPKey, TIndexPaths, TGet>,
-    TableOutboundBulkTuple<TDatabase, TPKey> {
+    TableOutboundAutoBulkTuple<TDatabase, TPKey> {
   add<T extends TDatabase>(
     item: NoExcessDataProperties<T, TDatabase>,
     key?: TPKey
