@@ -1493,6 +1493,42 @@ describe("Outbound - non auto", () => {
     );
     expect(db.numberPKeyTable.put).type.not.toBeCallableWith(addItem);
   });
+
+  it("should require primary keys for bulkAdd, bulkPut", () => {
+    expect(db.stringPKeyTable.bulkAdd).type.toBeCallableWith(
+      [{ value: 42 }, { value: 43 }],
+      ["key1", "key2"]
+    );
+    expect(db.stringPKeyTable.bulkAdd).type.not.toBeCallableWith(
+      [{ value: 42, additional: 1 }],
+      ["key1", "key2"]
+    );
+    expect(db.stringPKeyTable.bulkAdd).type.not.toBeCallableWith(
+      [{ value: 42 }, { value: 43 }],
+      [1, 2]
+    );
+    expect(db.stringPKeyTable.bulkAdd).type.not.toBeCallableWith([
+      { value: 42 },
+      { value: 43 },
+    ]);
+
+    expect(db.stringPKeyTable.bulkPut).type.toBeCallableWith(
+      [{ value: 42 }, { value: 43 }],
+      ["key1", "key2"]
+    );
+    expect(db.stringPKeyTable.bulkPut).type.not.toBeCallableWith(
+      [{ value: 42, additional: 1 }],
+      ["key1", "key2"]
+    );
+    expect(db.stringPKeyTable.bulkPut).type.not.toBeCallableWith(
+      [{ value: 42 }, { value: 43 }],
+      [1, 2]
+    );
+    expect(db.stringPKeyTable.bulkPut).type.not.toBeCallableWith([
+      { value: 42 },
+      { value: 43 },
+    ]);
+  });
 });
 
 describe("Outbound auto", () => {
@@ -1557,5 +1593,38 @@ describe("Outbound auto", () => {
 
     expect(db.unionPKeyTable.put).type.toBeCallableWith(addItem, 42);
     expect(db.unionPKeyTable.put).type.toBeCallableWith(addItem, "stringKey");
+  });
+
+  it("should have optional primary keys for bulkAdd, with optional options ", () => {
+    expect(db.numberPKeyTable.bulkAdd([addItem])).type.toBe<
+      PromiseExtended<number>
+    >();
+    expect(db.numberPKeyTable.bulkAdd([addItem], { allKeys: true })).type.toBe<
+      PromiseExtended<number[]>
+    >();
+
+    expect(db.numberPKeyTable.bulkAdd([addItem], [42])).type.toBe<
+      PromiseExtended<number>
+    >();
+    expect(
+      db.numberPKeyTable.bulkAdd([addItem], [undefined], { allKeys: true })
+    ).type.toBe<PromiseExtended<number[]>>();
+  });
+
+  it("should require primary keys for bulkPut unless options provided", () => {
+    expect(db.numberPKeyTable.bulkPut([addItem], [42])).type.toBe<
+      PromiseExtended<number>
+    >();
+    expect(db.numberPKeyTable.bulkPut).type.not.toBeCallableWith([addItem]);
+    expect(db.numberPKeyTable.bulkPut).type.not.toBeCallableWith(
+      [addItem, addItem],
+      [1, undefined]
+    );
+    expect(
+      db.numberPKeyTable.bulkPut([addItem], [undefined], { allKeys: true })
+    ).type.toBe<PromiseExtended<number[]>>();
+    expect(
+      db.numberPKeyTable.bulkPut([addItem], [undefined], { allKeys: false })
+    ).type.toBe<PromiseExtended<number>>();
   });
 });

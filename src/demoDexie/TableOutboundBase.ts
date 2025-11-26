@@ -18,6 +18,10 @@ export interface TableOutboundBase<
     TIndexPaths,
     TPKey
   > {
+  /*
+   making the key required, although allowed by the spec to be optional for auto-increment keys
+   use add without a key on TableOutboundAuto for that case
+   */
   put<T extends TDatabase>(
     item: NoExcessDataProperties<T, TDatabase>,
     key: TPKey

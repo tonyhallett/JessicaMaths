@@ -48,8 +48,12 @@ export const DemoDexie = () => {
         await db.hiddenExplicit.clear();
         const addAutoItem: DexieDataItem = { value: 1 };
         const addAutoItem2: DexieDataItem = { value: 2 };
-        const hiddenAutoKey = await db.hiddenAuto.add(addAutoItem);
+        const hiddenAutoKey = await db.hiddenAuto.add(addAutoItem, undefined);
         const hiddenAutoKey2 = await db.hiddenAuto.add(addAutoItem2, 100);
+        const res = await db.hiddenAuto.bulkPut(
+          [addAutoItem, addAutoItem2],
+          undefined as any
+        );
         const addExplicitItem: DexieDataItem = { value: 1 };
         const hiddenExplicitKey = await db.hiddenExplicit.add(
           addExplicitItem,

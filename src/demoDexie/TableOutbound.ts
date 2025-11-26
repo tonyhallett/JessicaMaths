@@ -14,4 +14,7 @@ export interface TableOutbound<
     item: NoExcessDataProperties<T, TDatabase>,
     key: TPKey
   ): PromiseExtended<TPKey>;
+  // no need for options overloads here as the keys are always provided
+  bulkAdd(items: TDatabase[], keys: TPKey[]): PromiseExtended<TPKey>;
+  bulkPut(items: TDatabase[], keys: TPKey[]): PromiseExtended<TPKey>;
 }
