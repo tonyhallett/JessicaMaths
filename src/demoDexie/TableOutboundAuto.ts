@@ -1,11 +1,9 @@
-import type { IndexableType, PromiseExtended } from "dexie";
+import type { IndexableType, PromiseExtended, Table } from "dexie";
 import type { DexieIndexPaths } from "./indexpaths";
 import type { NoExcessDataProperties } from "./utilitytypes";
 import type { TableOutboundBase } from "./TableOutboundBase";
-
-type PromiseExtendedKeyOrKeys<TPKey, B extends boolean> = PromiseExtended<
-  B extends true ? TPKey[] : TPKey
->;
+import type { PromiseExtendedPKeyOrKeys } from "./primarykey";
+import type { TableOutboundBulkTuple } from "./TableBulkTupleAddOn";
 
 export interface TableOutboundAuto<
   TName extends string,
@@ -13,7 +11,8 @@ export interface TableOutboundAuto<
   TPKey extends IndexableType,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet
-> extends TableOutboundBase<TName, TDatabase, TPKey, TIndexPaths, TGet> {
+> extends TableOutboundBase<TName, TDatabase, TPKey, TIndexPaths, TGet>,
+    TableOutboundBulkTuple<TDatabase, TPKey> {
   add<T extends TDatabase>(
     item: NoExcessDataProperties<T, TDatabase>,
     key?: TPKey
@@ -24,7 +23,7 @@ export interface TableOutboundAuto<
     options?: {
       allKeys: B;
     }
-  ): PromiseExtendedKeyOrKeys<TPKey, B>;
+  ): PromiseExtendedPKeyOrKeys<TPKey, B>;
 
   bulkAdd<B extends boolean = false>(
     items: readonly TDatabase[],
@@ -32,7 +31,7 @@ export interface TableOutboundAuto<
     options?: {
       allKeys: B;
     }
-  ): PromiseExtendedKeyOrKeys<TPKey, B>;
+  ): PromiseExtendedPKeyOrKeys<TPKey, B>;
 
   bulkPut(items: TDatabase[], keys: TPKey[]): PromiseExtended<TPKey>;
 
@@ -40,5 +39,5 @@ export interface TableOutboundAuto<
     items: TDatabase[],
     keys: (TPKey | undefined)[],
     options: { allKeys: B }
-  ): PromiseExtendedKeyOrKeys<TPKey, B>;
+  ): PromiseExtendedPKeyOrKeys<TPKey, B>;
 }

@@ -2,6 +2,7 @@ import type { IndexableType, PromiseExtended } from "dexie";
 import type { DexieIndexPaths } from "./indexpaths";
 import type { NoExcessDataProperties } from "./utilitytypes";
 import type { TableOutboundBase } from "./TableOutboundBase";
+import type { TableOutboundBulkTuple } from "./TableBulkTupleAddOn";
 
 export interface TableOutbound<
   TName extends string,
@@ -9,7 +10,8 @@ export interface TableOutbound<
   TPKey extends IndexableType,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet
-> extends TableOutboundBase<TName, TDatabase, TPKey, TIndexPaths, TGet> {
+> extends TableOutboundBase<TName, TDatabase, TPKey, TIndexPaths, TGet>,
+    TableOutboundBulkTuple<TDatabase, TPKey> {
   add<T extends TDatabase>(
     item: NoExcessDataProperties<T, TDatabase>,
     key: TPKey

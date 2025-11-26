@@ -3,7 +3,7 @@ import type { DexieIndexPaths } from "./indexpaths";
 import type { DexiePrimaryKeyPathOrPaths, PrimaryKey } from "./primarykey";
 import type { TableBase } from "./TableBase";
 import type { NoExcessDataProperties } from "./utilitytypes";
-import type { TableInboundBulkTuple } from "./TableInboundBulkTupleAddOn";
+import type { TableInboundBaseBulkTuple } from "./TableBulkTupleAddOn";
 
 export interface TableInboundBase<
   TName extends string,
@@ -21,17 +21,21 @@ export interface TableInboundBase<
       TIndexPaths,
       PrimaryKey<TDatabase, TPKeyPathOrPaths>
     >,
-    TableInboundBulkTuple<TDatabase, TPKeyPathOrPaths, TInsert> {
+    TableInboundBaseBulkTuple<TDatabase, TPKeyPathOrPaths, TInsert> {
   add<T extends TInsert>(
     item: NoExcessDataProperties<T, TInsert>
   ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
   bulkAdd(
     items: readonly TInsert[]
   ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+  /*
+   making the key required, although allowed by the spec to be optional for auto-increment keys
+   use add for that case
+   */
   put<T extends TDatabase>(
     item: NoExcessDataProperties<T, TDatabase>
   ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
   bulkPut(
-    items: readonly TDatabase[]
+    items: readonly TInsert[]
   ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
 }

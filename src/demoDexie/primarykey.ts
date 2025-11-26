@@ -1,4 +1,4 @@
-import type { KeyPathValue } from "dexie";
+import type { KeyPathValue, PromiseExtended } from "dexie";
 import type {
   CompoundKeyPaths,
   ValidIndexedDBKeyPath,
@@ -98,3 +98,8 @@ export type DeletePrimaryKeys<
   : TKey extends string
   ? DeleteByPath<T, Split<TKey>>
   : T;
+
+export type PromiseExtendedPKeyOrKeys<
+  TPKey,
+  B extends boolean
+> = PromiseExtended<B extends true ? TPKey[] : TPKey>;
