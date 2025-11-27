@@ -14,6 +14,13 @@ import type {
   DexiePrimaryKeyPathOrPaths,
   OptionalPrimaryKeys,
 } from "./primarykey";
+import type {
+  ConstructorOf,
+  IncludesNumber,
+  IncludesNumberInUnion,
+  NoDuplicates,
+  TuplesEqual,
+} from "./utilitytypes";
 
 export interface TableConfig<
   TDatabase,
@@ -55,17 +62,6 @@ type NonPrimaryKeyPath<T, PkPathOrPaths> =
       : P
     : never;
 
-type NoDuplicates<T extends readonly any[]> = T extends readonly [
-  infer First,
-  ...infer Rest
-]
-  ? First extends Rest[number]
-    ? never
-    : Rest extends readonly any[]
-    ? readonly [First, ...NoDuplicates<Rest>]
-    : T
-  : T;
-
 export type DuplicateKeysError = {
   readonly error: "Duplicate keys in compound key are not allowed";
 };
@@ -98,19 +94,6 @@ type UsedIndexNames<TIndexPaths extends DexieIndexPaths<any>> =
       ? IndexName<First> | UsedIndexNames<Rest>
       : IndexName<First>
     : never;
-
-// Helper to check if two tuples are equal
-type TuplesEqual<A, B> = A extends readonly [...infer AItems]
-  ? B extends readonly [...infer BItems]
-    ? AItems["length"] extends BItems["length"]
-      ? A extends B
-        ? B extends A
-          ? true
-          : false
-        : false
-      : false
-    : false
-  : false;
 
 // Check if an index name is already used
 type IsIndexDuplicate<
@@ -239,12 +222,6 @@ const isDistinctArray = (arr: readonly any[]): boolean => {
   return Array.from(new Set(arr)).length === arr.length;
 };
 
-type IncludesNumber<T> = [T] extends [number]
-  ? true // exact number
-  : Extract<T, number> extends never
-  ? false
-  : true; // number in union
-
 type InboundAutoIncrementKeyPath<T> = ValidIndexedDBKeyPath<
   T,
   "",
@@ -256,8 +233,6 @@ type InboundAutoIncrementKeyPath<T> = ValidIndexedDBKeyPath<
       : never
     : never
   : never;
-
-type IncludesNumberInUnion<T> = Extract<T, number> extends never ? false : true;
 
 function createTableBuilder<TDatabase, TGet>(
   mapToClass?: ConstructorOf<TDatabase>
@@ -436,8 +411,6 @@ function createTableBuilder<TDatabase, TGet>(
 export function tableBuilder<T>() {
   return createTableBuilder<T, T>();
 }
-
-export type ConstructorOf<T> = new (...args: any[]) => T;
 
 export function tableClassBuilder<TCtor extends new (...args: any) => any>(
   ctor: TCtor

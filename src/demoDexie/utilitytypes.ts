@@ -47,3 +47,38 @@ export type NoExcessDataPropertiesArray<
   : readonly [];
 
 export type StringKeyOf<T> = Extract<keyof T, string>;
+
+export type IncludesNumberInUnion<T> = Extract<T, number> extends never
+  ? false
+  : true;
+
+export type IncludesNumber<T> = [T] extends [number]
+  ? true // exact number
+  : Extract<T, number> extends never
+  ? false
+  : true; // number in union
+
+export type ConstructorOf<T> = new (...args: any[]) => T;
+
+export type NoDuplicates<T extends readonly any[]> = T extends readonly [
+  infer First,
+  ...infer Rest
+]
+  ? First extends Rest[number]
+    ? never
+    : Rest extends readonly any[]
+    ? readonly [First, ...NoDuplicates<Rest>]
+    : T
+  : T;
+
+export type TuplesEqual<A, B> = A extends readonly [...infer AItems]
+  ? B extends readonly [...infer BItems]
+    ? AItems["length"] extends BItems["length"]
+      ? A extends B
+        ? B extends A
+          ? true
+          : false
+        : false
+      : false
+    : false
+  : false;

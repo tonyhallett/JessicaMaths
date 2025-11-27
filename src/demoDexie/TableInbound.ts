@@ -1,7 +1,6 @@
 import { type PromiseExtended } from "dexie";
 import type { ChangeCallback } from "./Collection";
 import type { DexieIndexPaths } from "./indexpaths";
-import type { WhereClauses } from "./where";
 import type { UpdateSpec } from "./UpdateSpec";
 import type { DexiePrimaryKeyPathOrPaths, PrimaryKey } from "./primarykey";
 import type { TableInboundBase } from "./TableInboundBase";
