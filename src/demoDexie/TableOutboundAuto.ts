@@ -5,42 +5,42 @@ import type { TableOutboundBase } from "./TableOutboundBase";
 import type { PromiseExtendedPKeyOrKeys } from "./primarykey";
 import type { TableOutboundAutoBulkTuple } from "./TableBulkTupleAddOn";
 
-export interface TableOutboundAuto<
+export type TableOutboundAuto<
   TName extends string,
   TDatabase,
   TPKey extends IndexableType,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet
-> extends TableOutboundBase<TName, TDatabase, TPKey, TIndexPaths, TGet>,
-    TableOutboundAutoBulkTuple<TDatabase, TPKey> {
-  add<T extends TDatabase>(
-    item: NoExcessDataProperties<T, TDatabase>,
-    key?: TPKey
-  ): PromiseExtended<TPKey>;
+> = TableOutboundBase<TName, TDatabase, TPKey, TIndexPaths, TGet> &
+  TableOutboundAutoBulkTuple<TDatabase, TPKey> & {
+    add<T extends TDatabase>(
+      item: NoExcessDataProperties<T, TDatabase>,
+      key?: TPKey
+    ): PromiseExtended<TPKey>;
 
-  bulkAdd<B extends boolean = false>(
-    items: readonly TDatabase[],
-    options?: {
-      allKeys: B;
-    }
-  ): PromiseExtendedPKeyOrKeys<TPKey, B>;
+    bulkAdd<B extends boolean = false>(
+      items: readonly TDatabase[],
+      options?: {
+        allKeys: B;
+      }
+    ): PromiseExtendedPKeyOrKeys<TPKey, B>;
 
-  bulkAdd<B extends boolean = false>(
-    items: readonly TDatabase[],
-    keys: readonly (TPKey | undefined)[],
-    options?: {
-      allKeys: B;
-    }
-  ): PromiseExtendedPKeyOrKeys<TPKey, B>;
+    bulkAdd<B extends boolean = false>(
+      items: readonly TDatabase[],
+      keys: readonly (TPKey | undefined)[],
+      options?: {
+        allKeys: B;
+      }
+    ): PromiseExtendedPKeyOrKeys<TPKey, B>;
 
-  bulkPut(
-    items: readonly TDatabase[],
-    keys: readonly TPKey[]
-  ): PromiseExtended<TPKey>;
+    bulkPut(
+      items: readonly TDatabase[],
+      keys: readonly TPKey[]
+    ): PromiseExtended<TPKey>;
 
-  bulkPut<B extends boolean = false>(
-    items: readonly TDatabase[],
-    keys: readonly (TPKey | undefined)[],
-    options: { allKeys: B }
-  ): PromiseExtendedPKeyOrKeys<TPKey, B>;
-}
+    bulkPut<B extends boolean = false>(
+      items: readonly TDatabase[],
+      keys: readonly (TPKey | undefined)[],
+      options: { allKeys: B }
+    ): PromiseExtendedPKeyOrKeys<TPKey, B>;
+  };

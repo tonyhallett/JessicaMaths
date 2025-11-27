@@ -3,8 +3,6 @@ import type {
   CompoundKeyPaths,
   ValidIndexedDBKeyPath,
 } from "./ValidIndexedDBKeyPaths";
-import type { DexieIndexPaths } from "./indexpaths";
-import type { Collection } from "./Collection";
 
 export type DexiePrimaryKeyPathOrPaths<T> =
   | ValidIndexedDBKeyPath<T>

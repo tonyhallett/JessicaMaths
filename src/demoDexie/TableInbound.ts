@@ -1,7 +1,7 @@
-import { type KeyPathValue, type PromiseExtended } from "dexie";
+import { type PromiseExtended } from "dexie";
 import type { ChangeCallback } from "./Collection";
 import type { DexieIndexPaths } from "./indexpaths";
-import type { WhereClausesFromIndexes } from "./where";
+import type { WhereClauses } from "./where";
 import type { UpdateSpec } from "./UpdateSpec";
 import type { DexiePrimaryKeyPathOrPaths, PrimaryKey } from "./primarykey";
 import type { TableInboundBase } from "./TableInboundBase";
@@ -34,10 +34,10 @@ export type TableInbound<
       PrimaryKey<TDatabase, TPKeyPathOrPaths>
     >
   ): PromiseExtended<0 | 1>;
-} & WhereClausesFromIndexes<
+} & WhereClauses<
     TGet,
     TDatabase,
     TDatabase,
-    KeyPathValue<TDatabase, TPKeyPathOrPaths>,
+    PrimaryKey<TDatabase, TPKeyPathOrPaths>,
     TIndexPaths
   >;

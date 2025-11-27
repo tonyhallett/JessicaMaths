@@ -1,5 +1,6 @@
 import {
   add as dexieAddPropModHelper,
+  type KeyPathValue,
   type PromiseExtended,
   type Table,
 } from "dexie";
@@ -622,6 +623,10 @@ describe("table base", () => {
       expect(db.table.where).type.not.toBeCallableWith("nestedIndex.badPath");
     });
 
+    it("should accept :id for primary key", () => {
+      expect(db.table.where).type.toBeCallableWith(":id");
+    });
+
     it("should accept multiEntry index paths", () => {
       expect(db.table.where).type.toBeCallableWith("multiEntry");
     });
@@ -713,7 +718,7 @@ describe("table base", () => {
       expect(whereUnion).type.toHaveProperty("startsWith");
     });
 
-    it("should return collection with key typed to the index type", () => {
+    it("should return collection with key typed to the index type when using index", () => {
       const stringCollectionKey = db.table.where("stringIndex").above("a");
       stringCollectionKey.each((item, cursor) => {
         expect(cursor.key).type.toBe<string>();
@@ -802,6 +807,32 @@ describe("table base", () => {
       expect(
         stringCollectionKey.or(["compound1", "compound2"]).equals
       ).type.toBeCallableWith(["a", 1]);
+    });
+
+    it("should return collection with key typed to the primary type when using :id", () => {
+      interface TableItem {
+        id1: string;
+        id2: number;
+      }
+      const db = dexieFactory(
+        1,
+        {
+          compound: tableBuilder<TableItem>().compoundKey("id1", "id2").build(),
+          inbound: tableBuilder<TableItem>().hiddenAuto().build(),
+        },
+        ""
+      );
+
+      expect(db.compound.where(":id").above(["a", 1]).keys()).type.toBe<
+        PromiseExtended<[string, number][]>
+      >();
+
+      db.inbound
+        .where(":id")
+        .above(1)
+        .each((item, cursor) => {
+          expect(cursor.key).type.toBe<number>();
+        });
     });
 
     it("should return collection with the primary key type", () => {

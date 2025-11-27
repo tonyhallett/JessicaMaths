@@ -5,37 +5,37 @@ import type { TableBase } from "./TableBase";
 import type { NoExcessDataProperties } from "./utilitytypes";
 import type { TableInboundBaseBulkTuple } from "./TableBulkTupleAddOn";
 
-export interface TableInboundBase<
+export type TableInboundBase<
   TName extends string,
   TDatabase,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet,
   TInsert
-> extends TableBase<
-      TName,
-      TGet,
-      TDatabase,
-      TInsert,
-      TPKeyPathOrPaths,
-      TIndexPaths,
-      PrimaryKey<TDatabase, TPKeyPathOrPaths>
-    >,
-    TableInboundBaseBulkTuple<TDatabase, TPKeyPathOrPaths, TInsert> {
-  add<T extends TInsert>(
-    item: NoExcessDataProperties<T, TInsert>
-  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
-  bulkAdd(
-    items: readonly TInsert[]
-  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
-  /*
+> = TableBase<
+  TName,
+  TGet,
+  TDatabase,
+  TInsert,
+  TPKeyPathOrPaths,
+  TIndexPaths,
+  PrimaryKey<TDatabase, TPKeyPathOrPaths>
+> &
+  TableInboundBaseBulkTuple<TDatabase, TPKeyPathOrPaths, TInsert> & {
+    add<T extends TInsert>(
+      item: NoExcessDataProperties<T, TInsert>
+    ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+    bulkAdd(
+      items: readonly TInsert[]
+    ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+    /*
    making the key required, although allowed by the spec to be optional for auto-increment keys
    use add for that case
    */
-  put<T extends TDatabase>(
-    item: NoExcessDataProperties<T, TDatabase>
-  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
-  bulkPut(
-    items: readonly TInsert[]
-  ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
-}
+    put<T extends TDatabase>(
+      item: NoExcessDataProperties<T, TDatabase>
+    ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+    bulkPut(
+      items: readonly TInsert[]
+    ): PromiseExtended<PrimaryKey<TDatabase, TPKeyPathOrPaths>>;
+  };

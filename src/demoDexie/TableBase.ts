@@ -16,8 +16,9 @@ import type { TableHooks } from "./TableHooks";
 import type { UpdateSpec } from "./UpdateSpec";
 import type { BulkUpdate } from "./BulkUpdate";
 import type { UpsertSpec } from "./UpsertSpec";
+import type { WhereClauses } from "./where";
 
-export interface TableBase<
+export interface TableCore<
   TName extends string,
   TGet,
   TDatabase,
@@ -107,3 +108,21 @@ export interface TableBase<
     spec: UpsertSpec<TDatabase, TPKeyPathOrPaths>
   ): PromiseExtended<boolean>;
 }
+export type TableBase<
+  TName extends string,
+  TGet,
+  TDatabase,
+  TInsert,
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TIndexPaths extends DexieIndexPaths<TDatabase>,
+  TPkey
+> = TableCore<
+  TName,
+  TGet,
+  TDatabase,
+  TInsert,
+  TPKeyPathOrPaths,
+  TIndexPaths,
+  TPkey
+> &
+  WhereClauses<TGet, TDatabase, TInsert, TPkey, TIndexPaths>;
