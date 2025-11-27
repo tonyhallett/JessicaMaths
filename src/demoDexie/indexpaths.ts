@@ -5,19 +5,19 @@ import type {
 } from "./ValidIndexedDBKeyPaths";
 
 export type SingleIndexPath<T, P extends ValidIndexedDBKeyPath<T>> = {
-  kind: "single";
+  //kind: "single";
   path: P;
   multi: false;
 };
 
 export type MultiIndexPath<T, P extends ValidIndexedDBKeyPath<T>> = {
-  kind: "multi";
+  //kind: "multi";
   path: P;
   multi: true;
 };
 
 export type CompoundIndexPaths<T, PS extends CompoundKeyPaths<T>> = {
-  kind: "compound";
+  //kind: "compound";
   paths: PS;
 };
 

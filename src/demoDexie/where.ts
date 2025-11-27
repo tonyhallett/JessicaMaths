@@ -93,15 +93,7 @@ export type WhereClauses<
     TPKey,
     TIndexPaths,
     TIndexOrId
-  > /* TIndexOrId extends PrimaryKeyId
-    ? WhereClause<TGet, TDatabase, TInsert, TPKey, TPKey, TIndexPaths>
-    : TIndexOrId extends infer P
-    ? P extends string
-      ? WhereClauseForPath<TGet, TDatabase, TInsert, TPKey, P, TIndexPaths>
-      : P extends readonly string[]
-      ? WhereClauseForPath<TGet, TDatabase, TInsert, TPKey, P, TIndexPaths>
-      : never
-    : never; */;
+  >;
 };
 
 export type WhereClause<

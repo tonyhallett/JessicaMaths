@@ -34,10 +34,4 @@ export type TableInbound<
       PrimaryKey<TDatabase, TPKeyPathOrPaths>
     >
   ): PromiseExtended<0 | 1>;
-} & WhereClauses<
-    TGet,
-    TDatabase,
-    TDatabase,
-    PrimaryKey<TDatabase, TPKeyPathOrPaths>,
-    TIndexPaths
-  >;
+};
