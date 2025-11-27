@@ -1,9 +1,4 @@
-import {
-  add as dexieAddPropModHelper,
-  type KeyPathValue,
-  type PromiseExtended,
-  type Table,
-} from "dexie";
+import { add as dexieAddPropModHelper, type PromiseExtended } from "dexie";
 import { dexieFactory } from "../dexieFactory";
 import {
   tableBuilder,
@@ -1751,27 +1746,4 @@ describe("Outbound auto", () => {
     expect(db.numberPKeyTable.db).type.toBe<typeof db>();
     expect(db.unionPKeyTable.db).type.toBe<typeof db>();
   });
-});
-
-describe("temp", () => {
-  type Demo = {
-    pkey: number;
-    cmpindex1: number;
-    cmpindex2: string;
-    index: number;
-    multi: string[];
-  };
-  const db = dexieFactory(
-    1,
-    {
-      table: tableBuilder<Demo>()
-        .primaryKey("pkey")
-        .index("index")
-        .compound("cmpindex1", "cmpindex2")
-        .multi("multi")
-        .build(),
-    },
-    ""
-  );
-  db.table.where("index").equals(5);
 });
