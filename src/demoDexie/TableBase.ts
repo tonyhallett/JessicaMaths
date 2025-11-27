@@ -10,6 +10,7 @@ import type {
   IndexPath,
   KeyForIndexPath,
   IndexPathForPath,
+  IndexPathRegistry,
 } from "./indexpaths";
 import type {
   DexiePrimaryKeyPathOrPaths,
@@ -29,8 +30,10 @@ export interface TableCore<
   TInsert,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
-  TPkey
+  TPkey,
+  TKeyLookup extends IndexPathRegistry<TDatabase, TIndexPaths>
 > {
+  lookup: TKeyLookup;
   readonly name: TName;
   schema: TableSchema;
   // todo TGet needs to be mapped to TExisting - TGet if entity class is incorrect
@@ -60,7 +63,7 @@ export interface TableCore<
     TInsert,
     TPkey,
     TPkey,
-    TIndexPaths
+    TKeyLookup
   >;
   orderBy<Path extends IndexPath<TDatabase, TIndexPaths[number]>>(
     index: Path
@@ -70,11 +73,11 @@ export interface TableCore<
     TInsert,
     TPkey,
     KeyForIndexPath<TDatabase, IndexPathForPath<TDatabase, TIndexPaths, Path>>,
-    TIndexPaths
+    TKeyLookup
   >;
   orderBy(
     id: PrimaryKeyId
-  ): Collection<TGet, TDatabase, TInsert, TPkey, TPkey, TIndexPaths>;
+  ): Collection<TGet, TDatabase, TInsert, TPkey, TPkey, TKeyLookup>;
   reverse: ReturnType<this["toCollection"]>["reverse"];
 
   delete(key: TPkey): PromiseExtended<void>;
@@ -122,7 +125,11 @@ export type TableBase<
   TInsert,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
-  TPkey
+  TPkey,
+  TKeyLookup extends IndexPathRegistry<
+    TDatabase,
+    TIndexPaths
+  > = IndexPathRegistry<TDatabase, TIndexPaths>
 > = TableCore<
   TName,
   TGet,
@@ -130,6 +137,7 @@ export type TableBase<
   TInsert,
   TPKeyPathOrPaths,
   TIndexPaths,
-  TPkey
+  TPkey,
+  TKeyLookup
 > &
-  WhereClauses<TGet, TDatabase, TInsert, TPkey, TIndexPaths>;
+  WhereClauses<TGet, TDatabase, TInsert, TPkey, TKeyLookup>;

@@ -1,7 +1,8 @@
 import type { PromiseExtended, ThenShortcut } from "dexie";
-import type { DexieIndexPaths } from "./indexpaths";
-import type { IndexPathsOrPrimaryKeyId, WhereClausePicker } from "./where";
+import type { DexieIndexPaths, IndexPathRegistry } from "./indexpaths";
+import type { KeyTypeForPath, WhereClause } from "./where";
 import type { UpdateSpec } from "./UpdateSpec";
+import type { PrimaryKeyId } from "./primarykey";
 
 type Comparable =
   | number
@@ -45,10 +46,10 @@ export type AndFilter<
   TInsert,
   TPkey,
   TKey,
-  TIndexPaths extends DexieIndexPaths<TInsert>
+  TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>
 > = (
   filter: (item: TDatabase) => boolean
-) => Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
+) => Collection<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
 
 export type Collection<
   TGet,
@@ -56,17 +57,20 @@ export type Collection<
   TInsert,
   TPKey,
   TKey,
-  TIndexPaths extends DexieIndexPaths<TInsert>
-> = CollectionBase<TGet, TDatabase, TInsert, TPKey, TKey, TIndexPaths> & {
-  or<TIndexOrId extends IndexPathsOrPrimaryKeyId<TInsert, TIndexPaths>>(
-    indexOrId: TIndexOrId
-  ): WhereClausePicker<
+  TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>
+> = CollectionBase<TGet, TDatabase, TInsert, TPKey, TKey, TKeyLookup> & {
+  or(
+    indexOrId: PrimaryKeyId
+  ): WhereClause<TGet, TDatabase, TInsert, TPKey, TPKey, TKeyLookup>;
+  or<TIndex extends TKeyLookup[number]["path"]>(
+    index: TIndex
+  ): WhereClause<
     TGet,
     TDatabase,
     TInsert,
     TPKey,
-    TIndexPaths,
-    TIndexOrId
+    KeyTypeForPath<TKeyLookup, TIndex>,
+    TKeyLookup
   >;
 };
 
@@ -104,12 +108,12 @@ interface CollectionBase<
   TInsert,
   TPkey,
   TKey,
-  TIndexPaths extends DexieIndexPaths<TInsert>
+  TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>
 > {
   //db: Database;
   clone(
     props?: Object
-  ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
+  ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
 
   count(): PromiseExtended<number>;
   count<R>(thenShortcut: ThenShortcut<number, R>): PromiseExtended<R>;
@@ -159,22 +163,22 @@ interface CollectionBase<
   last<R>(thenShortcut: ThenShortcut<TGet | undefined, R>): PromiseExtended<R>;
   limit(
     n: number
-  ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
+  ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
   // https://dexie.org/docs/Collection/Collection.until()  works similar to limit
   until(
     filter: (value: TDatabase) => boolean,
     includeStopEntry?: boolean
-  ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
+  ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
   offset(
     n: number
-  ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
-  and: AndFilter<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
-  filter: AndFilter<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
-  distinct(): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
+  ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
+  and: AndFilter<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
+  filter: AndFilter<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
+  distinct(): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
 
   // alias for desc
-  reverse(): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
-  desc(): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
+  reverse(): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
+  desc(): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
 
   // Mutating methods
   delete(): PromiseExtended<number>;
@@ -188,5 +192,5 @@ interface CollectionBase<
 
   // Other methods
   // https://dexie.org/docs/Collection/Collection.raw()
-  raw(): Collection<TDatabase, TDatabase, TInsert, TPkey, TKey, TIndexPaths>;
+  raw(): Collection<TDatabase, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
 }

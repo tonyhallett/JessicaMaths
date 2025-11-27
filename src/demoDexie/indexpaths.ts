@@ -3,19 +3,24 @@ import type {
   CompoundKeyPaths,
   ValidIndexedDBKeyPath,
 } from "./ValidIndexedDBKeyPaths";
-
+declare const KeyTypeBrand: unique symbol;
 export type SingleIndexPath<T, P extends ValidIndexedDBKeyPath<T>> = {
   path: P;
   multi: false;
+  [KeyTypeBrand]?: KeyPathValue<T, P>;
 };
 
 export type MultiIndexPath<T, P extends ValidIndexedDBKeyPath<T>> = {
   path: P;
   multi: true;
+  [KeyTypeBrand]?: KeyPathValue<T, P> extends readonly (infer Elem)[]
+    ? Elem
+    : KeyPathValue<T, P>;
 };
 
 export type CompoundIndexPaths<T, PS extends CompoundKeyPaths<T>> = {
   paths: PS;
+  [KeyTypeBrand]?: { [K in keyof PS]: KeyPathValue<T, PS[K] & string> };
 };
 
 export type DexieIndexPath<T> =
@@ -24,6 +29,23 @@ export type DexieIndexPath<T> =
   | CompoundIndexPaths<T, any>;
 
 export type DexieIndexPaths<T> = readonly DexieIndexPath<T>[];
+
+export type IndexPathRegistry<
+  TInsert,
+  TIndexPaths extends readonly DexieIndexPath<TInsert>[]
+> = {
+  [K in keyof TIndexPaths]: TIndexPaths[K] extends { path: infer P }
+    ? {
+        path: P;
+        keyType: NonNullable<TIndexPaths[K][typeof KeyTypeBrand]>;
+      }
+    : TIndexPaths[K] extends { paths: infer Paths }
+    ? {
+        path: Paths;
+        keyType: NonNullable<TIndexPaths[K][typeof KeyTypeBrand]>;
+      }
+    : never;
+};
 
 export type IndexPath<
   T,
