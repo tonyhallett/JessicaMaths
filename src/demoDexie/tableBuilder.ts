@@ -295,7 +295,14 @@ function createTableBuilder<TDatabase, TGet>(
           (createIndexMethods(
             key,
             auto,
-            [...indices, { kind: "single", path: indexKey, multi: false }],
+            [
+              ...indices,
+              {
+                kind: "single",
+                path: indexKey,
+                multi: false,
+              },
+            ],
             pkeyIsInbound,
             outboundPKey
           ) as any)
