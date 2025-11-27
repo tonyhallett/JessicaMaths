@@ -239,6 +239,12 @@ describe("tableBuilder", () => {
         builder.compound("index", "date").compound("index", "date")
       ).type.toBe<DuplicateIndexError>();
     });
+
+    it("should work with hiddenAuto and hiddenExplicit primary keys", () => {
+      const builder = tableBuilder<{ prop: string }>();
+      builder.hiddenAuto().index("prop");
+      builder.hiddenExplicit<number>().index("prop");
+    });
   });
 
   describe("tableClassBuilderExcluded", () => {

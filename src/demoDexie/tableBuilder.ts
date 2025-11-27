@@ -44,7 +44,10 @@ type MultiEntryKeyPath<T> = ValidIndexedDBKeyPath<T, "", false> extends infer P
   : never;
 
 type NonPrimaryKeyPath<T, PkPathOrPaths> =
-  PkPathOrPaths extends readonly string[]
+  // If there is no inbound PK path (hidden PK -> we pass `never`), allow any valid key path
+  [PkPathOrPaths] extends [never]
+    ? ValidIndexedDBKeyPath<T>
+    : PkPathOrPaths extends readonly string[]
     ? ValidIndexedDBKeyPath<T> // Compound PK: allow any single index
     : ValidIndexedDBKeyPath<T> extends infer P
     ? P extends PkPathOrPaths
