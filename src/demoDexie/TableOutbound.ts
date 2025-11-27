@@ -9,8 +9,9 @@ export type TableOutbound<
   TDatabase,
   TPKey extends IndexableType,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
-  TGet
-> = TableOutboundBase<TName, TDatabase, TPKey, TIndexPaths, TGet> &
+  TGet,
+  TDexie
+> = TableOutboundBase<TName, TDatabase, TPKey, TIndexPaths, TGet, TDexie> &
   TableOutboundBulkTuple<TDatabase, TPKey> & {
     add<T extends TDatabase>(
       item: NoExcessDataProperties<T, TDatabase>,

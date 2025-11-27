@@ -10,8 +10,9 @@ export type TableOutboundAuto<
   TDatabase,
   TPKey extends IndexableType,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
-  TGet
-> = TableOutboundBase<TName, TDatabase, TPKey, TIndexPaths, TGet> &
+  TGet,
+  TDexie
+> = TableOutboundBase<TName, TDatabase, TPKey, TIndexPaths, TGet, TDexie> &
   TableOutboundAutoBulkTuple<TDatabase, TPKey> & {
     add<T extends TDatabase>(
       item: NoExcessDataProperties<T, TDatabase>,

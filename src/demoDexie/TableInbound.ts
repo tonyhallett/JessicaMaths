@@ -12,14 +12,16 @@ export type TableInbound<
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet,
-  TInsert
+  TInsert,
+  TDexie
 > = TableInboundBase<
   TName,
   TDatabase,
   TPKeyPathOrPaths,
   TIndexPaths,
   TGet,
-  TInsert
+  TInsert,
+  TDexie
 > & {
   // note that docs do not mention this ( as the key must exist on the object - so ok for this table type )
   update<TMAXDEPTH extends string = "II">(

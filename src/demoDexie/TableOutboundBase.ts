@@ -8,8 +8,18 @@ export type TableOutboundBase<
   TDatabase,
   TPKey extends IndexableType,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
-  TGet
-> = TableBase<TName, TGet, TDatabase, TDatabase, never, TIndexPaths, TPKey> & {
+  TGet,
+  TDexie
+> = TableBase<
+  TName,
+  TGet,
+  TDatabase,
+  TDatabase,
+  never,
+  TIndexPaths,
+  TPKey,
+  TDexie
+> & {
   /*
    making the key required, although allowed by the spec to be optional for auto-increment keys
    use add without a key on TableOutboundAuto for that case

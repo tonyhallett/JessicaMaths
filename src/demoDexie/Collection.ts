@@ -40,28 +40,26 @@ export type DotKeyComparable<TValue> = IsAny<TValue> extends true
 
 export type DotKey<T> = DotNestedKeys<T>;
 
-export type AndFilter<
-  TGet,
-  TDatabase,
-  TInsert,
-  TPkey,
-  TKey,
-  TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>
-> = (
-  filter: (item: TDatabase) => boolean
-) => Collection<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
-
 export type Collection<
   TGet,
   TDatabase,
   TInsert,
   TPKey,
   TKey,
-  TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>
-> = CollectionBase<TGet, TDatabase, TInsert, TPKey, TKey, TKeyLookup> & {
+  TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>,
+  TDexie
+> = CollectionBase<
+  TGet,
+  TDatabase,
+  TInsert,
+  TPKey,
+  TKey,
+  TKeyLookup,
+  TDexie
+> & {
   or(
     indexOrId: PrimaryKeyId
-  ): WhereClause<TGet, TDatabase, TInsert, TPKey, TPKey, TKeyLookup>;
+  ): WhereClause<TGet, TDatabase, TInsert, TPKey, TPKey, TKeyLookup, TDexie>;
   or<TIndex extends TKeyLookup[number]["path"]>(
     index: TIndex
   ): WhereClause<
@@ -70,7 +68,8 @@ export type Collection<
     TInsert,
     TPKey,
     KeyTypeForPath<TKeyLookup, TIndex>,
-    TKeyLookup
+    TKeyLookup,
+    TDexie
   >;
 };
 
@@ -108,12 +107,13 @@ interface CollectionBase<
   TInsert,
   TPkey,
   TKey,
-  TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>
+  TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>,
+  TDexie
 > {
-  //db: Database;
+  db: TDexie;
   clone(
     props?: Object
-  ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
+  ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup, TDexie>;
 
   count(): PromiseExtended<number>;
   count<R>(thenShortcut: ThenShortcut<number, R>): PromiseExtended<R>;
@@ -161,24 +161,20 @@ interface CollectionBase<
   first<R>(thenShortcut: ThenShortcut<TGet | undefined, R>): PromiseExtended<R>;
   last(): PromiseExtended<TGet | undefined>;
   last<R>(thenShortcut: ThenShortcut<TGet | undefined, R>): PromiseExtended<R>;
-  limit(
-    n: number
-  ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
+  limit(n: number): this;
   // https://dexie.org/docs/Collection/Collection.until()  works similar to limit
   until(
     filter: (value: TDatabase) => boolean,
     includeStopEntry?: boolean
-  ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
-  offset(
-    n: number
-  ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
-  and: AndFilter<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
-  filter: AndFilter<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
-  distinct(): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
+  ): this;
+  offset(n: number): this;
+  and: this["filter"];
+  filter(filter: (item: TDatabase) => boolean): this;
+  distinct(): this;
 
-  // alias for desc
-  reverse(): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
-  desc(): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
+  // alias
+  reverse(): this;
+  desc: this["reverse"];
 
   // Mutating methods
   delete(): PromiseExtended<number>;
@@ -192,5 +188,13 @@ interface CollectionBase<
 
   // Other methods
   // https://dexie.org/docs/Collection/Collection.raw()
-  raw(): Collection<TDatabase, TDatabase, TInsert, TPkey, TKey, TKeyLookup>;
+  raw(): Collection<
+    TDatabase,
+    TDatabase,
+    TInsert,
+    TPkey,
+    TKey,
+    TKeyLookup,
+    TDexie
+  >;
 }

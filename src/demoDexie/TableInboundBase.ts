@@ -11,7 +11,8 @@ export type TableInboundBase<
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet,
-  TInsert
+  TInsert,
+  TDexie
 > = TableBase<
   TName,
   TGet,
@@ -19,7 +20,8 @@ export type TableInboundBase<
   TInsert,
   TPKeyPathOrPaths,
   TIndexPaths,
-  PrimaryKey<TDatabase, TPKeyPathOrPaths>
+  PrimaryKey<TDatabase, TPKeyPathOrPaths>,
+  TDexie
 > &
   TableInboundBaseBulkTuple<TDatabase, TPKeyPathOrPaths, TInsert> & {
     add<T extends TInsert>(

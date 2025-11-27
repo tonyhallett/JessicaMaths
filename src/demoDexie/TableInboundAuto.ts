@@ -14,14 +14,16 @@ export type TableInboundAuto<
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet,
-  TInsert
+  TInsert,
+  TDexie
 > = TableInboundBase<
   TName,
   TDatabase,
   TPKeyPathOrPaths,
   TIndexPaths,
   TGet,
-  TInsert
+  TInsert,
+  TDexie
 > &
   TableInboundAutoAdd<TDatabase, TPKeyPathOrPaths, TInsert> &
   TableInboundAutoBulkTuple<TDatabase, TPKeyPathOrPaths, TInsert> & {

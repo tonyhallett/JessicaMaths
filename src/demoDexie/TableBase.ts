@@ -31,8 +31,10 @@ export interface TableCore<
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TPkey,
-  TKeyLookup extends IndexPathRegistry<TDatabase, TIndexPaths>
+  TKeyLookup extends IndexPathRegistry<TDatabase, TIndexPaths>,
+  TDexie
 > {
+  db: TDexie;
   lookup: TKeyLookup;
   readonly name: TName;
   schema: TableSchema;
@@ -63,7 +65,8 @@ export interface TableCore<
     TInsert,
     TPkey,
     TPkey,
-    TKeyLookup
+    TKeyLookup,
+    TDexie
   >;
   orderBy<Path extends IndexPath<TDatabase, TIndexPaths[number]>>(
     index: Path
@@ -73,11 +76,12 @@ export interface TableCore<
     TInsert,
     TPkey,
     KeyForIndexPath<TDatabase, IndexPathForPath<TDatabase, TIndexPaths, Path>>,
-    TKeyLookup
+    TKeyLookup,
+    TDexie
   >;
   orderBy(
     id: PrimaryKeyId
-  ): Collection<TGet, TDatabase, TInsert, TPkey, TPkey, TKeyLookup>;
+  ): Collection<TGet, TDatabase, TInsert, TPkey, TPkey, TKeyLookup, TDexie>;
   reverse: ReturnType<this["toCollection"]>["reverse"];
 
   delete(key: TPkey): PromiseExtended<void>;
@@ -126,6 +130,7 @@ export type TableBase<
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TPkey,
+  TDexie = any,
   TKeyLookup extends IndexPathRegistry<
     TDatabase,
     TIndexPaths
@@ -138,6 +143,7 @@ export type TableBase<
   TPKeyPathOrPaths,
   TIndexPaths,
   TPkey,
-  TKeyLookup
+  TKeyLookup,
+  TDexie
 > &
-  WhereClauses<TGet, TDatabase, TInsert, TPkey, TKeyLookup>;
+  WhereClauses<TGet, TDatabase, TInsert, TPkey, TKeyLookup, TDexie>;

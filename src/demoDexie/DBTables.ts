@@ -26,15 +26,17 @@ export type DBTables<
             TDatabase,
             TOutboundKey,
             TIndexPaths,
-            TGet
-          > & { db: TypedDexie<TConfig> }
+            TGet,
+            TypedDexie<TConfig>
+          >
         : TableOutbound<
             TName & string,
             TDatabase,
             TOutboundKey,
             TIndexPaths,
-            TGet
-          > & { db: TypedDexie<TConfig> }
+            TGet,
+            TypedDexie<TConfig>
+          >
       : TAuto extends true
       ? TableInboundAuto<
           TName & string,
@@ -42,15 +44,17 @@ export type DBTables<
           TPKeyPathOrPaths,
           TIndexPaths,
           TGet,
-          TInsert
-        > & { db: TypedDexie<TConfig> }
+          TInsert,
+          TypedDexie<TConfig>
+        >
       : TableInbound<
           TName & string,
           TDatabase,
           TPKeyPathOrPaths,
           TIndexPaths,
           TGet,
-          TInsert
-        > & { db: TypedDexie<TConfig> }
+          TInsert,
+          TypedDexie<TConfig>
+        >
     : never;
 };
