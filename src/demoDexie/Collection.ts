@@ -58,7 +58,7 @@ export type Collection<
   TDexie
 > & {
   or(
-    indexOrId: PrimaryKeyId
+    primaryKeyId: PrimaryKeyId
   ): WhereClause<TGet, TDatabase, TInsert, TPKey, TPKey, TKeyLookup, TDexie>;
   or<TIndex extends TKeyLookup[number]["path"]>(
     index: TIndex

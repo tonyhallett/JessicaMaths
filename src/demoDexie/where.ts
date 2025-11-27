@@ -16,7 +16,7 @@ export type WhereClauses<
   TDexie
 > = {
   where(
-    indexOrId: PrimaryKeyId
+    primaryKeyId: PrimaryKeyId
   ): WhereClause<TGet, TDatabase, TInsert, TPKey, TPKey, TKeyLookup, TDexie>;
   where<TIndex extends TKeyLookup[number]["path"]>(
     index: TIndex
