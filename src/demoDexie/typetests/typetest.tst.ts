@@ -570,6 +570,41 @@ describe("table base", () => {
     });
   });
 
+  it("shoould have key type the primary key type when orderBy :id", () => {
+    const db = dexieFactory(
+      1,
+      {
+        stringIdTable: tableBuilder<{
+          id: string;
+        }>()
+          .primaryKey("id")
+          .build(),
+        numberIdTable: tableBuilder<{
+          id: number;
+        }>()
+          .primaryKey("id")
+          .build(),
+        compoundIdTable: tableBuilder<{
+          id1: number;
+          id2: string;
+        }>()
+          .compoundKey("id1", "id2")
+          .build(),
+      },
+      ""
+    );
+
+    db.stringIdTable.orderBy(":id").each((item, cursor) => {
+      expect(cursor.key).type.toBe<string>();
+    });
+    db.numberIdTable.orderBy(":id").each((item, cursor) => {
+      expect(cursor.key).type.toBe<number>();
+    });
+    db.compoundIdTable.orderBy(":id").each((item, cursor) => {
+      expect(cursor.key).type.toBe<[number, string]>();
+    });
+  });
+
   it("should have the filter method with database item type", () => {
     db.stringMapped.filter((item) => {
       expect(item).type.not.toHaveProperty("upperId");

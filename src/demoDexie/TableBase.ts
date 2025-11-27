@@ -11,7 +11,11 @@ import type {
   KeyForIndexPath,
   IndexPathForPath,
 } from "./indexpaths";
-import type { DexiePrimaryKeyPathOrPaths, PrimaryKey } from "./primarykey";
+import type {
+  DexiePrimaryKeyPathOrPaths,
+  PrimaryKey,
+  PrimaryKeyId,
+} from "./primarykey";
 import type { TableHooks } from "./TableHooks";
 import type { UpdateSpec } from "./UpdateSpec";
 import type { BulkUpdate } from "./BulkUpdate";
@@ -68,6 +72,9 @@ export interface TableCore<
     KeyForIndexPath<TDatabase, IndexPathForPath<TDatabase, TIndexPaths, Path>>,
     TIndexPaths
   >;
+  orderBy(
+    id: PrimaryKeyId
+  ): Collection<TGet, TDatabase, TInsert, TPkey, TPkey, TIndexPaths>;
   reverse: ReturnType<this["toCollection"]>["reverse"];
 
   delete(key: TPkey): PromiseExtended<void>;
