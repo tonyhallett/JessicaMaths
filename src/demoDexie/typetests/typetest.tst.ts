@@ -652,6 +652,13 @@ describe("table base", () => {
       ""
     );
 
+    it("should have the typed db as a property of where clause and collection", () => {
+      expect(db.table.where(":id").db).type.toBe<typeof db>();
+      expect(db.table.where(":id").anyOf(["key1", "key2"]).db).type.toBe<
+        typeof db
+      >();
+    });
+
     it("should accept index paths", () => {
       expect(db.table.where).type.toBeCallableWith("stringIndex");
       expect(db.table.where).type.toBeCallableWith("nestedIndex.subIndex");
