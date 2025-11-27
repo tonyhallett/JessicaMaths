@@ -72,3 +72,16 @@ export type KeyForIndexPath<T, TIndexPath> =
     TIndexPath extends CompoundIndexPaths<T, infer Paths>
     ? { [K in keyof Paths]: KeyPathValue<T, Paths[K] & string> } // keeps path order
     : never;
+
+export type ExtractIndexPaths<
+  TInsert,
+  TIndexPaths extends DexieIndexPaths<TInsert>
+> = TIndexPaths[number] extends infer I
+  ? I extends SingleIndexPath<TInsert, any>
+    ? I["path"]
+    : I extends MultiIndexPath<TInsert, any>
+    ? I["path"]
+    : I extends CompoundIndexPaths<TInsert, any>
+    ? I["paths"]
+    : never
+  : never;

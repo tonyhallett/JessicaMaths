@@ -101,3 +101,5 @@ export type PromiseExtendedPKeyOrKeys<
   TPKey,
   B extends boolean
 > = PromiseExtended<B extends true ? TPKey[] : TPKey>;
+
+export type PrimaryKeyId = ":id";

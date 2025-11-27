@@ -1,6 +1,6 @@
 import type { PromiseExtended, ThenShortcut } from "dexie";
 import type { DexieIndexPaths } from "./indexpaths";
-import type { WhereClauses, WhereClausesFromIndexes } from "./where";
+import type { IndexPathsOrPrimaryKeyId, WhereClausePicker } from "./where";
 import type { UpdateSpec } from "./UpdateSpec";
 
 type Comparable =
@@ -54,11 +54,21 @@ export type Collection<
   TGet,
   TDatabase,
   TInsert,
-  PKey,
+  TPKey,
   TKey,
   TIndexPaths extends DexieIndexPaths<TInsert>
-> = CollectionBase<TGet, TDatabase, TInsert, PKey, TKey, TIndexPaths> &
-  WhereClauses<TGet, TDatabase, TInsert, PKey, TIndexPaths, "or">;
+> = CollectionBase<TGet, TDatabase, TInsert, TPKey, TKey, TIndexPaths> & {
+  or<TIndexOrId extends IndexPathsOrPrimaryKeyId<TInsert, TIndexPaths>>(
+    indexOrId: TIndexOrId
+  ): WhereClausePicker<
+    TGet,
+    TDatabase,
+    TInsert,
+    TPKey,
+    TIndexPaths,
+    TIndexOrId
+  >;
+};
 
 export interface Cursor<TKey, TPkey> {
   key: TKey;

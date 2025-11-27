@@ -2,166 +2,106 @@ import type { KeyPathValue } from "dexie";
 import type { Collection } from "./Collection";
 import type {
   CompoundIndexPaths,
-  DexieIndexPath,
   DexieIndexPaths,
+  ExtractIndexPaths,
   KeyForIndexPath,
   MultiIndexPath,
   SingleIndexPath,
 } from "./indexpaths";
-import type {
-  CompoundKeyPaths,
-  ValidIndexedDBKeyPath,
-} from "./ValidIndexedDBKeyPaths";
-import type { UnionToIntersection } from "./utilitytypes";
+import type { PrimaryKeyId } from "./primarykey";
 
-type WhereMethodName = "where" | "or";
+type WhereClauseForPath<
+  TGet,
+  TDatabase,
+  TInsert,
+  TPKey,
+  TPath,
+  TIndexPaths extends DexieIndexPaths<TInsert>
+> = TIndexPaths[number] extends infer I
+  ? I extends SingleIndexPath<TInsert, any>
+    ? I["path"] extends TPath
+      ? WhereClause<
+          TGet,
+          TDatabase,
+          TInsert,
+          TPKey,
+          KeyPathValue<TInsert, I["path"]>,
+          TIndexPaths
+        >
+      : never
+    : I extends MultiIndexPath<TInsert, any>
+    ? I["path"] extends TPath
+      ? WhereClause<
+          TGet,
+          TDatabase,
+          TInsert,
+          TPKey,
+          KeyForIndexPath<TInsert, I>,
+          TIndexPaths
+        >
+      : never
+    : I extends CompoundIndexPaths<TInsert, any>
+    ? I["paths"] extends TPath
+      ? WhereClause<
+          TGet,
+          TDatabase,
+          TInsert,
+          TPKey,
+          KeyForIndexPath<TInsert, I>,
+          TIndexPaths
+        >
+      : never
+    : never
+  : never;
+
+export type IndexPathsOrPrimaryKeyId<
+  TInsert,
+  TIndexPaths extends DexieIndexPaths<TInsert>
+> = PrimaryKeyId | ExtractIndexPaths<TInsert, TIndexPaths>;
+
+export type WhereClausePicker<
+  TGet,
+  TDatabase,
+  TInsert,
+  TPKey,
+  TIndexPaths extends DexieIndexPaths<TInsert>,
+  TIndexOrId extends IndexPathsOrPrimaryKeyId<TInsert, TIndexPaths>
+> = TIndexOrId extends PrimaryKeyId
+  ? WhereClause<TGet, TDatabase, TInsert, TPKey, TPKey, TIndexPaths>
+  : WhereClauseForPath<
+      TGet,
+      TDatabase,
+      TInsert,
+      TPKey,
+      TIndexOrId,
+      TIndexPaths
+    >;
 
 export type WhereClauses<
   TGet,
   TDatabase,
   TInsert,
   TPKey,
-  TIndexPaths extends DexieIndexPaths<TInsert>,
-  TMethodName extends WhereMethodName = "where"
+  TIndexPaths extends DexieIndexPaths<TInsert>
 > = {
-  [K in TMethodName]: (
-    id: ":id"
-  ) => WhereClause<TGet, TDatabase, TInsert, TPKey, TPKey, TIndexPaths>;
-} & WhereClausesFromIndexes<
-  TGet,
-  TDatabase,
-  TInsert,
-  TPKey,
-  TIndexPaths,
-  TMethodName
->;
-
-export type WhereClausesFromIndexes<
-  TGet,
-  TDatabase,
-  TInsert,
-  TPKey,
-  TIndexPaths extends DexieIndexPaths<TInsert>,
-  TMethodName extends WhereMethodName = "where"
-> = UnionToIntersection<
-  WhereClauseFor<
+  where<TIndexOrId extends IndexPathsOrPrimaryKeyId<TInsert, TIndexPaths>>(
+    indexOrId: TIndexOrId
+  ): WhereClausePicker<
     TGet,
     TDatabase,
     TInsert,
     TPKey,
-    TIndexPaths[number],
     TIndexPaths,
-    TMethodName
-  >
->;
-
-type WhereClauseFor<
-  TGet,
-  TDatabase,
-  TInsert,
-  TPKey,
-  TIndexPath extends DexieIndexPath<TInsert>,
-  TIndexPaths extends DexieIndexPaths<TInsert>,
-  TMethodName extends WhereMethodName
-> = TIndexPath extends SingleIndexPath<TInsert, infer P>
-  ? WhereForSingle<
-      TGet,
-      TDatabase,
-      TInsert,
-      TPKey,
-      P,
-      TIndexPath,
-      TIndexPaths,
-      TMethodName
-    >
-  : TIndexPath extends MultiIndexPath<TInsert, infer P>
-  ? WhereForMulti<
-      TGet,
-      TDatabase,
-      TInsert,
-      TPKey,
-      P,
-      TIndexPath,
-      TIndexPaths,
-      TMethodName
-    >
-  : TIndexPath extends CompoundIndexPaths<TInsert, infer Ps>
-  ? WhereForCompound<
-      TGet,
-      TDatabase,
-      TInsert,
-      TPKey,
-      Ps,
-      TIndexPath,
-      TIndexPaths,
-      TMethodName
-    >
-  : never;
-
-type WhereForSingle<
-  TGet,
-  TDatabase,
-  TInsert,
-  PKey,
-  P extends ValidIndexedDBKeyPath<TInsert>,
-  I extends SingleIndexPath<TInsert, P>,
-  TIndexPaths extends DexieIndexPaths<TInsert>,
-  TMethodName extends WhereMethodName
-> = {
-  [K in TMethodName]: (
-    path: I["path"]
-  ) => WhereClause<
-    TGet,
-    TDatabase,
-    TInsert,
-    PKey,
-    KeyPathValue<TInsert, I["path"]>,
-    TIndexPaths
-  >;
-};
-
-type WhereForMulti<
-  TGet,
-  TDatabase,
-  TInsert,
-  PKey,
-  P extends ValidIndexedDBKeyPath<TInsert>,
-  I extends MultiIndexPath<TInsert, P>,
-  TIndexPaths extends DexieIndexPaths<TInsert>,
-  TMethodName extends WhereMethodName
-> = {
-  [K in TMethodName]: (
-    path: I["path"]
-  ) => WhereClause<
-    TGet,
-    TDatabase,
-    TInsert,
-    PKey,
-    KeyForIndexPath<TInsert, I>,
-    TIndexPaths
-  >;
-};
-
-type WhereForCompound<
-  TGet,
-  TDatabase,
-  TInsert,
-  PKey,
-  P extends CompoundKeyPaths<TInsert>,
-  I extends CompoundIndexPaths<TInsert, P>,
-  TIndexPaths extends DexieIndexPaths<TInsert>,
-  TMethodName extends WhereMethodName
-> = {
-  [K in TMethodName]: (
-    paths: I["paths"]
-  ) => WhereClause<
-    TGet,
-    TDatabase,
-    TInsert,
-    PKey,
-    KeyForIndexPath<TInsert, I>,
-    TIndexPaths
-  >;
+    TIndexOrId
+  > /* TIndexOrId extends PrimaryKeyId
+    ? WhereClause<TGet, TDatabase, TInsert, TPKey, TPKey, TIndexPaths>
+    : TIndexOrId extends infer P
+    ? P extends string
+      ? WhereClauseForPath<TGet, TDatabase, TInsert, TPKey, P, TIndexPaths>
+      : P extends readonly string[]
+      ? WhereClauseForPath<TGet, TDatabase, TInsert, TPKey, P, TIndexPaths>
+      : never
+    : never; */;
 };
 
 export type WhereClause<

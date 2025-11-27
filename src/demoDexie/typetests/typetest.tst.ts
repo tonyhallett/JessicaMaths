@@ -789,7 +789,6 @@ describe("table base", () => {
       expect(multiEntryCollectionKey.clone()).type.toBe<
         typeof multiEntryCollectionKey
       >();
-
       // or - where clause
       expect(stringCollectionKey.or("numberIndex").above).type.toBeCallableWith(
         123
