@@ -3,7 +3,7 @@ import type {
   PrimaryKey,
   PrimaryKeyPaths,
 } from "./primarykey";
-import type { UpdateSpec } from "./UpdateSpec";
+import type { Level2, UpdateSpec } from "./UpdateSpec";
 
 /*
   Dexie does not allow updating primary key paths in bulkUpdate
@@ -13,13 +13,13 @@ import type { UpdateSpec } from "./UpdateSpec";
 type BulkUpdateChanges<
   T,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<T>,
-  TMAXDEPTH extends string = "II"
+  TMAXDEPTH extends string = Level2
 > = Omit<UpdateSpec<T, TMAXDEPTH>, PrimaryKeyPaths<T, TPKeyPathOrPaths>>;
 
 export interface BulkUpdate<
   T,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<T>,
-  TMAXDEPTH extends string = "II"
+  TMAXDEPTH extends string = Level2
 > {
   key: PrimaryKey<T, TPKeyPathOrPaths>;
   changes: BulkUpdateChanges<T, TPKeyPathOrPaths, TMAXDEPTH>;

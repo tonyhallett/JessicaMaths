@@ -1,7 +1,9 @@
 import type { KeyPathIgnoreObject, KeyPathValue } from "dexie";
 import type { PropModificationTyped } from "./propmodifications";
 
-type DexieKeyPaths<T, MAXDEPTH = "II", CURRDEPTH extends string = ""> = {
+export type Level2 = "II";
+
+type DexieKeyPaths<T, MAXDEPTH = Level2, CURRDEPTH extends string = ""> = {
   [P in keyof T]: P extends string
     ? CURRDEPTH extends MAXDEPTH
       ? P
@@ -33,12 +35,12 @@ export type MaxDepth<S extends string> = S extends ""
 
 export type KeyPaths<
   T,
-  TMAXDEPTH extends string = "II"
+  TMAXDEPTH extends string
 > = TMAXDEPTH extends MaxDepth<TMAXDEPTH> ? DexieKeyPaths<T, TMAXDEPTH> : never;
 
 export type UpdateSpec<
   T,
-  TMAXDEPTH extends string = "II"
+  TMAXDEPTH extends string = Level2
 > = TMAXDEPTH extends MaxDepth<TMAXDEPTH>
   ? {
       [KP in KeyPaths<Required<T>, TMAXDEPTH>]?:

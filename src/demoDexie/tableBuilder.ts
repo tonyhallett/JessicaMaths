@@ -42,7 +42,7 @@ type IsMultiEntryArray<T> = T extends readonly (infer E)[]
     : false
   : false;
 
-type MultiEntryKeyPath<T> = ValidIndexedDBKeyPath<T, "", false> extends infer P
+type MultiEntryKeyPath<T> = ValidIndexedDBKeyPath<T, false> extends infer P
   ? P extends string
     ? IsMultiEntryArray<KeyPathValue<T, P>> extends true
       ? P
@@ -224,7 +224,6 @@ const isDistinctArray = (arr: readonly any[]): boolean => {
 
 type InboundAutoIncrementKeyPath<T> = ValidIndexedDBKeyPath<
   T,
-  "",
   false
 > extends infer K
   ? K extends string
@@ -234,9 +233,11 @@ type InboundAutoIncrementKeyPath<T> = ValidIndexedDBKeyPath<
     : never
   : never;
 
-function createTableBuilder<TDatabase, TGet>(
-  mapToClass?: ConstructorOf<TDatabase>
-) {
+function createTableBuilder<
+  TDatabase,
+  TGet,
+  TAllowTypeSpecificProperties extends boolean
+>(mapToClass?: ConstructorOf<TDatabase>) {
   const indexParts: string[] = [];
 
   function createIndexMethods<
@@ -362,9 +363,12 @@ function createTableBuilder<TDatabase, TGet>(
     ) {
       return createIndexMethods(key, true, [] as const, true, null as never);
     },
-    primaryKey<TPkeyPath extends ValidIndexedDBKeyPath<TDatabase>>(
-      key: TPkeyPath
-    ) {
+    primaryKey<
+      TPkeyPath extends ValidIndexedDBKeyPath<
+        TDatabase,
+        TAllowTypeSpecificProperties
+      >
+    >(key: TPkeyPath) {
       return createIndexMethods(key, false, [] as const, true, null as never);
     },
     compoundKey<const TCompoundKeyPaths extends CompoundKeyPaths<TDatabase>>(
@@ -408,21 +412,28 @@ function createTableBuilder<TDatabase, TGet>(
   };
 }
 
-export function tableBuilder<T>() {
-  return createTableBuilder<T, T>();
+export function tableBuilder<
+  T,
+  TAllowTypeSpecificProperties extends boolean = false
+>() {
+  return createTableBuilder<T, T, TAllowTypeSpecificProperties>();
 }
 
-export function tableClassBuilder<TCtor extends new (...args: any) => any>(
-  ctor: TCtor
-) {
+export function tableClassBuilder<
+  TCtor extends new (...args: any) => any,
+  TAllowTypeSpecificProperties extends boolean = false
+>(ctor: TCtor) {
   type TEntity = InstanceType<TCtor>;
   type TDatabase = InsertType<TEntity, never>;
 
-  return createTableBuilder<TDatabase, TEntity>(ctor);
+  return createTableBuilder<TDatabase, TEntity, TAllowTypeSpecificProperties>(
+    ctor
+  );
 }
 
 export function tableClassBuilderExcluded<
-  TCtor extends new (...args: any) => any
+  TCtor extends new (...args: any) => any,
+  TAllowTypeSpecificProperties extends boolean = false
 >(ctor: TCtor) {
   type TEntity = InstanceType<TCtor>;
   return {
@@ -430,7 +441,11 @@ export function tableClassBuilderExcluded<
       type T = Omit<TEntity, TExcludeProps>;
       type TDatabase = InsertType<T, never>;
 
-      return createTableBuilder<TDatabase, TEntity>(ctor);
+      return createTableBuilder<
+        TDatabase,
+        TEntity,
+        TAllowTypeSpecificProperties
+      >(ctor);
     },
   };
 }

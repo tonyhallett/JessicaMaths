@@ -22,11 +22,13 @@ type ArrayElement<T> = T extends readonly (infer E)[] ? E : never;
 type IsFile<T> = T extends File ? true : false;
 type IsBlob<T> = T extends Blob ? true : false;
 
-type NoPefix = "";
+type NoPrefix = "";
 type WithSuffix<
   TPossiblePrefix extends string,
   TSuffix extends string
-> = TPossiblePrefix extends NoPefix ? TSuffix : `${TPossiblePrefix}.${TSuffix}`;
+> = TPossiblePrefix extends NoPrefix
+  ? TSuffix
+  : `${TPossiblePrefix}.${TSuffix}`;
 
 type WithTypeSpecificPropertyPaths<
   TPossiblePrefix extends string,
@@ -93,12 +95,15 @@ type FilePathProperties<
     >
   | BlobPathProperties<TPossiblePrefix, TKey, TAllowTypeSpecificProperties>;
 
-// ---------- Main recursive type ----------
-
 export type ValidIndexedDBKeyPath<
   T,
-  Prefix extends string = NoPefix,
   TAllowTypeSpecificProperties extends boolean = true
+> = ValidIndexedDBKeyPathRecursive<T, NoPrefix, TAllowTypeSpecificProperties>;
+
+type ValidIndexedDBKeyPathRecursive<
+  T,
+  Prefix extends string,
+  TAllowTypeSpecificProperties extends boolean
 > = {
   [P in StringKey<T>]: IsAllowedLeaf<T[P]> extends true
     ? LeafPath<Prefix, T[P], P, TAllowTypeSpecificProperties>
@@ -120,7 +125,7 @@ export type ValidIndexedDBKeyPath<
         : never
       : never
     : T[P] extends object
-    ? ValidIndexedDBKeyPath<
+    ? ValidIndexedDBKeyPathRecursive<
         T[P],
         WithSuffix<Prefix, P>,
         TAllowTypeSpecificProperties

@@ -27,14 +27,14 @@ describe("tableBuilder", () => {
       );
     });
 
-    it("should allow primary key to be allowed properties of leaf object", () => {
+    it("should allow primary key to be allowed properties of leaf object when specified", () => {
       interface TableItem {
         stringValue: string;
         blobValue: Blob;
         fileValue: File;
         arrayValue: string[];
       }
-      const builder = tableBuilder<TableItem>();
+      const builder = tableBuilder<TableItem, true>();
       expect(builder.primaryKey).type.toBeCallableWith("stringValue.length");
       expect(builder.primaryKey).type.toBeCallableWith("blobValue.size");
       expect(builder.primaryKey).type.toBeCallableWith("blobValue.type");
@@ -45,6 +45,11 @@ describe("tableBuilder", () => {
         "fileValue.lastModified"
       );
       expect(builder.primaryKey).type.toBeCallableWith("arrayValue.length");
+
+      const builderNotAllowed = tableBuilder<TableItem>();
+      expect(builderNotAllowed.primaryKey).type.not.toBeCallableWith(
+        "stringValue.length"
+      );
     });
 
     it("should allow compound primary key", () => {
@@ -365,7 +370,7 @@ describe("table base", () => {
       compound: tableBuilder<Compound>()
         .compoundKey("stringPart", "numberPart")
         .build(),
-      leafPropertyTable: tableBuilder<StringId>()
+      leafPropertyTable: tableBuilder<StringId, true>()
         .primaryKey("id.length")
         .build(),
     },
