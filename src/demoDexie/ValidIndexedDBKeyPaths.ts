@@ -95,49 +95,91 @@ type FilePathProperties<
     >
   | BlobPathProperties<TPossiblePrefix, TKey, TAllowTypeSpecificProperties>;
 
+export type KeyPathNoDescend = "";
+
 export type ValidIndexedDBKeyPath<
   T,
-  TAllowTypeSpecificProperties extends boolean = true
-> = ValidIndexedDBKeyPathRecursive<T, NoPrefix, TAllowTypeSpecificProperties>;
+  TAllowTypeSpecificProperties extends boolean = true,
+  TMaxDepth extends string = KeyPathNoDescend
+> = ValidIndexedDBKeyPathRecursive<
+  T,
+  NoPrefix,
+  TAllowTypeSpecificProperties,
+  TMaxDepth
+>;
+
+type PropertyKeyPaths<
+  T,
+  P extends StringKey<T>,
+  Prefix extends string,
+  TAllowTypeSpecificProperties extends boolean,
+  MAXDEPTH extends string,
+  CURRDEPTH extends string = "",
+  Descend extends boolean = true
+> = IsAllowedLeaf<T[P]> extends true
+  ? LeafPath<Prefix, T[P], P, TAllowTypeSpecificProperties>
+  : IsFile<T[P]> extends true
+  ? FilePathProperties<Prefix, P, TAllowTypeSpecificProperties>
+  : IsBlob<T[P]> extends true
+  ? BlobPathProperties<Prefix, P, TAllowTypeSpecificProperties>
+  : IsArray<T[P]> extends true
+  ? ArrayElement<T[P]> extends infer Elem
+    ? IsValidKey<Elem> extends true
+      ? Elem extends string
+        ? WithKeyAndTypeSpecificPropertyPaths<
+            Prefix,
+            P,
+            ["length"],
+            TAllowTypeSpecificProperties
+          >
+        : WithSuffix<Prefix, P>
+      : never
+    : never
+  : T[P] extends object
+  ? Descend extends true
+    ? ValidIndexedDBKeyPathRecursive<
+        T[P],
+        WithSuffix<Prefix, P>,
+        TAllowTypeSpecificProperties,
+        MAXDEPTH,
+        `${CURRDEPTH}I`
+      >
+    : never
+  : never;
 
 type ValidIndexedDBKeyPathRecursive<
   T,
   Prefix extends string,
-  TAllowTypeSpecificProperties extends boolean
+  TAllowTypeSpecificProperties extends boolean,
+  MAXDEPTH extends string,
+  CURRDEPTH extends string = ""
 > = {
-  [P in StringKey<T>]: IsAllowedLeaf<T[P]> extends true
-    ? LeafPath<Prefix, T[P], P, TAllowTypeSpecificProperties>
-    : IsFile<T[P]> extends true
-    ? FilePathProperties<Prefix, P, TAllowTypeSpecificProperties>
-    : IsBlob<T[P]> extends true
-    ? BlobPathProperties<Prefix, P, TAllowTypeSpecificProperties>
-    : IsArray<T[P]> extends true
-    ? ArrayElement<T[P]> extends infer Elem
-      ? IsValidKey<Elem> extends true
-        ? Elem extends string
-          ? WithKeyAndTypeSpecificPropertyPaths<
-              Prefix,
-              P,
-              ["length"],
-              TAllowTypeSpecificProperties
-            >
-          : WithSuffix<Prefix, P>
-        : never
-      : never
-    : T[P] extends object
-    ? ValidIndexedDBKeyPathRecursive<
-        T[P],
-        WithSuffix<Prefix, P>,
-        TAllowTypeSpecificProperties
+  [P in StringKey<T>]: CURRDEPTH extends MAXDEPTH
+    ? PropertyKeyPaths<
+        T,
+        P,
+        Prefix,
+        TAllowTypeSpecificProperties,
+        MAXDEPTH,
+        CURRDEPTH,
+        false
       >
-    : never;
+    : PropertyKeyPaths<
+        T,
+        P,
+        Prefix,
+        TAllowTypeSpecificProperties,
+        MAXDEPTH,
+        CURRDEPTH
+      >;
 }[StringKey<T>];
 
 export type CompoundKeyPaths<
   T,
-  TAllowTypeSpecificProperties extends boolean = true
+  TAllowTypeSpecificProperties extends boolean = true,
+  TMaxDepth extends string = KeyPathNoDescend
 > = [
-  ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties>,
-  ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties>,
-  ...ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties>[]
+  ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties, TMaxDepth>,
+  ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties, TMaxDepth>,
+  ...ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties, TMaxDepth>[]
 ];

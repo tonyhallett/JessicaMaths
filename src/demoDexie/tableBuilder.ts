@@ -8,9 +8,11 @@ import type {
 import type {
   AllowedKeyLeaf,
   CompoundKeyPaths,
+  KeyPathNoDescend,
   ValidIndexedDBKeyPath,
 } from "./ValidIndexedDBKeyPaths";
 import type {
+  DeletePrimaryKeys,
   DexiePrimaryKeyPathOrPaths,
   OptionalPrimaryKeys,
 } from "./primarykey";
@@ -24,7 +26,7 @@ import type {
 
 export interface TableConfig<
   TDatabase,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TPKeyPathOrPaths,
   TAuto extends boolean,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet = TDatabase,
@@ -49,18 +51,6 @@ type MultiEntryKeyPath<T> = ValidIndexedDBKeyPath<T, false> extends infer P
       : never
     : never
   : never;
-
-type NonPrimaryKeyPath<T, PkPathOrPaths> =
-  // If there is no inbound PK path (hidden PK -> we pass `never`), allow any valid key path
-  [PkPathOrPaths] extends [never]
-    ? ValidIndexedDBKeyPath<T>
-    : PkPathOrPaths extends readonly string[]
-    ? ValidIndexedDBKeyPath<T> // Compound PK: allow any single index
-    : ValidIndexedDBKeyPath<T> extends infer P
-    ? P extends PkPathOrPaths
-      ? never
-      : P
-    : never;
 
 export type DuplicateKeysError = {
   readonly error: "Duplicate keys in compound key are not allowed";
@@ -125,20 +115,50 @@ type CompoundMatchesPK<TCompound, PK> = PK extends readonly any[]
     : false
   : false;
 
+type SingleIndexKeyPathExcludePrimaryKey<
+  TDatabase,
+  PkPathOrPaths extends string | readonly string[],
+  TAllowTypeSpecificProperties extends boolean,
+  TMaxDepth extends string
+> = ValidIndexedDBKeyPath<
+  ApplyPkRemoval<TDatabase, PkPathOrPaths>,
+  TAllowTypeSpecificProperties,
+  TMaxDepth
+>;
+
+type MultiIndexKeyPathExcludePrimaryKey<
+  TDatabase,
+  PkPathOrPaths extends string | readonly string[]
+> = MultiEntryKeyPath<ApplyPkRemoval<TDatabase, PkPathOrPaths>>;
+
+type ApplyPkRemoval<
+  TDatabase,
+  PkPathOrPaths extends string | readonly string[]
+> = [PkPathOrPaths] extends [never]
+  ? TDatabase
+  : PkPathOrPaths extends readonly string[]
+  ? TDatabase
+  : DeletePrimaryKeys<TDatabase, PkPathOrPaths>;
+
 interface IndexMethods<
   TDatabase,
-  PkPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  PkPathOrPaths extends string | readonly string[],
   Auto extends boolean,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet = TDatabase,
   // stored on object - https://dexie.org/docs/inbound
   TPkeyIsInbound extends boolean = false,
   TPkeyOutbound extends IndexableType = never,
-  TAllowTypeSpecificProperties extends boolean = false
+  TAllowTypeSpecificProperties extends boolean = false,
+  TMaxDepth extends string = KeyPathNoDescend
 > {
   index<
-    TIndexPath extends NonPrimaryKeyPath<TDatabase, PkPathOrPaths> &
-      ValidIndexedDBKeyPath<TDatabase, TAllowTypeSpecificProperties>
+    TIndexPath extends SingleIndexKeyPathExcludePrimaryKey<
+      TDatabase,
+      PkPathOrPaths,
+      TAllowTypeSpecificProperties,
+      TMaxDepth
+    >
   >(
     indexPath: TIndexPath
   ): IsIndexDuplicate<TIndexPath, TIndexPaths> extends true
@@ -151,11 +171,16 @@ interface IndexMethods<
         TGet,
         TPkeyIsInbound,
         TPkeyOutbound,
-        TAllowTypeSpecificProperties
+        TAllowTypeSpecificProperties,
+        TMaxDepth
       >;
   unique<
-    TIndexPath extends NonPrimaryKeyPath<TDatabase, PkPathOrPaths> &
-      ValidIndexedDBKeyPath<TDatabase, TAllowTypeSpecificProperties>
+    TIndexPath extends SingleIndexKeyPathExcludePrimaryKey<
+      TDatabase,
+      PkPathOrPaths,
+      TAllowTypeSpecificProperties,
+      TMaxDepth
+    >
   >(
     indexPath: TIndexPath
   ): IsIndexDuplicate<TIndexPath, TIndexPaths> extends true
@@ -168,11 +193,14 @@ interface IndexMethods<
         TGet,
         TPkeyIsInbound,
         TPkeyOutbound,
-        TAllowTypeSpecificProperties
+        TAllowTypeSpecificProperties,
+        TMaxDepth
       >;
   multi<
-    TIndexPath extends NonPrimaryKeyPath<TDatabase, PkPathOrPaths> &
-      MultiEntryKeyPath<TDatabase>
+    TIndexPath extends MultiIndexKeyPathExcludePrimaryKey<
+      TDatabase,
+      PkPathOrPaths
+    >
   >(
     indexPath: TIndexPath
   ): IsIndexDuplicate<TIndexPath, TIndexPaths> extends true
@@ -185,12 +213,14 @@ interface IndexMethods<
         TGet,
         TPkeyIsInbound,
         TPkeyOutbound,
-        TAllowTypeSpecificProperties
+        TAllowTypeSpecificProperties,
+        TMaxDepth
       >;
   compound<
     const TCompoundIndexPaths extends CompoundKeyPaths<
       TDatabase,
-      TAllowTypeSpecificProperties
+      TAllowTypeSpecificProperties,
+      TMaxDepth
     >
   >(
     ...indexPaths: CompoundMatchesPK<
@@ -211,7 +241,8 @@ interface IndexMethods<
         TGet,
         TPkeyIsInbound,
         TPkeyOutbound,
-        TAllowTypeSpecificProperties
+        TAllowTypeSpecificProperties,
+        TMaxDepth
       >;
   build(): TableConfig<
     TDatabase,
@@ -232,10 +263,10 @@ const isDistinctArray = (arr: readonly any[]): boolean => {
   return Array.from(new Set(arr)).length === arr.length;
 };
 
-type InboundAutoIncrementKeyPath<T> = ValidIndexedDBKeyPath<
+type InboundAutoIncrementKeyPath<
   T,
-  false
-> extends infer K
+  TMaxDepth extends string
+> = ValidIndexedDBKeyPath<T, false, TMaxDepth> extends infer K
   ? K extends string
     ? IncludesNumber<KeyPathValue<T, K>> extends true
       ? K
@@ -246,12 +277,13 @@ type InboundAutoIncrementKeyPath<T> = ValidIndexedDBKeyPath<
 function createTableBuilder<
   TDatabase,
   TGet,
-  TAllowTypeSpecificProperties extends boolean
+  TAllowTypeSpecificProperties extends boolean,
+  TMaxDepth extends string
 >(mapToClass?: ConstructorOf<TDatabase>) {
   const indexParts: string[] = [];
 
   function createIndexMethods<
-    TPkeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+    TPkeyPathOrPaths extends string | readonly string[],
     TAuto extends boolean,
     TIndexPaths extends DexieIndexPaths<TDatabase>,
     TPkeyIsInbound extends boolean,
@@ -270,7 +302,8 @@ function createTableBuilder<
     TGet,
     TPkeyIsInbound,
     TOutboundPKey,
-    TAllowTypeSpecificProperties
+    TAllowTypeSpecificProperties,
+    TMaxDepth
   > {
     const addIfNotDuplicatePart = (part: string) => {
       if (indexParts.includes(part)) {
@@ -369,23 +402,26 @@ function createTableBuilder<
   }
 
   return {
-    autoIncrement<TPkeyPath extends InboundAutoIncrementKeyPath<TDatabase>>(
-      key: TPkeyPath
-    ) {
+    autoIncrement<
+      TPkeyPath extends InboundAutoIncrementKeyPath<TDatabase, TMaxDepth>
+    >(key: TPkeyPath) {
       return createIndexMethods(key, true, [] as const, true, null as never);
     },
     primaryKey<
       TPkeyPath extends ValidIndexedDBKeyPath<
         TDatabase,
-        TAllowTypeSpecificProperties
-      >
+        TAllowTypeSpecificProperties,
+        TMaxDepth
+      > &
+        string
     >(key: TPkeyPath) {
       return createIndexMethods(key, false, [] as const, true, null as never);
     },
     compoundKey<
       const TCompoundKeyPaths extends CompoundKeyPaths<
         TDatabase,
-        TAllowTypeSpecificProperties
+        TAllowTypeSpecificProperties,
+        TMaxDepth
       >
     >(
       ...keys: TCompoundKeyPaths
@@ -430,26 +466,32 @@ function createTableBuilder<
 
 export function tableBuilder<
   T,
-  TAllowTypeSpecificProperties extends boolean = false
+  TAllowTypeSpecificProperties extends boolean = false,
+  TMaxDepth extends string = KeyPathNoDescend
 >() {
-  return createTableBuilder<T, T, TAllowTypeSpecificProperties>();
+  return createTableBuilder<T, T, TAllowTypeSpecificProperties, TMaxDepth>();
 }
 
 export function tableClassBuilder<
   TCtor extends new (...args: any) => any,
-  TAllowTypeSpecificProperties extends boolean = false
+  TAllowTypeSpecificProperties extends boolean = false,
+  TMaxDepth extends string = KeyPathNoDescend
 >(ctor: TCtor) {
   type TEntity = InstanceType<TCtor>;
   type TDatabase = InsertType<TEntity, never>;
 
-  return createTableBuilder<TDatabase, TEntity, TAllowTypeSpecificProperties>(
-    ctor
-  );
+  return createTableBuilder<
+    TDatabase,
+    TEntity,
+    TAllowTypeSpecificProperties,
+    TMaxDepth
+  >(ctor);
 }
 
 export function tableClassBuilderExcluded<
   TCtor extends new (...args: any) => any,
-  TAllowTypeSpecificProperties extends boolean = false
+  TAllowTypeSpecificProperties extends boolean = false,
+  TMaxDepth extends string = KeyPathNoDescend
 >(ctor: TCtor) {
   type TEntity = InstanceType<TCtor>;
   return {
@@ -460,7 +502,8 @@ export function tableClassBuilderExcluded<
       return createTableBuilder<
         TDatabase,
         TEntity,
-        TAllowTypeSpecificProperties
+        TAllowTypeSpecificProperties,
+        TMaxDepth
       >(ctor);
     },
   };

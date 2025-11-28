@@ -1,16 +1,13 @@
 import type { KeyPathValue } from "dexie";
-import type {
-  CompoundKeyPaths,
-  ValidIndexedDBKeyPath,
-} from "./ValidIndexedDBKeyPaths";
+
 declare const KeyTypeBrand: unique symbol;
-export type SingleIndexPath<T, P extends ValidIndexedDBKeyPath<T>> = {
+export type SingleIndexPath<T, P extends string> = {
   path: P;
   multi: false;
   [KeyTypeBrand]?: KeyPathValue<T, P>;
 };
 
-export type MultiIndexPath<T, P extends ValidIndexedDBKeyPath<T>> = {
+export type MultiIndexPath<T, P extends string> = {
   path: P;
   multi: true;
   [KeyTypeBrand]?: KeyPathValue<T, P> extends readonly (infer Elem)[]
@@ -18,7 +15,9 @@ export type MultiIndexPath<T, P extends ValidIndexedDBKeyPath<T>> = {
     : KeyPathValue<T, P>;
 };
 
-export type CompoundIndexPaths<T, PS extends CompoundKeyPaths<T>> = {
+type CompoundKeyPathsAsStr = [string, string, ...string[]];
+
+export type CompoundIndexPaths<T, PS extends CompoundKeyPathsAsStr> = {
   paths: PS;
   [KeyTypeBrand]?: { [K in keyof PS]: KeyPathValue<T, PS[K] & string> };
 };

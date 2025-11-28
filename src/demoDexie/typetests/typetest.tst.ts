@@ -19,8 +19,8 @@ describe("tableBuilder", () => {
       expect(builder.primaryKey).type.not.toBeCallableWith("doesnotexist");
     });
 
-    it("should allow nested primary key ", () => {
-      const builder = tableBuilder<{ nested: { id: string } }>();
+    it("should allow nested primary key when opt in", () => {
+      const builder = tableBuilder<{ nested: { id: string } }, false, "I">();
       expect(builder.primaryKey).type.toBeCallableWith("nested.id");
       expect(builder.primaryKey).type.not.toBeCallableWith(
         "nested.doesnotexist"
@@ -52,8 +52,38 @@ describe("tableBuilder", () => {
       );
     });
 
+    it("should use the MaxDepth for deep paths", () => {
+      interface TableItem {
+        levelDefault: {
+          levelI: {
+            levelII: {
+              id: string;
+            };
+          };
+        };
+      }
+      const builder = tableBuilder<TableItem, false>();
+      expect(builder.primaryKey).type.not.toBeCallableWith(
+        "levelDefault.levelI.levelII.id"
+      );
+
+      const builderDeeper = tableBuilder<TableItem, false, "I">();
+      expect(builderDeeper.primaryKey).type.not.toBeCallableWith(
+        "levelDefault.levelI.levelII.id"
+      );
+
+      const builderIncludes = tableBuilder<TableItem, false, "II">();
+      expect(builderIncludes.primaryKey).type.not.toBeCallableWith(
+        "levelDefault.levelI.levelII.id"
+      );
+    });
+
     it("should allow compound primary key", () => {
-      const builder = tableBuilder<{ id: string; nested: { id2: number } }>();
+      const builder = tableBuilder<
+        { id: string; nested: { id2: number } },
+        false,
+        "I"
+      >();
       expect(builder.compoundKey).type.toBeCallableWith("id", "nested.id2");
       expect(builder.compoundKey).type.not.toBeCallableWith("id");
       expect(builder.compoundKey).type.not.toBeCallableWith();
@@ -147,35 +177,52 @@ describe("tableBuilder", () => {
   });
 
   describe("index path typing", () => {
-    const builder = tableBuilder<{
-      id: string;
-      index: string;
-      unionAllowed: string | number;
-      unionDisallowed: string | { obj: number };
-      number: number;
-      date: Date;
-      arrayBuffer: ArrayBuffer;
-      arrayBufferView: Uint8Array;
-      dataView: DataView;
-      indexableArray: string[];
-      indexableArray2: string[][];
-      indexableArray3: (string | number)[];
-      notIndexableArray: (string | { obj: number })[];
-      multiEntry: string[];
-      notAMultiEntry: string;
-      notAMultiEntryArray: string[][];
-      nested: { index: string };
-      notAnIndex: { obj: string };
-    }>().primaryKey("id");
+    const builder = tableBuilder<
+      {
+        id: string;
+        index: string;
+        unionAllowed: string | number;
+        unionDisallowed: string | { obj: number };
+        number: number;
+        date: Date;
+        arrayBuffer: ArrayBuffer;
+        arrayBufferView: Uint8Array;
+        dataView: DataView;
+        indexableArray: string[];
+        indexableArray2: string[][];
+        indexableArray3: (string | number)[];
+        notIndexableArray: (string | { obj: number })[];
+        multiEntry: string[];
+        notAMultiEntry: string;
+        notAMultiEntryArray: string[][];
+        nested: { index: string };
+        notAnIndex: { obj: string };
+      },
+      false,
+      "I"
+    >().primaryKey("id");
 
     it("should allow valid index path", () => {
       expect(builder.index).type.toBeCallableWith("index");
       expect(builder.index).type.not.toBeCallableWith("doesnotexist");
     });
 
-    it("should allow nested index path", () => {
-      expect(builder.index).type.toBeCallableWith("nested.index");
-      expect(builder.index).type.not.toBeCallableWith("nested.doesnotexist");
+    it("should allow nested index path when MaxDepth allows", () => {
+      interface Nested {
+        id: string;
+        nested: { index: string; multi: string[] };
+      }
+      const builder = tableBuilder<Nested, false, "">().primaryKey("id");
+      const builderDefault = tableBuilder<Nested>().primaryKey("id");
+      const builderLevel1 = tableBuilder<Nested, false, "I">().primaryKey("id");
+
+      expect(builder.index).type.not.toBeCallableWith("nested.index");
+      expect(builderDefault.index).type.not.toBeCallableWith("nested.index");
+      expect(builder.multi).type.not.toBeCallableWith("nested.multi");
+      expect(builderDefault.multi).type.not.toBeCallableWith("nested.multi");
+
+      expect(builderLevel1.index).type.toBeCallableWith("nested.index");
+      expect(builderLevel1.multi).type.toBeCallableWith("nested.multi");
     });
 
     it("should allow index key to be allowed properties of leaf object when specified", () => {
@@ -618,13 +665,17 @@ describe("table base", () => {
     const db = dexieFactory(
       1,
       {
-        table: tableBuilder<{
-          id: string;
-          stringIndex: string;
-          numberIndex: number;
-          nestedIndex: { subIndex: Date };
-          notAnIndex: number;
-        }>()
+        table: tableBuilder<
+          {
+            id: string;
+            stringIndex: string;
+            numberIndex: number;
+            nestedIndex: { subIndex: Date };
+            notAnIndex: number;
+          },
+          false,
+          "I"
+        >()
           .primaryKey("id")
           .index("stringIndex")
           .index("numberIndex")
@@ -713,7 +764,7 @@ describe("table base", () => {
     const db = dexieFactory(
       1,
       {
-        table: tableBuilder<TableItem>()
+        table: tableBuilder<TableItem, false, "I">()
           .primaryKey("id")
           .index("stringIndex")
           .index("numberIndex")
@@ -1004,7 +1055,7 @@ describe("table base", () => {
     const db = dexieFactory(
       1,
       {
-        table: tableBuilder<TableItem>()
+        table: tableBuilder<TableItem, false, "I">()
           .primaryKey("id")
           .index("stringIndex")
           .index("numberIndex")
@@ -1478,7 +1529,7 @@ describe("Inbound - non auto", () => {
       const db = dexieFactory(
         1,
         {
-          table: tableBuilder<TableItem>()
+          table: tableBuilder<TableItem, false, "I">()
             .primaryKey("primaryKeyParent.pkey")
             .build(),
         },
