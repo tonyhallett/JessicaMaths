@@ -178,6 +178,62 @@ describe("tableBuilder", () => {
       expect(builder.index).type.not.toBeCallableWith("nested.doesnotexist");
     });
 
+    it("should allow index key to be allowed properties of leaf object when specified", () => {
+      interface TableItem {
+        id: string;
+        stringValue: string;
+        blobValue: Blob;
+        fileValue: File;
+        arrayValue: string[];
+      }
+      const builder = tableBuilder<TableItem, true>().primaryKey("id");
+      expect(builder.index).type.toBeCallableWith("stringValue.length");
+      expect(builder.index).type.toBeCallableWith("blobValue.size");
+      expect(builder.index).type.toBeCallableWith("blobValue.type");
+      expect(builder.index).type.toBeCallableWith("fileValue.size");
+      expect(builder.index).type.toBeCallableWith("fileValue.type");
+      expect(builder.index).type.toBeCallableWith("fileValue.name");
+      expect(builder.index).type.toBeCallableWith("fileValue.lastModified");
+      expect(builder.index).type.toBeCallableWith("arrayValue.length");
+
+      const builderNotAllowed = tableBuilder<TableItem>().primaryKey("id");
+      expect(builderNotAllowed.index).type.not.toBeCallableWith(
+        "stringValue.length"
+      );
+    });
+
+    it("should allow compound index key to be allowed properties of leaf object when specified", () => {
+      interface TableItem {
+        id: string;
+        stringValue: string;
+        blobValue: Blob;
+        fileValue: File;
+        arrayValue: string[];
+      }
+      const builder = tableBuilder<TableItem, true>().primaryKey("id");
+      expect(builder.compound).type.toBeCallableWith(
+        "stringValue.length",
+        "blobValue.size",
+        "blobValue.type",
+        "fileValue.size",
+        "fileValue.type",
+        "fileValue.name",
+        "fileValue.lastModified",
+        "arrayValue.length"
+      );
+      const builderNotAllowed = tableBuilder<TableItem>().primaryKey("id");
+      expect(builderNotAllowed.compound).type.not.toBeCallableWith(
+        "stringValue.length",
+        "blobValue.size",
+        "blobValue.type",
+        "fileValue.size",
+        "fileValue.type",
+        "fileValue.name",
+        "fileValue.lastModified",
+        "arrayValue.length"
+      );
+    });
+
     it("should not allow primary key as index", () => {
       expect(builder.index).type.not.toBeCallableWith("id");
     });

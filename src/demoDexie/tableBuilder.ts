@@ -133,11 +133,12 @@ interface IndexMethods<
   TGet = TDatabase,
   // stored on object - https://dexie.org/docs/inbound
   TPkeyIsInbound extends boolean = false,
-  TPkeyOutbound extends IndexableType = never
+  TPkeyOutbound extends IndexableType = never,
+  TAllowTypeSpecificProperties extends boolean = false
 > {
   index<
     TIndexPath extends NonPrimaryKeyPath<TDatabase, PkPathOrPaths> &
-      ValidIndexedDBKeyPath<TDatabase>
+      ValidIndexedDBKeyPath<TDatabase, TAllowTypeSpecificProperties>
   >(
     indexPath: TIndexPath
   ): IsIndexDuplicate<TIndexPath, TIndexPaths> extends true
@@ -149,11 +150,12 @@ interface IndexMethods<
         [...TIndexPaths, SingleIndexPath<TDatabase, TIndexPath>],
         TGet,
         TPkeyIsInbound,
-        TPkeyOutbound
+        TPkeyOutbound,
+        TAllowTypeSpecificProperties
       >;
   unique<
     TIndexPath extends NonPrimaryKeyPath<TDatabase, PkPathOrPaths> &
-      ValidIndexedDBKeyPath<TDatabase>
+      ValidIndexedDBKeyPath<TDatabase, TAllowTypeSpecificProperties>
   >(
     indexPath: TIndexPath
   ): IsIndexDuplicate<TIndexPath, TIndexPaths> extends true
@@ -165,7 +167,8 @@ interface IndexMethods<
         [...TIndexPaths, SingleIndexPath<TDatabase, TIndexPath>],
         TGet,
         TPkeyIsInbound,
-        TPkeyOutbound
+        TPkeyOutbound,
+        TAllowTypeSpecificProperties
       >;
   multi<
     TIndexPath extends NonPrimaryKeyPath<TDatabase, PkPathOrPaths> &
@@ -181,9 +184,15 @@ interface IndexMethods<
         [...TIndexPaths, MultiIndexPath<TDatabase, TIndexPath>],
         TGet,
         TPkeyIsInbound,
-        TPkeyOutbound
+        TPkeyOutbound,
+        TAllowTypeSpecificProperties
       >;
-  compound<const TCompoundIndexPaths extends CompoundKeyPaths<TDatabase>>(
+  compound<
+    const TCompoundIndexPaths extends CompoundKeyPaths<
+      TDatabase,
+      TAllowTypeSpecificProperties
+    >
+  >(
     ...indexPaths: CompoundMatchesPK<
       TCompoundIndexPaths,
       PkPathOrPaths
@@ -201,7 +210,8 @@ interface IndexMethods<
         [...TIndexPaths, CompoundIndexPaths<TDatabase, TCompoundIndexPaths>],
         TGet,
         TPkeyIsInbound,
-        TPkeyOutbound
+        TPkeyOutbound,
+        TAllowTypeSpecificProperties
       >;
   build(): TableConfig<
     TDatabase,
@@ -259,7 +269,8 @@ function createTableBuilder<
     TIndexPaths,
     TGet,
     TPkeyIsInbound,
-    TOutboundPKey
+    TOutboundPKey,
+    TAllowTypeSpecificProperties
   > {
     const addIfNotDuplicatePart = (part: string) => {
       if (indexParts.includes(part)) {
