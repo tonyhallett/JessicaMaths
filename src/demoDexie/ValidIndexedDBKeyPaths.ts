@@ -1,6 +1,6 @@
 // ---------- Helpers ----------
 
-import type { MaxDepth, NoDescend, StringKey } from "./utilitytypes";
+import type { MaxDepth, NextDepth, NoDescend, StringKey } from "./utilitytypes";
 
 type IsValidKey<T> = T extends AllowedKeyLeaf
   ? true
@@ -103,7 +103,8 @@ export type ValidIndexedDBKeyPath<
   T,
   NoPrefix,
   TAllowTypeSpecificProperties,
-  TMaxDepth
+  TMaxDepth,
+  NoDescend
 >;
 
 type PropertyKeyPaths<
@@ -112,8 +113,8 @@ type PropertyKeyPaths<
   TPrefix extends string,
   TAllowTypeSpecificProperties extends boolean,
   TMaxDepth extends string,
-  TCurrDepth extends string = "",
-  TDescend extends boolean = true
+  TCurrDepth extends string,
+  TDescend extends boolean
 > = IsAllowedLeaf<T[TKey]> extends true
   ? LeafPath<TPrefix, T[TKey], TKey, TAllowTypeSpecificProperties>
   : IsFile<T[TKey]> extends true
@@ -140,7 +141,7 @@ type PropertyKeyPaths<
         WithSuffix<TPrefix, TKey>,
         TAllowTypeSpecificProperties,
         TMaxDepth,
-        `${TCurrDepth}I`
+        NextDepth<TCurrDepth>
       >
     : never
   : never;
@@ -150,7 +151,7 @@ type ValidIndexedDBKeyPathRecursive<
   TPrefix extends string,
   TAllowTypeSpecificProperties extends boolean,
   TMaxDepth extends string,
-  TCurrDepth extends string = ""
+  TCurrDepth extends string
 > = {
   [P in StringKey<T>]: TCurrDepth extends TMaxDepth
     ? PropertyKeyPaths<
@@ -168,7 +169,8 @@ type ValidIndexedDBKeyPathRecursive<
         TPrefix,
         TAllowTypeSpecificProperties,
         TMaxDepth,
-        TCurrDepth
+        TCurrDepth,
+        true
       >;
 }[StringKey<T>];
 

@@ -1,10 +1,14 @@
 import type { KeyPathIgnoreObject, KeyPathValue } from "dexie";
 import type { PropModificationTyped } from "./propmodifications";
-import type { MaxDepth } from "./utilitytypes";
+import type { MaxDepth, NextDepth, NoDescend } from "./utilitytypes";
 
 export type Level2 = "II";
 
-type UpdateKeyPaths<T, TMaxDepth = Level2, TCurrDepth extends string = ""> = {
+type UpdateKeyPaths<
+  T,
+  TMaxDepth = Level2,
+  TCurrDepth extends string = NoDescend
+> = {
   [P in keyof T]: P extends string
     ? TCurrDepth extends TMaxDepth
       ? P
@@ -24,7 +28,7 @@ type UpdateKeyPaths<T, TMaxDepth = Level2, TCurrDepth extends string = ""> = {
           | `${P}.${UpdateKeyPaths<
               Required<T[P]>,
               TMaxDepth,
-              `${TCurrDepth}I`
+              NextDepth<TCurrDepth>
             >}`
       : P
     : never;
