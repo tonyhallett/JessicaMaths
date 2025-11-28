@@ -1,6 +1,6 @@
 // ---------- Helpers ----------
 
-import type { StringKey } from "./utilitytypes";
+import type { MaxDepth, NoDescend, StringKey } from "./utilitytypes";
 
 type IsValidKey<T> = T extends AllowedKeyLeaf
   ? true
@@ -58,18 +58,18 @@ type WithKeyAndTypeSpecificPropertyPaths<
   | WithSuffix<TPossiblePrefix, TKey>;
 
 type LeafPath<
-  PossiblePrefix extends string,
+  TPossiblePrefix extends string,
   TLeafType,
   TKey extends string,
   TAllowTypeSpecificProperties extends boolean
 > = TLeafType extends string
   ? WithKeyAndTypeSpecificPropertyPaths<
-      PossiblePrefix,
+      TPossiblePrefix,
       TKey,
       ["length"],
       TAllowTypeSpecificProperties
     >
-  : WithSuffix<PossiblePrefix, TKey>;
+  : WithSuffix<TPossiblePrefix, TKey>;
 
 type BlobPathProperties<
   TPossiblePrefix extends string,
@@ -95,12 +95,10 @@ type FilePathProperties<
     >
   | BlobPathProperties<TPossiblePrefix, TKey, TAllowTypeSpecificProperties>;
 
-export type KeyPathNoDescend = "";
-
 export type ValidIndexedDBKeyPath<
   T,
   TAllowTypeSpecificProperties extends boolean = true,
-  TMaxDepth extends string = KeyPathNoDescend
+  TMaxDepth extends string = NoDescend
 > = ValidIndexedDBKeyPathRecursive<
   T,
   NoPrefix,
@@ -110,76 +108,78 @@ export type ValidIndexedDBKeyPath<
 
 type PropertyKeyPaths<
   T,
-  P extends StringKey<T>,
-  Prefix extends string,
+  TKey extends StringKey<T>,
+  TPrefix extends string,
   TAllowTypeSpecificProperties extends boolean,
-  MAXDEPTH extends string,
-  CURRDEPTH extends string = "",
-  Descend extends boolean = true
-> = IsAllowedLeaf<T[P]> extends true
-  ? LeafPath<Prefix, T[P], P, TAllowTypeSpecificProperties>
-  : IsFile<T[P]> extends true
-  ? FilePathProperties<Prefix, P, TAllowTypeSpecificProperties>
-  : IsBlob<T[P]> extends true
-  ? BlobPathProperties<Prefix, P, TAllowTypeSpecificProperties>
-  : IsArray<T[P]> extends true
-  ? ArrayElement<T[P]> extends infer Elem
+  TMaxDepth extends string,
+  TCurrDepth extends string = "",
+  TDescend extends boolean = true
+> = IsAllowedLeaf<T[TKey]> extends true
+  ? LeafPath<TPrefix, T[TKey], TKey, TAllowTypeSpecificProperties>
+  : IsFile<T[TKey]> extends true
+  ? FilePathProperties<TPrefix, TKey, TAllowTypeSpecificProperties>
+  : IsBlob<T[TKey]> extends true
+  ? BlobPathProperties<TPrefix, TKey, TAllowTypeSpecificProperties>
+  : IsArray<T[TKey]> extends true
+  ? ArrayElement<T[TKey]> extends infer Elem
     ? IsValidKey<Elem> extends true
       ? Elem extends string
         ? WithKeyAndTypeSpecificPropertyPaths<
-            Prefix,
-            P,
+            TPrefix,
+            TKey,
             ["length"],
             TAllowTypeSpecificProperties
           >
-        : WithSuffix<Prefix, P>
+        : WithSuffix<TPrefix, TKey>
       : never
     : never
-  : T[P] extends object
-  ? Descend extends true
+  : T[TKey] extends object
+  ? TDescend extends true
     ? ValidIndexedDBKeyPathRecursive<
-        T[P],
-        WithSuffix<Prefix, P>,
+        T[TKey],
+        WithSuffix<TPrefix, TKey>,
         TAllowTypeSpecificProperties,
-        MAXDEPTH,
-        `${CURRDEPTH}I`
+        TMaxDepth,
+        `${TCurrDepth}I`
       >
     : never
   : never;
 
 type ValidIndexedDBKeyPathRecursive<
   T,
-  Prefix extends string,
+  TPrefix extends string,
   TAllowTypeSpecificProperties extends boolean,
-  MAXDEPTH extends string,
-  CURRDEPTH extends string = ""
+  TMaxDepth extends string,
+  TCurrDepth extends string = ""
 > = {
-  [P in StringKey<T>]: CURRDEPTH extends MAXDEPTH
+  [P in StringKey<T>]: TCurrDepth extends TMaxDepth
     ? PropertyKeyPaths<
         T,
         P,
-        Prefix,
+        TPrefix,
         TAllowTypeSpecificProperties,
-        MAXDEPTH,
-        CURRDEPTH,
+        TMaxDepth,
+        TCurrDepth,
         false
       >
     : PropertyKeyPaths<
         T,
         P,
-        Prefix,
+        TPrefix,
         TAllowTypeSpecificProperties,
-        MAXDEPTH,
-        CURRDEPTH
+        TMaxDepth,
+        TCurrDepth
       >;
 }[StringKey<T>];
 
 export type CompoundKeyPaths<
   T,
   TAllowTypeSpecificProperties extends boolean = true,
-  TMaxDepth extends string = KeyPathNoDescend
-> = [
-  ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties, TMaxDepth>,
-  ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties, TMaxDepth>,
-  ...ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties, TMaxDepth>[]
-];
+  TMaxDepth extends string = NoDescend
+> = TMaxDepth extends MaxDepth<TMaxDepth>
+  ? [
+      ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties, TMaxDepth>,
+      ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties, TMaxDepth>,
+      ...ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties, TMaxDepth>[]
+    ]
+  : never;

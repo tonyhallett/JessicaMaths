@@ -8,18 +8,15 @@ import type {
 import type {
   AllowedKeyLeaf,
   CompoundKeyPaths,
-  KeyPathNoDescend,
   ValidIndexedDBKeyPath,
 } from "./ValidIndexedDBKeyPaths";
-import type {
-  DeletePrimaryKeys,
-  DexiePrimaryKeyPathOrPaths,
-  OptionalPrimaryKeys,
-} from "./primarykey";
+import type { DeletePrimaryKeys, OptionalPrimaryKeys } from "./primarykey";
 import type {
   ConstructorOf,
   IncludesNumber,
   IncludesNumberInUnion,
+  MaxDepth,
+  NoDescend,
   NoDuplicates,
   TuplesEqual,
 } from "./utilitytypes";
@@ -124,18 +121,23 @@ type SingleIndexKeyPathExcludePrimaryKey<
   PkPathOrPaths extends string | readonly string[],
   TAllowTypeSpecificProperties extends boolean,
   TMaxDepth extends string
-> = ValidIndexedDBKeyPath<
-  ApplyPkRemoval<TDatabase, PkPathOrPaths>,
-  TAllowTypeSpecificProperties,
-  TMaxDepth
->;
+> = TMaxDepth extends MaxDepth<TMaxDepth>
+  ? ValidIndexedDBKeyPath<
+      ApplySinglePkRemoval<TDatabase, PkPathOrPaths>,
+      TAllowTypeSpecificProperties,
+      TMaxDepth
+    >
+  : never;
 
 type MultiIndexKeyPathExcludePrimaryKey<
   TDatabase,
   PkPathOrPaths extends string | readonly string[],
   TMaxDepth extends string
-> = MultiEntryKeyPath<ApplyPkRemoval<TDatabase, PkPathOrPaths>, TMaxDepth>;
-type ApplyPkRemoval<
+> = TMaxDepth extends MaxDepth<TMaxDepth>
+  ? MultiEntryKeyPath<ApplySinglePkRemoval<TDatabase, PkPathOrPaths>, TMaxDepth>
+  : never;
+
+type ApplySinglePkRemoval<
   TDatabase,
   PkPathOrPaths extends string | readonly string[]
 > = [PkPathOrPaths] extends [never]
@@ -154,7 +156,7 @@ interface IndexMethods<
   TPkeyIsInbound extends boolean = false,
   TPkeyOutbound extends IndexableType = never,
   TAllowTypeSpecificProperties extends boolean = false,
-  TMaxDepth extends string = KeyPathNoDescend
+  TMaxDepth extends string = NoDescend
 > {
   index<
     TIndexPath extends SingleIndexKeyPathExcludePrimaryKey<
@@ -471,7 +473,7 @@ function createTableBuilder<
 
 export function tableBuilder<
   T,
-  TMaxDepth extends string = KeyPathNoDescend,
+  TMaxDepth extends string = NoDescend,
   TAllowTypeSpecificProperties extends boolean = false
 >() {
   return createTableBuilder<T, T, TAllowTypeSpecificProperties, TMaxDepth>();
@@ -479,7 +481,7 @@ export function tableBuilder<
 
 export function tableClassBuilder<
   TCtor extends new (...args: any) => any,
-  TMaxDepth extends string = KeyPathNoDescend,
+  TMaxDepth extends string = NoDescend,
   TAllowTypeSpecificProperties extends boolean = false
 >(ctor: TCtor) {
   type TEntity = InstanceType<TCtor>;
@@ -495,7 +497,7 @@ export function tableClassBuilder<
 
 export function tableClassBuilderExcluded<
   TCtor extends new (...args: any) => any,
-  TMaxDepth extends string = KeyPathNoDescend,
+  TMaxDepth extends string = NoDescend,
   TAllowTypeSpecificProperties extends boolean = false
 >(ctor: TCtor) {
   type TEntity = InstanceType<TCtor>;

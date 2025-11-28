@@ -18,7 +18,7 @@ import type {
   PrimaryKeyId,
 } from "./primarykey";
 import type { TableHooks } from "./TableHooks";
-import type { UpdateSpec } from "./UpdateSpec";
+import type { Level2, UpdateSpec } from "./UpdateSpec";
 import type { BulkUpdate } from "./BulkUpdate";
 import type { UpsertSpec } from "./UpsertSpec";
 import type { WhereClauses } from "./where";
@@ -89,7 +89,7 @@ export interface TableCore<
   clear(): PromiseExtended<void>;
 
   // https://dexie.org/docs/Table/Table.update()
-  update<TMAXDEPTH extends string = "II">(
+  update<TMAXDEPTH extends string = Level2>(
     key: PrimaryKey<TDatabase, TPKeyPathOrPaths>,
     changes: UpdateSpec<TDatabase, TMAXDEPTH>
   ): PromiseExtended<0 | 1>;
@@ -102,7 +102,7 @@ export interface TableCore<
     >
   ): PromiseExtended<0 | 1>;
 
-  bulkUpdate<TMAXDEPTH extends string = "II">(
+  bulkUpdate<TMAXDEPTH extends string = Level2>(
     changes: BulkUpdate<TDatabase, TPKeyPathOrPaths, TMAXDEPTH>[]
   ): PromiseExtended<number>;
 

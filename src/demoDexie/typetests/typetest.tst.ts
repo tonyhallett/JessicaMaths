@@ -10,7 +10,7 @@ import {
 import { expect, describe, it } from "tstyche";
 import type { ChangeCallback } from "../Collection";
 import { add, ObjectPropModification } from "../propmodifications";
-import type { KeyPathNoDescend } from "../ValidIndexedDBKeyPaths";
+import type { NoDescend } from "../utilitytypes";
 
 describe("tableBuilder", () => {
   describe("primary key selection", () => {
@@ -35,7 +35,7 @@ describe("tableBuilder", () => {
         fileValue: File;
         arrayValue: string[];
       }
-      const builder = tableBuilder<TableItem, KeyPathNoDescend, true>();
+      const builder = tableBuilder<TableItem, NoDescend, true>();
       expect(builder.primaryKey).type.toBeCallableWith("stringValue.length");
       expect(builder.primaryKey).type.toBeCallableWith("blobValue.size");
       expect(builder.primaryKey).type.toBeCallableWith("blobValue.type");
@@ -92,7 +92,7 @@ describe("tableBuilder", () => {
     it("should allow compound primary key to be allowed properties of leaf object when specified", () => {
       const builder = tableBuilder<
         { leaf1: string; leaf2: string },
-        KeyPathNoDescend,
+        NoDescend,
         true
       >();
       expect(builder.compoundKey).type.toBeCallableWith(
@@ -236,11 +236,9 @@ describe("tableBuilder", () => {
         fileValue: File;
         arrayValue: string[];
       }
-      const builder = tableBuilder<
-        TableItem,
-        KeyPathNoDescend,
-        true
-      >().primaryKey("id");
+      const builder = tableBuilder<TableItem, NoDescend, true>().primaryKey(
+        "id"
+      );
       expect(builder.index).type.toBeCallableWith("stringValue.length");
       expect(builder.index).type.toBeCallableWith("blobValue.size");
       expect(builder.index).type.toBeCallableWith("blobValue.type");
@@ -264,11 +262,9 @@ describe("tableBuilder", () => {
         fileValue: File;
         arrayValue: string[];
       }
-      const builder = tableBuilder<
-        TableItem,
-        KeyPathNoDescend,
-        true
-      >().primaryKey("id");
+      const builder = tableBuilder<TableItem, NoDescend, true>().primaryKey(
+        "id"
+      );
       expect(builder.compound).type.toBeCallableWith(
         "stringValue.length",
         "blobValue.size",
@@ -501,7 +497,7 @@ describe("table base", () => {
       compound: tableBuilder<Compound>()
         .compoundKey("stringPart", "numberPart")
         .build(),
-      leafPropertyTable: tableBuilder<StringId, KeyPathNoDescend, true>()
+      leafPropertyTable: tableBuilder<StringId, NoDescend, true>()
         .primaryKey("id.length")
         .build(),
     },
@@ -1449,6 +1445,27 @@ describe("Inbound - non auto", () => {
           nested,
         }
       );
+
+      expect(db.table.update<"">).type.toBeCallableWith(tableItem, {
+        nested: nested,
+      });
+      expect(db.table.update<"">).type.not.toBeCallableWith(tableItem, {
+        "nested.sub": 1,
+      });
+      expect(db.table.update<"I">).type.toBeCallableWith(tableItem, {
+        "nested.sub": 1,
+      });
+
+      expect(db.table.update<"I">).type.not.toBeCallableWith(tableItem, {
+        "nested.deep.level2": nested.deep.level2,
+      });
+      expect(db.table.update<"II">).type.toBeCallableWith(tableItem, {
+        "nested.deep.level2": nested.deep.level2,
+      });
+      // default
+      expect(db.table.update).type.toBeCallableWith(tableItem, {
+        "nested.deep.level2": nested.deep.level2,
+      });
 
       expect(db.table.update<"II">).type.not.toBeCallableWith(tableItem, {
         "nested.deep.level2.level3": nested.deep.level2.level3,

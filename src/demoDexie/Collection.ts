@@ -1,7 +1,7 @@
 import type { PromiseExtended, ThenShortcut } from "dexie";
 import type { DexieIndexPaths, IndexPathRegistry } from "./indexpaths";
 import type { KeyTypeForPath, WhereClause } from "./where";
-import type { UpdateSpec } from "./UpdateSpec";
+import type { Level2, UpdateSpec } from "./UpdateSpec";
 import type { PrimaryKeyId } from "./primarykey";
 
 type Comparable =
@@ -182,7 +182,7 @@ interface CollectionBase<
   modify(
     changeCallback: ChangeCallback<TDatabase, TInsert, TPkey>
   ): PromiseExtended<number>;
-  modify<TMAXDEPTH extends string = "II">(
+  modify<TMAXDEPTH extends string = Level2>(
     changes: UpdateSpec<TDatabase, TMAXDEPTH>
   ): PromiseExtended<number>;
 

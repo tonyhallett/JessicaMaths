@@ -1,7 +1,7 @@
 import { type PromiseExtended } from "dexie";
 import type { ChangeCallback } from "./Collection";
 import type { DexieIndexPaths } from "./indexpaths";
-import type { UpdateSpec } from "./UpdateSpec";
+import type { Level2, UpdateSpec } from "./UpdateSpec";
 import type { DexiePrimaryKeyPathOrPaths, PrimaryKey } from "./primarykey";
 import type { TableInboundBase } from "./TableInboundBase";
 
@@ -23,7 +23,7 @@ export type TableInbound<
   TDexie
 > & {
   // note that docs do not mention this ( as the key must exist on the object - so ok for this table type )
-  update<TMAXDEPTH extends string = "II">(
+  update<TMAXDEPTH extends string = Level2>(
     object: TDatabase,
     changes: UpdateSpec<TDatabase, TMAXDEPTH>
   ): PromiseExtended<0 | 1>;

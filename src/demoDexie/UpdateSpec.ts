@@ -1,49 +1,41 @@
 import type { KeyPathIgnoreObject, KeyPathValue } from "dexie";
 import type { PropModificationTyped } from "./propmodifications";
+import type { MaxDepth } from "./utilitytypes";
 
 export type Level2 = "II";
 
-type DexieKeyPaths<T, MAXDEPTH = Level2, CURRDEPTH extends string = ""> = {
+type UpdateKeyPaths<T, TMaxDepth = Level2, TCurrDepth extends string = ""> = {
   [P in keyof T]: P extends string
-    ? CURRDEPTH extends MAXDEPTH
+    ? TCurrDepth extends TMaxDepth
       ? P
       : T[P] extends Array<infer K>
       ? K extends any[] // Array of arrays (issue #2026)
         ? P | `${P}.${number}` | `${P}.${number}.${number}`
         : K extends object // only drill into the array element if it's an object
-        ? P | `${P}.${number}` | `${P}.${number}.${DexieKeyPaths<Required<K>>}`
+        ? P | `${P}.${number}` | `${P}.${number}.${UpdateKeyPaths<Required<K>>}`
         : P | `${P}.${number}`
       : T[P] extends (...args: any[]) => any // Method
       ? never
       : T[P] extends KeyPathIgnoreObject // Not valid in update spec or where clause (+ avoid circular reference)
       ? P
       : T[P] extends object
-      ? P | `${P}.${DexieKeyPaths<Required<T[P]>, MAXDEPTH, `${CURRDEPTH}I`>}`
+      ?
+          | P
+          | `${P}.${UpdateKeyPaths<
+              Required<T[P]>,
+              TMaxDepth,
+              `${TCurrDepth}I`
+            >}`
       : P
     : never;
 }[keyof T];
 
-export type MaxDepth<S extends string> = S extends ""
-  ? never // empty string is invalid
-  : S extends `I${infer Rest}` // starts with "I"
-  ? Rest extends "" // if nothing left, ok
-    ? S
-    : MaxDepth<Rest> extends never // recursively check the rest
-    ? never
-    : S
-  : never; // does not start with "I"
-
-export type KeyPaths<
-  T,
-  TMAXDEPTH extends string
-> = TMAXDEPTH extends MaxDepth<TMAXDEPTH> ? DexieKeyPaths<T, TMAXDEPTH> : never;
-
 export type UpdateSpec<
   T,
-  TMAXDEPTH extends string = Level2
-> = TMAXDEPTH extends MaxDepth<TMAXDEPTH>
+  TMaxDepth extends string = Level2
+> = TMaxDepth extends MaxDepth<TMaxDepth>
   ? {
-      [KP in KeyPaths<Required<T>, TMAXDEPTH>]?:
+      [KP in UpdateKeyPaths<Required<T>, TMaxDepth>]?:
         | KeyPathValue<Required<T>, KP>
         | PropModificationTyped<KeyPathValue<T, KP>>
         | (undefined extends KeyPathValue<T, KP> ? undefined : never);
