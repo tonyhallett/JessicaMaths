@@ -44,7 +44,11 @@ type IsMultiEntryArray<T> = T extends readonly (infer E)[]
     : false
   : false;
 
-type MultiEntryKeyPath<T> = ValidIndexedDBKeyPath<T, false> extends infer P
+type MultiEntryKeyPath<T, TMaxDepth extends string> = ValidIndexedDBKeyPath<
+  T,
+  false,
+  TMaxDepth
+> extends infer P
   ? P extends string
     ? IsMultiEntryArray<KeyPathValue<T, P>> extends true
       ? P
@@ -128,9 +132,9 @@ type SingleIndexKeyPathExcludePrimaryKey<
 
 type MultiIndexKeyPathExcludePrimaryKey<
   TDatabase,
-  PkPathOrPaths extends string | readonly string[]
-> = MultiEntryKeyPath<ApplyPkRemoval<TDatabase, PkPathOrPaths>>;
-
+  PkPathOrPaths extends string | readonly string[],
+  TMaxDepth extends string
+> = MultiEntryKeyPath<ApplyPkRemoval<TDatabase, PkPathOrPaths>, TMaxDepth>;
 type ApplyPkRemoval<
   TDatabase,
   PkPathOrPaths extends string | readonly string[]
@@ -199,7 +203,8 @@ interface IndexMethods<
   multi<
     TIndexPath extends MultiIndexKeyPathExcludePrimaryKey<
       TDatabase,
-      PkPathOrPaths
+      PkPathOrPaths,
+      TMaxDepth
     >
   >(
     indexPath: TIndexPath
@@ -466,16 +471,16 @@ function createTableBuilder<
 
 export function tableBuilder<
   T,
-  TAllowTypeSpecificProperties extends boolean = false,
-  TMaxDepth extends string = KeyPathNoDescend
+  TMaxDepth extends string = KeyPathNoDescend,
+  TAllowTypeSpecificProperties extends boolean = false
 >() {
   return createTableBuilder<T, T, TAllowTypeSpecificProperties, TMaxDepth>();
 }
 
 export function tableClassBuilder<
   TCtor extends new (...args: any) => any,
-  TAllowTypeSpecificProperties extends boolean = false,
-  TMaxDepth extends string = KeyPathNoDescend
+  TMaxDepth extends string = KeyPathNoDescend,
+  TAllowTypeSpecificProperties extends boolean = false
 >(ctor: TCtor) {
   type TEntity = InstanceType<TCtor>;
   type TDatabase = InsertType<TEntity, never>;
@@ -490,8 +495,8 @@ export function tableClassBuilder<
 
 export function tableClassBuilderExcluded<
   TCtor extends new (...args: any) => any,
-  TAllowTypeSpecificProperties extends boolean = false,
-  TMaxDepth extends string = KeyPathNoDescend
+  TMaxDepth extends string = KeyPathNoDescend,
+  TAllowTypeSpecificProperties extends boolean = false
 >(ctor: TCtor) {
   type TEntity = InstanceType<TCtor>;
   return {

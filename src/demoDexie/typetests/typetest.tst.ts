@@ -10,6 +10,7 @@ import {
 import { expect, describe, it } from "tstyche";
 import type { ChangeCallback } from "../Collection";
 import { add, ObjectPropModification } from "../propmodifications";
+import type { KeyPathNoDescend } from "../ValidIndexedDBKeyPaths";
 
 describe("tableBuilder", () => {
   describe("primary key selection", () => {
@@ -20,7 +21,7 @@ describe("tableBuilder", () => {
     });
 
     it("should allow nested primary key when opt in", () => {
-      const builder = tableBuilder<{ nested: { id: string } }, false, "I">();
+      const builder = tableBuilder<{ nested: { id: string } }, "I">();
       expect(builder.primaryKey).type.toBeCallableWith("nested.id");
       expect(builder.primaryKey).type.not.toBeCallableWith(
         "nested.doesnotexist"
@@ -34,7 +35,7 @@ describe("tableBuilder", () => {
         fileValue: File;
         arrayValue: string[];
       }
-      const builder = tableBuilder<TableItem, true>();
+      const builder = tableBuilder<TableItem, KeyPathNoDescend, true>();
       expect(builder.primaryKey).type.toBeCallableWith("stringValue.length");
       expect(builder.primaryKey).type.toBeCallableWith("blobValue.size");
       expect(builder.primaryKey).type.toBeCallableWith("blobValue.type");
@@ -62,17 +63,17 @@ describe("tableBuilder", () => {
           };
         };
       }
-      const builder = tableBuilder<TableItem, false>();
+      const builder = tableBuilder<TableItem>();
       expect(builder.primaryKey).type.not.toBeCallableWith(
         "levelDefault.levelI.levelII.id"
       );
 
-      const builderDeeper = tableBuilder<TableItem, false, "I">();
+      const builderDeeper = tableBuilder<TableItem, "I">();
       expect(builderDeeper.primaryKey).type.not.toBeCallableWith(
         "levelDefault.levelI.levelII.id"
       );
 
-      const builderIncludes = tableBuilder<TableItem, false, "II">();
+      const builderIncludes = tableBuilder<TableItem, "II">();
       expect(builderIncludes.primaryKey).type.not.toBeCallableWith(
         "levelDefault.levelI.levelII.id"
       );
@@ -81,7 +82,6 @@ describe("tableBuilder", () => {
     it("should allow compound primary key", () => {
       const builder = tableBuilder<
         { id: string; nested: { id2: number } },
-        false,
         "I"
       >();
       expect(builder.compoundKey).type.toBeCallableWith("id", "nested.id2");
@@ -90,7 +90,11 @@ describe("tableBuilder", () => {
     });
 
     it("should allow compound primary key to be allowed properties of leaf object when specified", () => {
-      const builder = tableBuilder<{ leaf1: string; leaf2: string }, true>();
+      const builder = tableBuilder<
+        { leaf1: string; leaf2: string },
+        KeyPathNoDescend,
+        true
+      >();
       expect(builder.compoundKey).type.toBeCallableWith(
         "leaf1.length",
         "leaf2.length"
@@ -198,7 +202,6 @@ describe("tableBuilder", () => {
         nested: { index: string };
         notAnIndex: { obj: string };
       },
-      false,
       "I"
     >().primaryKey("id");
 
@@ -212,9 +215,9 @@ describe("tableBuilder", () => {
         id: string;
         nested: { index: string; multi: string[] };
       }
-      const builder = tableBuilder<Nested, false, "">().primaryKey("id");
+      const builder = tableBuilder<Nested, "">().primaryKey("id");
       const builderDefault = tableBuilder<Nested>().primaryKey("id");
-      const builderLevel1 = tableBuilder<Nested, false, "I">().primaryKey("id");
+      const builderLevel1 = tableBuilder<Nested, "I">().primaryKey("id");
 
       expect(builder.index).type.not.toBeCallableWith("nested.index");
       expect(builderDefault.index).type.not.toBeCallableWith("nested.index");
@@ -233,7 +236,11 @@ describe("tableBuilder", () => {
         fileValue: File;
         arrayValue: string[];
       }
-      const builder = tableBuilder<TableItem, true>().primaryKey("id");
+      const builder = tableBuilder<
+        TableItem,
+        KeyPathNoDescend,
+        true
+      >().primaryKey("id");
       expect(builder.index).type.toBeCallableWith("stringValue.length");
       expect(builder.index).type.toBeCallableWith("blobValue.size");
       expect(builder.index).type.toBeCallableWith("blobValue.type");
@@ -257,7 +264,11 @@ describe("tableBuilder", () => {
         fileValue: File;
         arrayValue: string[];
       }
-      const builder = tableBuilder<TableItem, true>().primaryKey("id");
+      const builder = tableBuilder<
+        TableItem,
+        KeyPathNoDescend,
+        true
+      >().primaryKey("id");
       expect(builder.compound).type.toBeCallableWith(
         "stringValue.length",
         "blobValue.size",
@@ -490,7 +501,7 @@ describe("table base", () => {
       compound: tableBuilder<Compound>()
         .compoundKey("stringPart", "numberPart")
         .build(),
-      leafPropertyTable: tableBuilder<StringId, true>()
+      leafPropertyTable: tableBuilder<StringId, KeyPathNoDescend, true>()
         .primaryKey("id.length")
         .build(),
     },
@@ -673,7 +684,6 @@ describe("table base", () => {
             nestedIndex: { subIndex: Date };
             notAnIndex: number;
           },
-          false,
           "I"
         >()
           .primaryKey("id")
@@ -764,7 +774,7 @@ describe("table base", () => {
     const db = dexieFactory(
       1,
       {
-        table: tableBuilder<TableItem, false, "I">()
+        table: tableBuilder<TableItem, "I">()
           .primaryKey("id")
           .index("stringIndex")
           .index("numberIndex")
@@ -1055,7 +1065,7 @@ describe("table base", () => {
     const db = dexieFactory(
       1,
       {
-        table: tableBuilder<TableItem, false, "I">()
+        table: tableBuilder<TableItem, "I">()
           .primaryKey("id")
           .index("stringIndex")
           .index("numberIndex")
@@ -1529,7 +1539,7 @@ describe("Inbound - non auto", () => {
       const db = dexieFactory(
         1,
         {
-          table: tableBuilder<TableItem, false, "I">()
+          table: tableBuilder<TableItem, "I">()
             .primaryKey("primaryKeyParent.pkey")
             .build(),
         },
