@@ -371,7 +371,12 @@ function createTableBuilder<
     >(key: TPkeyPath) {
       return createIndexMethods(key, false, [] as const, true, null as never);
     },
-    compoundKey<const TCompoundKeyPaths extends CompoundKeyPaths<TDatabase>>(
+    compoundKey<
+      const TCompoundKeyPaths extends CompoundKeyPaths<
+        TDatabase,
+        TAllowTypeSpecificProperties
+      >
+    >(
       ...keys: TCompoundKeyPaths
     ): NoDuplicates<TCompoundKeyPaths> extends never
       ? DuplicateKeysError

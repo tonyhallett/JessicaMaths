@@ -59,6 +59,23 @@ describe("tableBuilder", () => {
       expect(builder.compoundKey).type.not.toBeCallableWith();
     });
 
+    it("should allow compound primary key to be allowed properties of leaf object when specified", () => {
+      const builder = tableBuilder<{ leaf1: string; leaf2: string }, true>();
+      expect(builder.compoundKey).type.toBeCallableWith(
+        "leaf1.length",
+        "leaf2.length"
+      );
+
+      const builderNotAllowed = tableBuilder<{
+        leaf1: string;
+        leaf2: string;
+      }>();
+      expect(builderNotAllowed.compoundKey).type.not.toBeCallableWith(
+        "leaf1.length",
+        "leaf2.length"
+      );
+    });
+
     it("should not be possible to complete the chain when duplicate keys are used", () => {
       const builder = tableBuilder<{ id: string; nested: { id2: number } }>();
       expect(builder.compoundKey("id", "id")).type.toBe<DuplicateKeysError>();

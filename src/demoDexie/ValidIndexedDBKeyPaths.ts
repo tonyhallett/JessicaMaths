@@ -133,8 +133,11 @@ type ValidIndexedDBKeyPathRecursive<
     : never;
 }[StringKey<T>];
 
-export type CompoundKeyPaths<T> = [
-  ValidIndexedDBKeyPath<T>,
-  ValidIndexedDBKeyPath<T>,
-  ...ValidIndexedDBKeyPath<T>[]
+export type CompoundKeyPaths<
+  T,
+  TAllowTypeSpecificProperties extends boolean = true
+> = [
+  ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties>,
+  ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties>,
+  ...ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties>[]
 ];
