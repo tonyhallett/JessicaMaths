@@ -17,14 +17,13 @@ import type {
   PrimaryKey,
   PrimaryKeyId,
   PrimaryKeyRegistry,
-  //PrimaryKeyRegistry,
 } from "./primarykey";
 import type { TableHooks } from "./TableHooks";
 import type { Level2, UpdateSpec } from "./UpdateSpec";
 import type { BulkUpdate } from "./BulkUpdate";
 import type { UpsertSpec } from "./UpsertSpec";
 import type { WhereClauses } from "./where";
-import type { KeyLookup } from "./utilitytypes";
+import type { KeyLookup, PathWithKey } from "./utilitytypes";
 
 type PathRegistry<
   TDatabase,
@@ -34,10 +33,7 @@ type PathRegistry<
 > = readonly [
   ...IndexPathRegistry<TDatabase, TIndexPaths>,
   ...PrimaryKeyRegistry<TPKeyPathOrPaths, TPKey>,
-  {
-    path: PrimaryKeyId;
-    keyType: TPKey;
-  }
+  PathWithKey<PrimaryKeyId, TPKey>
 ];
 
 export interface TableCore<
