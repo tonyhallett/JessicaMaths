@@ -43,6 +43,7 @@ export type WhereClauses<
     TPKeyPathOrPaths,
     TCollectionKey
   >;
+  // includes virtual indexes
   where<TIndex extends TKeyLookup[number]["path"]>(
     index: TIndex
   ): WhereClause<

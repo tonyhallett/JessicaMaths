@@ -1,4 +1,5 @@
 import type { KeyPathValue } from "dexie";
+import type { UnionToIntersection } from "./utilitytypes";
 
 declare const KeyTypeBrand: unique symbol;
 export type SingleIndexPath<T, P extends string> = {
@@ -29,20 +30,67 @@ export type DexieIndexPath<T> =
 
 export type DexieIndexPaths<T> = readonly DexieIndexPath<T>[];
 
+type First<T extends readonly any[]> = T extends readonly [infer A, ...any[]]
+  ? A
+  : never;
+
+type Prefixes<T extends readonly any[]> = T extends readonly [infer A]
+  ? readonly [A]
+  : T extends readonly [infer A, ...infer Rest]
+  ? readonly [A] | readonly [A, ...Prefixes<Rest>]
+  : never;
+
+type DemoPrefixes = Prefixes<["a", "b", "c", "d"]>;
+
+/*
+  Accumulate:
+  - Brand is a tuple of key types corresponding to Paths (same length).
+  - Produce a union beginning with the full tuple (Paths, Brand), then
+    drop the last element from both Brand and Paths and include that shorter
+    tuple, then repeat until only the single-path case would remain.
+  - The single-path (first element) is emitted separately in IndexPathRegistry
+    as a plain string, so Accumulate should stop when the remaining Paths would
+    have length 1.
+*/
+type Accumulate<
+  Brand extends readonly any[],
+  Paths extends readonly string[]
+> = Paths extends [
+  ...infer RestPaths extends string[],
+  infer _LastPath extends string
+]
+  ? Brand extends [...infer RestBrand extends any[], infer _LastBrand]
+    ? // If RestPaths is a single-element tuple, include the current Paths (length 2)
+      // and stop (single element handled separately).
+      RestPaths extends readonly [any]
+      ? { path: Paths; keyType: Brand }
+      : // Otherwise include current full tuple and recurse dropping the last element.
+        { path: Paths; keyType: Brand } | Accumulate<RestBrand, RestPaths>
+    : never
+  : never;
+
 export type IndexPathRegistry<
   TInsert,
   TIndexPaths extends readonly DexieIndexPath<TInsert>[]
 > = {
-  [K in keyof TIndexPaths]: TIndexPaths[K] extends { path: infer P }
+  [K in keyof TIndexPaths]: TIndexPaths[K] extends {
+    path: infer P;
+    [KeyTypeBrand]?: infer Brand;
+  }
     ? {
         path: P;
-        keyType: NonNullable<TIndexPaths[K][typeof KeyTypeBrand]>;
+        keyType: Brand;
       }
-    : TIndexPaths[K] extends { paths: infer Paths }
-    ? {
-        path: Paths;
-        keyType: NonNullable<TIndexPaths[K][typeof KeyTypeBrand]>;
+    : TIndexPaths[K] extends {
+        paths: infer Paths extends readonly string[];
+        [KeyTypeBrand]?: infer Brand extends readonly any[];
       }
+    ? // note that single entry array is not supported
+      | {
+            path: First<Paths>;
+            keyType: First<Brand>;
+          }
+        | Accumulate<Brand, Paths>
     : never;
 };
 

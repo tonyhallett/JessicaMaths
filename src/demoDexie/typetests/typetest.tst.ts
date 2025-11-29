@@ -820,6 +820,34 @@ describe("table base", () => {
       expect(db.pkCompoundTable.where).type.toBeCallableWith(["id1", "id2"]);
     });
 
+    it("should accept virtual indexes", () => {
+      const db = dexieFactory(
+        1,
+        {
+          table: tableBuilder<{
+            id: number;
+            index1: number;
+            index2: string;
+            index3: Date;
+          }>()
+            .primaryKey("id")
+            .compound("index1", "index2", "index3")
+            .build(),
+        },
+        ""
+      );
+      expect(db.table.where).type.toBeCallableWith([
+        "index1",
+        "index2",
+        "index3",
+      ]);
+      // virtual index subsets
+      expect(db.table.where).type.toBeCallableWith(["index1", "index2"]);
+      expect(db.table.where).type.toBeCallableWith("index1");
+      // dexie does not support single in this manner though
+      expect(db.table.where).type.not.toBeCallableWith(["index1"]);
+    });
+
     it("should accept multiEntry index paths", () => {
       expect(db.table.where).type.toBeCallableWith("multiEntry");
     });
@@ -909,6 +937,26 @@ describe("table base", () => {
       expect(whereNumber).type.not.toHaveProperty("startsWithAnyOfIgnoreCase");
 
       expect(whereUnion).type.toHaveProperty("startsWith");
+    });
+
+    it("should have methods typed to the virtual index type when using virtul indexes", () => {
+      const db = dexieFactory(
+        1,
+        {
+          table: tableBuilder<{
+            id: number;
+            index1: number;
+            index2: string;
+            index3: Date;
+          }>()
+            .primaryKey("id")
+            .compound("index1", "index2", "index3")
+            .build(),
+        },
+        ""
+      );
+      db.table.where("index1").equals(123);
+      db.table.where(["index1", "index2"]).equals([123, "stringValue"]);
     });
 
     it("should return collection with key typed to the index type when using index", () => {

@@ -6,6 +6,7 @@ interface DexieDataItem {
   pk: number;
   indexString: string;
   indexNumber: number;
+  indexDate: Date;
 }
 
 const db = dexieFactory(
@@ -13,8 +14,7 @@ const db = dexieFactory(
   {
     demo: tableBuilder<DexieDataItem>()
       .primaryKey("pk")
-      .index("indexNumber")
-      .index("indexString")
+      .compound("indexNumber", "indexString", "indexDate")
       .build(),
   },
   "DemoDexieBulkUpdate"
@@ -48,15 +48,26 @@ export const DemoDexie = () => {
       onClick={async () => {
         await db.demo.clear();
         await db.demo.bulkAdd([
-          { pk: 1, indexNumber: 1, indexString: "1" },
-          { pk: 2, indexNumber: 2, indexString: "2" },
+          { pk: 1, indexNumber: 1, indexString: "1", indexDate: new Date() },
+          { pk: 2, indexNumber: 2, indexString: "2", indexDate: new Date() },
         ]);
-        const keys = await db.demo
+        const virtualUsingString = await db.demo
           .where("indexNumber")
-          .equals(2)
-          .or("indexString")
-          .equals("2")
-          .keys();
+          .equals(1)
+          .first();
+
+        /*        
+          suprisingly Dexie does not support this way of querying a virtual index, given that it supports the subset with two
+
+          const virtualUsingSingleArray = await db.demo
+          .where(["indexNumber"])
+          .equals([1])
+          .first(); */
+        const virtualUsingArray = await db.demo
+          .where(["indexNumber", "indexString"])
+          .equals([1, "1"])
+          .first();
+        const x = "";
       }}
     >
       Demo Dexie
