@@ -805,6 +805,21 @@ describe("table base", () => {
       expect(db.table.where).type.toBeCallableWith(":id");
     });
 
+    it("should accept the pkey", () => {
+      const db = dexieFactory(
+        1,
+        {
+          pkTable: tableBuilder<{ id: number }>().primaryKey("id").build(),
+          pkCompoundTable: tableBuilder<{ id1: number; id2: string }>()
+            .compoundKey("id1", "id2")
+            .build(),
+        },
+        ""
+      );
+      expect(db.pkTable.where).type.toBeCallableWith("id");
+      expect(db.pkCompoundTable.where).type.toBeCallableWith(["id1", "id2"]);
+    });
+
     it("should accept multiEntry index paths", () => {
       expect(db.table.where).type.toBeCallableWith("multiEntry");
     });
@@ -817,7 +832,7 @@ describe("table base", () => {
       ]);
     });
 
-    it("should have methods typed to the index type", () => {
+    it("should have methods typed to the index type when using index", () => {
       const whereString = db.table.where("stringIndex");
       expect(whereString.above).type.toBeCallableWith("stringValue");
       expect(whereString.above).type.not.toBeCallableWith(42);
@@ -985,9 +1000,16 @@ describe("table base", () => {
       expect(
         stringCollectionKey.or(["compound1", "compound2"]).equals
       ).type.toBeCallableWith(["a", 1]);
+      expect(numberCollectionKey.or(":id").above).type.toBeCallableWith(
+        "pkeyid"
+      );
+      expect(numberCollectionKey.or(":id").above).type.not.toBeCallableWith(1);
+      expect(numberCollectionKey.or(":id").above("1").keys()).type.toBe<
+        PromiseExtended<string[]>
+      >();
     });
 
-    it("should return collection with key typed to the primary type when using :id", () => {
+    it("should return collection with key typed to the primary type when using pkey", () => {
       interface TableItem {
         id1: string;
         id2: number;
@@ -1004,6 +1026,9 @@ describe("table base", () => {
       expect(db.compound.where(":id").above(["a", 1]).keys()).type.toBe<
         PromiseExtended<[string, number][]>
       >();
+      expect(
+        db.compound.where(["id1", "id2"]).above(["a", 1]).keys()
+      ).type.toBe<PromiseExtended<[string, number][]>>();
 
       db.inbound
         .where(":id")

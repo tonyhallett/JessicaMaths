@@ -2,7 +2,7 @@ import type { PromiseExtended, ThenShortcut } from "dexie";
 import type { DexieIndexPaths, IndexPathRegistry } from "./indexpaths";
 import type { KeyTypeForPath, WhereClause } from "./where";
 import type { Level2, UpdateSpec } from "./UpdateSpec";
-import type { PrimaryKeyId } from "./primarykey";
+import type { DexiePrimaryKeyPathOrPaths, PrimaryKeyId } from "./primarykey";
 
 type Comparable =
   | number
@@ -47,7 +47,8 @@ export type Collection<
   TPKey,
   TKey,
   TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>,
-  TDexie
+  TDexie,
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>
 > = CollectionBase<
   TGet,
   TDatabase,
@@ -55,11 +56,21 @@ export type Collection<
   TPKey,
   TKey,
   TKeyLookup,
-  TDexie
+  TDexie,
+  TPKeyPathOrPaths
 > & {
   or(
     primaryKeyId: PrimaryKeyId
-  ): WhereClause<TGet, TDatabase, TInsert, TPKey, TPKey, TKeyLookup, TDexie>;
+  ): WhereClause<
+    TGet,
+    TDatabase,
+    TInsert,
+    TPKey,
+    TPKey,
+    TKeyLookup,
+    TDexie,
+    TPKeyPathOrPaths
+  >;
   or<TIndex extends TKeyLookup[number]["path"]>(
     index: TIndex
   ): WhereClause<
@@ -69,7 +80,8 @@ export type Collection<
     TPKey,
     KeyTypeForPath<TKeyLookup, TIndex>,
     TKeyLookup,
-    TDexie
+    TDexie,
+    TPKeyPathOrPaths
   >;
 };
 
@@ -108,12 +120,22 @@ interface CollectionBase<
   TPkey,
   TKey,
   TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>,
-  TDexie
+  TDexie,
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>
 > {
   db: TDexie;
   clone(
     props?: Object
-  ): Collection<TGet, TDatabase, TInsert, TPkey, TKey, TKeyLookup, TDexie>;
+  ): Collection<
+    TGet,
+    TDatabase,
+    TInsert,
+    TPkey,
+    TKey,
+    TKeyLookup,
+    TDexie,
+    TPKeyPathOrPaths
+  >;
 
   count(): PromiseExtended<number>;
   count<R>(thenShortcut: ThenShortcut<number, R>): PromiseExtended<R>;
@@ -195,6 +217,7 @@ interface CollectionBase<
     TPkey,
     TKey,
     TKeyLookup,
-    TDexie
+    TDexie,
+    TPKeyPathOrPaths
   >;
 }
