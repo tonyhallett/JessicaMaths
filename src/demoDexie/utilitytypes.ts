@@ -96,3 +96,10 @@ export type MaxDepth<S extends string> = S extends NoDescend
   : never; // does not start with "I"
 
 export type NextDepth<D extends string> = `${D}I`;
+
+export type First<T extends readonly any[]> = T extends readonly [
+  infer A,
+  ...any[]
+]
+  ? A
+  : never;

@@ -1,5 +1,5 @@
 import type { KeyPathValue } from "dexie";
-import type { UnionToIntersection } from "./utilitytypes";
+import type { First } from "./utilitytypes";
 
 declare const KeyTypeBrand: unique symbol;
 export type SingleIndexPath<T, P extends string> = {
@@ -29,18 +29,6 @@ export type DexieIndexPath<T> =
   | CompoundIndexPaths<T, any>;
 
 export type DexieIndexPaths<T> = readonly DexieIndexPath<T>[];
-
-type First<T extends readonly any[]> = T extends readonly [infer A, ...any[]]
-  ? A
-  : never;
-
-type Prefixes<T extends readonly any[]> = T extends readonly [infer A]
-  ? readonly [A]
-  : T extends readonly [infer A, ...infer Rest]
-  ? readonly [A] | readonly [A, ...Prefixes<Rest>]
-  : never;
-
-type DemoPrefixes = Prefixes<["a", "b", "c", "d"]>;
 
 /*
   Accumulate:
