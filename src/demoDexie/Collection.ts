@@ -1,12 +1,8 @@
 import type { PromiseExtended, ThenShortcut } from "dexie";
-import type { DexieIndexPaths, IndexPathRegistry } from "./indexpaths";
-import type { KeyTypeForPath, WhereClause, WhereClauses } from "./where";
+import type { WhereClauses } from "./where";
 import type { Level2, UpdateSpec } from "./UpdateSpec";
-import type {
-  DexiePrimaryKeyPathOrPaths,
-  PrimaryKeyId,
-  PrimaryKeyRegistry,
-} from "./primarykey";
+import type { DexiePrimaryKeyPathOrPaths } from "./primarykey";
+import type { KeyLookup } from "./utilitytypes";
 
 type Comparable =
   | number
@@ -50,10 +46,9 @@ export type Collection<
   TInsert,
   TPKey,
   TKey,
-  TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>,
+  TKeyLookup extends KeyLookup,
   TDexie,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
-  TPKeyLookup extends PrimaryKeyRegistry<TPKeyPathOrPaths, TPKey>
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>
 > = CollectionBase<
   TGet,
   TDatabase,
@@ -62,8 +57,7 @@ export type Collection<
   TKey,
   TKeyLookup,
   TDexie,
-  TPKeyPathOrPaths,
-  TPKeyLookup
+  TPKeyPathOrPaths
 > & {
   or: WhereClauses<
     TGet,
@@ -73,8 +67,7 @@ export type Collection<
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths,
-    TKey,
-    TPKeyLookup
+    TKey
   >["where"];
 };
 
@@ -112,10 +105,9 @@ interface CollectionBase<
   TInsert,
   TPkey,
   TKey,
-  TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>,
+  TKeyLookup extends KeyLookup,
   TDexie,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
-  TPKeyLookup extends PrimaryKeyRegistry<TPKeyPathOrPaths, TPkey>
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>
 > {
   db: TDexie;
   clone(
@@ -128,8 +120,7 @@ interface CollectionBase<
     TKey,
     TKeyLookup,
     TDexie,
-    TPKeyPathOrPaths,
-    TPKeyLookup
+    TPKeyPathOrPaths
   >;
 
   count(): PromiseExtended<number>;
@@ -213,7 +204,6 @@ interface CollectionBase<
     TKey,
     TKeyLookup,
     TDexie,
-    TPKeyPathOrPaths,
-    TPKeyLookup
+    TPKeyPathOrPaths
   >;
 }

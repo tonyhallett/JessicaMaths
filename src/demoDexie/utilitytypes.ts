@@ -103,3 +103,5 @@ export type First<T extends readonly any[]> = T extends readonly [
 ]
   ? A
   : never;
+
+export type KeyLookup = readonly { path: any; keyType: any }[];

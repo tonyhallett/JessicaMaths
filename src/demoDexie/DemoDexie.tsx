@@ -51,10 +51,7 @@ export const DemoDexie = () => {
           { pk: 1, indexNumber: 1, indexString: "1", indexDate: new Date() },
           { pk: 2, indexNumber: 2, indexString: "2", indexDate: new Date() },
         ]);
-        const virtualUsingString = await db.demo
-          .where("indexNumber")
-          .equals(1)
-          .first();
+        const keys = await db.demo.where("indexNumber").equals(1).keys();
 
         /*        
           suprisingly Dexie does not support this way of querying a virtual index, given that it supports the subset with two
@@ -63,10 +60,10 @@ export const DemoDexie = () => {
           .where(["indexNumber"])
           .equals([1])
           .first(); */
-        const virtualUsingArray = await db.demo
+        const keys2 = await db.demo
           .where(["indexNumber", "indexString"])
           .equals([1, "1"])
-          .first();
+          .keys();
         const x = "";
       }}
     >

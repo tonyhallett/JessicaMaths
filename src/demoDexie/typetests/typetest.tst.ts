@@ -1084,7 +1084,7 @@ describe("table base", () => {
         1,
         {
           compound: tableBuilder<TableItem>().compoundKey("id1", "id2").build(),
-          inbound: tableBuilder<TableItem>()
+          outbound: tableBuilder<TableItem>()
             .hiddenAuto()
             .index("id1")
             .index("id2")
@@ -1100,7 +1100,7 @@ describe("table base", () => {
         db.compound.where(["id1", "id2"]).above(["a", 1]).keys()
       ).type.toBe<PromiseExtended<[string, number][]>>();
 
-      db.inbound
+      db.outbound
         .where(":id")
         .above(1)
         .each((item, cursor) => {
@@ -1109,7 +1109,7 @@ describe("table base", () => {
 
       // should be a union of keys when or
       expect(
-        db.inbound.where("id1").equals("value").or("id2").equals(42).keys()
+        db.outbound.where(":id").equals(42).or("id1").equals("value").keys()
       ).type.toBe<PromiseExtended<(string | number)[]>>();
     });
 

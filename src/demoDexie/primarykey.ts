@@ -141,7 +141,7 @@ type BuildPrimaryEntries<
 export type PrimaryKeyRegistry<
   TPKeyPathOrPaths extends string | readonly string[],
   TPrimaryKeyTypes
-> = [TPrimaryKeyTypes] extends [never]
+> = [TPKeyPathOrPaths] extends [never]
   ? readonly []
   : TPKeyPathOrPaths extends readonly string[]
   ? TPrimaryKeyTypes extends readonly any[]
