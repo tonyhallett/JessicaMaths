@@ -2,12 +2,12 @@ import type { Collection } from "./Collection";
 import type { DexiePrimaryKeyPathOrPaths, PrimaryKeyId } from "./primarykey";
 import type { KeyLookup } from "./utilitytypes";
 
-export type KeyTypeForPath<TPathLookup extends KeyLookup, TPath> = Extract<
+type KeyTypeForPath<TPathLookup extends KeyLookup, TPath> = Extract<
   TPathLookup[number],
   { path: TPath }
 >["keyType"];
 
-export type WhereClauses<
+export interface WhereClauses<
   TGet,
   TDatabase,
   TInsert,
@@ -16,20 +16,7 @@ export type WhereClauses<
   TDexie,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TCollectionKey
-> = {
-  where(
-    primaryKeyId: PrimaryKeyId
-  ): WhereClause<
-    TGet,
-    TDatabase,
-    TInsert,
-    TPKey,
-    TPKey,
-    TKeyLookup,
-    TDexie,
-    TPKeyPathOrPaths,
-    TCollectionKey
-  >;
+> {
   // includes virtual indexes
   where<TPath extends TKeyLookup[number]["path"]>(
     indexOrPrimaryKeyPath: TPath
@@ -44,7 +31,7 @@ export type WhereClauses<
     TPKeyPathOrPaths,
     TCollectionKey
   >;
-};
+}
 
 type CollectionKey<TCurrent, TKey> = [TCurrent] extends [undefined]
   ? TKey

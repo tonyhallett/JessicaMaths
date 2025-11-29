@@ -17,6 +17,7 @@ import type {
   PrimaryKey,
   PrimaryKeyId,
   PrimaryKeyRegistry,
+  //PrimaryKeyRegistry,
 } from "./primarykey";
 import type { TableHooks } from "./TableHooks";
 import type { Level2, UpdateSpec } from "./UpdateSpec";
@@ -32,8 +33,13 @@ type PathRegistry<
   TPKey
 > = readonly [
   ...IndexPathRegistry<TDatabase, TIndexPaths>,
-  ...PrimaryKeyRegistry<TPKeyPathOrPaths, TPKey>
+  ...PrimaryKeyRegistry<TPKeyPathOrPaths, TPKey>,
+  {
+    path: PrimaryKeyId;
+    keyType: TPKey;
+  }
 ];
+
 export interface TableCore<
   TName extends string,
   TGet,
