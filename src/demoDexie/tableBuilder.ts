@@ -153,8 +153,8 @@ interface IndexMethods<
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet = TDatabase,
   // stored on object - https://dexie.org/docs/inbound
-  TPkeyIsInbound extends boolean = false,
-  TPkeyOutbound extends IndexableType = never,
+  TPKeyIsInbound extends boolean = false,
+  TPKeyOutbound extends IndexableType = never,
   TAllowTypeSpecificProperties extends boolean = false,
   TMaxDepth extends string = NoDescend
 > {
@@ -175,8 +175,8 @@ interface IndexMethods<
         Auto,
         [...TIndexPaths, SingleIndexPath<TDatabase, TIndexPath>],
         TGet,
-        TPkeyIsInbound,
-        TPkeyOutbound,
+        TPKeyIsInbound,
+        TPKeyOutbound,
         TAllowTypeSpecificProperties,
         TMaxDepth
       >;
@@ -197,8 +197,8 @@ interface IndexMethods<
         Auto,
         [...TIndexPaths, SingleIndexPath<TDatabase, TIndexPath>],
         TGet,
-        TPkeyIsInbound,
-        TPkeyOutbound,
+        TPKeyIsInbound,
+        TPKeyOutbound,
         TAllowTypeSpecificProperties,
         TMaxDepth
       >;
@@ -218,8 +218,8 @@ interface IndexMethods<
         Auto,
         [...TIndexPaths, MultiIndexPath<TDatabase, TIndexPath>],
         TGet,
-        TPkeyIsInbound,
-        TPkeyOutbound,
+        TPKeyIsInbound,
+        TPKeyOutbound,
         TAllowTypeSpecificProperties,
         TMaxDepth
       >;
@@ -246,8 +246,8 @@ interface IndexMethods<
         Auto,
         [...TIndexPaths, CompoundIndexPaths<TDatabase, TCompoundIndexPaths>],
         TGet,
-        TPkeyIsInbound,
-        TPkeyOutbound,
+        TPKeyIsInbound,
+        TPKeyOutbound,
         TAllowTypeSpecificProperties,
         TMaxDepth
       >;
@@ -257,12 +257,12 @@ interface IndexMethods<
     Auto,
     TIndexPaths,
     TGet,
-    TPkeyIsInbound extends true
+    TPKeyIsInbound extends true
       ? Auto extends true
         ? OptionalPrimaryKeys<TDatabase, PkPathOrPaths>
         : TDatabase
       : TDatabase,
-    TPkeyOutbound
+    TPKeyOutbound
   >;
 }
 
@@ -290,24 +290,24 @@ function createTableBuilder<
   const indexParts: string[] = [];
 
   function createIndexMethods<
-    TPkeyPathOrPaths extends string | readonly string[],
+    TPKeyPathOrPaths extends string | readonly string[],
     TAuto extends boolean,
     TIndexPaths extends DexieIndexPaths<TDatabase>,
-    TPkeyIsInbound extends boolean,
+    TPKeyIsInbound extends boolean,
     TOutboundPKey extends IndexableType
   >(
-    key: TPkeyPathOrPaths,
+    key: TPKeyPathOrPaths,
     auto: TAuto,
     indices: TIndexPaths,
-    pkeyIsInbound: TPkeyIsInbound,
+    pkeyIsInbound: TPKeyIsInbound,
     outboundPKey: TOutboundPKey
   ): IndexMethods<
     TDatabase,
-    TPkeyPathOrPaths,
+    TPKeyPathOrPaths,
     TAuto,
     TIndexPaths,
     TGet,
-    TPkeyIsInbound,
+    TPKeyIsInbound,
     TOutboundPKey,
     TAllowTypeSpecificProperties,
     TMaxDepth
@@ -381,7 +381,7 @@ function createTableBuilder<
         if (mapToClass) {
           const mapToClasstableConfig: TableConfig<
             TDatabase,
-            TPkeyPathOrPaths,
+            TPKeyPathOrPaths,
             TAuto,
             TIndexPaths,
             TGet
@@ -395,7 +395,7 @@ function createTableBuilder<
 
         const tableConfig: TableConfig<
           TDatabase,
-          TPkeyPathOrPaths,
+          TPKeyPathOrPaths,
           TAuto,
           TIndexPaths,
           TGet
@@ -410,18 +410,18 @@ function createTableBuilder<
 
   return {
     autoIncrement<
-      TPkeyPath extends InboundAutoIncrementKeyPath<TDatabase, TMaxDepth>
-    >(key: TPkeyPath) {
+      TPKeyPath extends InboundAutoIncrementKeyPath<TDatabase, TMaxDepth>
+    >(key: TPKeyPath) {
       return createIndexMethods(key, true, [] as const, true, null as never);
     },
     primaryKey<
-      TPkeyPath extends ValidIndexedDBKeyPath<
+      TPKeyPath extends ValidIndexedDBKeyPath<
         TDatabase,
         TAllowTypeSpecificProperties,
         TMaxDepth
       > &
         string
-    >(key: TPkeyPath) {
+    >(key: TPKeyPath) {
       return createIndexMethods(key, false, [] as const, true, null as never);
     },
     compoundKey<

@@ -29,10 +29,10 @@ type PathRegistry<
   TDatabase,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
-  TPkey
+  TPKey
 > = [
   ...IndexPathRegistry<TDatabase, TIndexPaths>,
-  ...PrimaryKeyRegistry<TPKeyPathOrPaths, TPkey>
+  ...PrimaryKeyRegistry<TPKeyPathOrPaths, TPKey>
 ];
 export interface TableCore<
   TName extends string,
@@ -41,7 +41,7 @@ export interface TableCore<
   TInsert,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
-  TPkey,
+  TPKey,
   TKeyLookup extends KeyLookup,
   TDexie
 > {
@@ -49,16 +49,16 @@ export interface TableCore<
   readonly name: TName;
   schema: TableSchema;
   // todo TGet needs to be mapped to TExisting - TGet if entity class is incorrect
-  hook: TableHooks<TDatabase, TGet, TPkey>;
+  hook: TableHooks<TDatabase, TGet, TPKey>;
   core: DBCoreTable;
 
   // todo object overload
-  get(key: TPkey): PromiseExtended<TGet | undefined>;
+  get(key: TPKey): PromiseExtended<TGet | undefined>;
   get<R>(
-    key: TPkey,
+    key: TPKey,
     thenShortcut: ThenShortcut<TGet | undefined, R>
   ): PromiseExtended<R>;
-  bulkGet(keys: TPkey[]): PromiseExtended<(TGet | undefined)[]>;
+  bulkGet(keys: TPKey[]): PromiseExtended<(TGet | undefined)[]>;
 
   filter: ReturnType<this["toCollection"]>["and"];
   count: ReturnType<this["toCollection"]>["count"];
@@ -73,8 +73,8 @@ export interface TableCore<
     TGet,
     TDatabase,
     TInsert,
-    TPkey,
-    TPkey,
+    TPKey,
+    TPKey,
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths
@@ -85,7 +85,7 @@ export interface TableCore<
     TGet,
     TDatabase,
     TInsert,
-    TPkey,
+    TPKey,
     KeyForIndexPath<TDatabase, IndexPathForPath<TDatabase, TIndexPaths, Path>>,
     TKeyLookup,
     TDexie,
@@ -97,16 +97,16 @@ export interface TableCore<
     TGet,
     TDatabase,
     TInsert,
-    TPkey,
-    TPkey,
+    TPKey,
+    TPKey,
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
   reverse: ReturnType<this["toCollection"]>["reverse"];
 
-  delete(key: TPkey): PromiseExtended<void>;
-  bulkDelete(keys: TPkey[]): PromiseExtended<void>;
+  delete(key: TPKey): PromiseExtended<void>;
+  bulkDelete(keys: TPKey[]): PromiseExtended<void>;
   clear(): PromiseExtended<void>;
 
   // https://dexie.org/docs/Table/Table.update()
@@ -139,7 +139,7 @@ export interface TableCore<
     todo look at typing with dotted paths too
   */
   upsert(
-    key: TPkey,
+    key: TPKey,
     spec: UpsertSpec<TDatabase, TPKeyPathOrPaths>
   ): PromiseExtended<boolean>;
 }
@@ -151,13 +151,13 @@ export type TableBase<
   TInsert,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
-  TPkey,
+  TPKey,
   TDexie = any,
   TKeyLookup extends KeyLookup = PathRegistry<
     TDatabase,
     TIndexPaths,
     TPKeyPathOrPaths,
-    TPkey
+    TPKey
   >
 > = TableCore<
   TName,
@@ -166,7 +166,7 @@ export type TableBase<
   TInsert,
   TPKeyPathOrPaths,
   TIndexPaths,
-  TPkey,
+  TPKey,
   TKeyLookup,
   TDexie
 > &
@@ -174,7 +174,7 @@ export type TableBase<
     TGet,
     TDatabase,
     TInsert,
-    TPkey,
+    TPKey,
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths,

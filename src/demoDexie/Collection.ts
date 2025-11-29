@@ -71,18 +71,18 @@ export type Collection<
   >["where"];
 };
 
-export interface Cursor<TKey, TPkey> {
+export interface Cursor<TKey, TPKey> {
   key: TKey;
-  primaryKey: TPkey;
+  primaryKey: TPKey;
 }
 
-export interface EachKeyCallback<TKey, TCursorKey, TPkey> {
-  (key: TKey, cursor: Cursor<TCursorKey, TPkey>): any;
+export interface EachKeyCallback<TKey, TCursorKey, TPKey> {
+  (key: TKey, cursor: Cursor<TCursorKey, TPKey>): any;
 }
 
-export interface ChangeContext<TInsert, TPkey> {
+export interface ChangeContext<TInsert, TPKey> {
   value?: TInsert;
-  primkey: TPkey;
+  primkey: TPKey;
 }
 
 /*
@@ -91,11 +91,11 @@ export interface ChangeContext<TInsert, TPkey> {
   if you are replacing the object then it needs to be of type TInsert
   due to deleting value property in the ChangeContext has to be optional
 */
-export interface ChangeCallback<TDatabase, TInsert, TPkey> {
+export interface ChangeCallback<TDatabase, TInsert, TPKey> {
   (
-    this: ChangeContext<TInsert, TPkey>,
+    this: ChangeContext<TInsert, TPKey>,
     obj: TDatabase,
-    ctx: ChangeContext<TInsert, TPkey>
+    ctx: ChangeContext<TInsert, TPKey>
   ): void | boolean;
 }
 
@@ -103,7 +103,7 @@ interface CollectionBase<
   TGet,
   TDatabase,
   TInsert,
-  TPkey,
+  TPKey,
   TKey,
   TKeyLookup extends KeyLookup,
   TDexie,
@@ -116,7 +116,7 @@ interface CollectionBase<
     TGet,
     TDatabase,
     TInsert,
-    TPkey,
+    TPKey,
     TKey,
     TKeyLookup,
     TDexie,
@@ -142,19 +142,19 @@ interface CollectionBase<
     */
   // https://dexie.org/docs/Collection/Collection.each()
   each(
-    callback: (obj: TGet, cursor: Cursor<TKey, TPkey>) => any
+    callback: (obj: TGet, cursor: Cursor<TKey, TPKey>) => any
   ): PromiseExtended<void>;
   // https://dexie.org/docs/Collection/Collection.eachKey()
   // ***************
-  eachKey(callback: EachKeyCallback<TKey, TKey, TPkey>): PromiseExtended<void>;
+  eachKey(callback: EachKeyCallback<TKey, TKey, TPKey>): PromiseExtended<void>;
   // https://dexie.org/docs/Collection/Collection.eachUniqueKey()
   // ***************
   eachUniqueKey(
-    callback: EachKeyCallback<TKey, TKey, TPkey>
+    callback: EachKeyCallback<TKey, TKey, TPKey>
   ): PromiseExtended<void>;
 
   eachPrimaryKey(
-    callback: EachKeyCallback<TPkey, TKey, TPkey>
+    callback: EachKeyCallback<TPKey, TKey, TPKey>
   ): PromiseExtended<void>;
 
   keys(): PromiseExtended<TKey[]>;
@@ -162,8 +162,8 @@ interface CollectionBase<
   uniqueKeys(): PromiseExtended<TKey[]>;
   uniqueKeys<R>(thenShortcut: ThenShortcut<TKey[], R>): PromiseExtended<R>;
 
-  primaryKeys(): PromiseExtended<TPkey[]>;
-  primaryKeys<R>(thenShortcut: ThenShortcut<TPkey[], R>): PromiseExtended<R>;
+  primaryKeys(): PromiseExtended<TPKey[]>;
+  primaryKeys<R>(thenShortcut: ThenShortcut<TPKey[], R>): PromiseExtended<R>;
 
   first(): PromiseExtended<TGet | undefined>;
   first<R>(thenShortcut: ThenShortcut<TGet | undefined, R>): PromiseExtended<R>;
@@ -188,7 +188,7 @@ interface CollectionBase<
   delete(): PromiseExtended<number>;
   // https://dexie.org/docs/Collection/Collection.modify()
   modify(
-    changeCallback: ChangeCallback<TDatabase, TInsert, TPkey>
+    changeCallback: ChangeCallback<TDatabase, TInsert, TPKey>
   ): PromiseExtended<number>;
   modify<TMAXDEPTH extends string = Level2>(
     changes: UpdateSpec<TDatabase, TMAXDEPTH>
@@ -200,7 +200,7 @@ interface CollectionBase<
     TDatabase,
     TDatabase,
     TInsert,
-    TPkey,
+    TPKey,
     TKey,
     TKeyLookup,
     TDexie,
