@@ -2,7 +2,11 @@ import type { PromiseExtended, ThenShortcut } from "dexie";
 import type { DexieIndexPaths, IndexPathRegistry } from "./indexpaths";
 import type { KeyTypeForPath, WhereClause, WhereClauses } from "./where";
 import type { Level2, UpdateSpec } from "./UpdateSpec";
-import type { DexiePrimaryKeyPathOrPaths, PrimaryKeyId } from "./primarykey";
+import type {
+  DexiePrimaryKeyPathOrPaths,
+  PrimaryKeyId,
+  PrimaryKeyRegistry,
+} from "./primarykey";
 
 type Comparable =
   | number
@@ -48,7 +52,8 @@ export type Collection<
   TKey,
   TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>,
   TDexie,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TPKeyLookup extends PrimaryKeyRegistry<TPKeyPathOrPaths, TPKey>
 > = CollectionBase<
   TGet,
   TDatabase,
@@ -57,7 +62,8 @@ export type Collection<
   TKey,
   TKeyLookup,
   TDexie,
-  TPKeyPathOrPaths
+  TPKeyPathOrPaths,
+  TPKeyLookup
 > & {
   or: WhereClauses<
     TGet,
@@ -67,7 +73,8 @@ export type Collection<
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths,
-    TKey
+    TKey,
+    TPKeyLookup
   >["where"];
 };
 
@@ -107,7 +114,8 @@ interface CollectionBase<
   TKey,
   TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>,
   TDexie,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TPKeyLookup extends PrimaryKeyRegistry<TPKeyPathOrPaths, TPkey>
 > {
   db: TDexie;
   clone(
@@ -120,7 +128,8 @@ interface CollectionBase<
     TKey,
     TKeyLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TPKeyLookup
   >;
 
   count(): PromiseExtended<number>;
@@ -204,6 +213,7 @@ interface CollectionBase<
     TKey,
     TKeyLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TPKeyLookup
   >;
 }

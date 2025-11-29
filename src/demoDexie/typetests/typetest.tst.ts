@@ -860,6 +860,22 @@ describe("table base", () => {
       ]);
     });
 
+    it("should accept virtual compound primary key paths", () => {
+      const db = dexieFactory(
+        1,
+        {
+          table: tableBuilder<{ id1: number; id2: string; id3: Date }>()
+            .compoundKey("id1", "id2", "id3")
+            .build(),
+        },
+        ""
+      );
+      expect(db.table.where).type.toBeCallableWith(["id1", "id2", "id3"]);
+      expect(db.table.where).type.toBeCallableWith(["id1", "id2"]);
+      expect(db.table.where).type.toBeCallableWith("id1");
+      expect(db.table.where).type.not.toBeCallableWith(["id2", "id1"]);
+    });
+
     it("should have methods typed to the index type when using index", () => {
       const whereString = db.table.where("stringIndex");
       expect(whereString.above).type.toBeCallableWith("stringValue");

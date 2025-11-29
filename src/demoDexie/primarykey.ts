@@ -103,3 +103,53 @@ export type PromiseExtendedPKeyOrKeys<
 > = PromiseExtended<B extends true ? TPKey[] : TPKey>;
 
 export type PrimaryKeyId = ":id";
+
+type BuildPrimaryEntries<
+  Paths extends readonly any[],
+  KeyTypes extends readonly any[],
+  AccP extends any[] = [],
+  AccK extends any[] = []
+> = Paths extends readonly [infer HPath, ...infer RPaths extends readonly any[]]
+  ? HPath extends string
+    ? KeyTypes extends readonly [
+        infer HKey,
+        ...infer RKeys extends readonly any[]
+      ]
+      ? AccP extends []
+        ? [
+            { path: HPath; keyType: HKey },
+            ...BuildPrimaryEntries<
+              readonly [...RPaths],
+              readonly [...RKeys],
+              [HPath],
+              [HKey]
+            >
+          ]
+        : [
+            { path: [...AccP, HPath]; keyType: [...AccK, HKey] },
+            ...BuildPrimaryEntries<
+              readonly [...RPaths],
+              readonly [...RKeys],
+              [...AccP, HPath],
+              [...AccK, HKey]
+            >
+          ]
+      : []
+    : []
+  : [];
+
+export type PrimaryKeyRegistry<
+  TPKeyPathOrPaths extends string | readonly string[],
+  TPrimaryKeyTypes
+> = [TPrimaryKeyTypes] extends [never]
+  ? readonly []
+  : TPKeyPathOrPaths extends readonly string[]
+  ? TPrimaryKeyTypes extends readonly any[]
+    ? BuildPrimaryEntries<
+        Extract<TPKeyPathOrPaths, readonly string[]>,
+        Extract<TPrimaryKeyTypes, readonly any[]>
+      >
+    : readonly []
+  : TPKeyPathOrPaths extends string
+  ? readonly [{ path: TPKeyPathOrPaths; keyType: TPrimaryKeyTypes }]
+  : readonly [];

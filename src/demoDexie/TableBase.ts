@@ -16,6 +16,7 @@ import type {
   DexiePrimaryKeyPathOrPaths,
   PrimaryKey,
   PrimaryKeyId,
+  PrimaryKeyRegistry,
 } from "./primarykey";
 import type { TableHooks } from "./TableHooks";
 import type { Level2, UpdateSpec } from "./UpdateSpec";
@@ -32,7 +33,8 @@ export interface TableCore<
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TPkey,
   TKeyLookup extends IndexPathRegistry<TDatabase, TIndexPaths>,
-  TDexie
+  TDexie,
+  TPKeyLookup extends PrimaryKeyRegistry<TPKeyPathOrPaths, TPkey>
 > {
   db: TDexie;
   lookup: TKeyLookup;
@@ -67,7 +69,8 @@ export interface TableCore<
     TPkey,
     TKeyLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TPKeyLookup
   >;
   orderBy<Path extends IndexPath<TDatabase, TIndexPaths[number]>>(
     index: Path
@@ -79,7 +82,8 @@ export interface TableCore<
     KeyForIndexPath<TDatabase, IndexPathForPath<TDatabase, TIndexPaths, Path>>,
     TKeyLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TPKeyLookup
   >;
   orderBy(
     id: PrimaryKeyId
@@ -91,7 +95,8 @@ export interface TableCore<
     TPkey,
     TKeyLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TPKeyLookup
   >;
   reverse: ReturnType<this["toCollection"]>["reverse"];
 
@@ -145,7 +150,11 @@ export type TableBase<
   TKeyLookup extends IndexPathRegistry<
     TDatabase,
     TIndexPaths
-  > = IndexPathRegistry<TDatabase, TIndexPaths>
+  > = IndexPathRegistry<TDatabase, TIndexPaths>,
+  TPKeyLookup extends PrimaryKeyRegistry<
+    TPKeyPathOrPaths,
+    TPkey
+  > = PrimaryKeyRegistry<TPKeyPathOrPaths, TPkey>
 > = TableCore<
   TName,
   TGet,
@@ -155,7 +164,8 @@ export type TableBase<
   TIndexPaths,
   TPkey,
   TKeyLookup,
-  TDexie
+  TDexie,
+  TPKeyLookup
 > &
   WhereClauses<
     TGet,
@@ -165,5 +175,6 @@ export type TableBase<
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths,
-    undefined
+    undefined,
+    TPKeyLookup
   >;
