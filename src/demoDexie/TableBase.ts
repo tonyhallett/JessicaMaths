@@ -30,7 +30,7 @@ type PathRegistry<
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TPKey
-> = [
+> = readonly [
   ...IndexPathRegistry<TDatabase, TIndexPaths>,
   ...PrimaryKeyRegistry<TPKeyPathOrPaths, TPKey>
 ];

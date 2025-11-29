@@ -31,14 +31,14 @@ export type WhereClauses<
     TCollectionKey
   >;
   // includes virtual indexes
-  where<TIndex extends TKeyLookup[number]["path"]>(
-    indexOrPrimaryKeyPath: TIndex
+  where<TPath extends TKeyLookup[number]["path"]>(
+    indexOrPrimaryKeyPath: TPath
   ): WhereClause<
     TGet,
     TDatabase,
     TInsert,
     TPKey,
-    KeyTypeForPath<TKeyLookup, TIndex>,
+    KeyTypeForPath<TKeyLookup, TPath>,
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths,
