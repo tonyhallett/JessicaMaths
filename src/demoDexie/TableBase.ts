@@ -164,5 +164,6 @@ export type TableBase<
     TPkey,
     TKeyLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    undefined
   >;

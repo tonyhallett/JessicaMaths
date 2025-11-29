@@ -66,7 +66,8 @@ export type Collection<
     TPKey,
     TKeyLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TKey
   >["where"];
 };
 

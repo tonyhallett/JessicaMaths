@@ -14,7 +14,8 @@ export type WhereClauses<
   TPKey,
   TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>,
   TDexie,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TCollectionKey
 > = {
   where(
     primaryKey: TPKeyPathOrPaths
@@ -26,7 +27,8 @@ export type WhereClauses<
     TPKey,
     TKeyLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TCollectionKey
   >;
   where(
     primaryKeyId: PrimaryKeyId
@@ -38,7 +40,8 @@ export type WhereClauses<
     TPKey,
     TKeyLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TCollectionKey
   >;
   where<TIndex extends TKeyLookup[number]["path"]>(
     index: TIndex
@@ -50,9 +53,14 @@ export type WhereClauses<
     KeyTypeForPath<TKeyLookup, TIndex>,
     TKeyLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TCollectionKey
   >;
 };
+
+type CollectionKey<TCurrent, TKey> = [TCurrent] extends [undefined]
+  ? TKey
+  : TCurrent | TKey;
 
 export type WhereClause<
   TGet,
@@ -62,7 +70,8 @@ export type WhereClause<
   TKey,
   TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>,
   TDexie,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TCollectionKey // this will union with TKey
 > = WhereClauseNonStrings<
   TGet,
   TDatabase,
@@ -71,7 +80,8 @@ export type WhereClause<
   TKey,
   TKeyLookup,
   TDexie,
-  TPKeyPathOrPaths
+  TPKeyPathOrPaths,
+  CollectionKey<TCollectionKey, TKey> // necessary due to Collection or
 > & { db: TDexie } & (Extract<TKey, string> extends never
     ? {}
     : WhereStringClause<
@@ -81,7 +91,8 @@ export type WhereClause<
         TPkey,
         TKeyLookup,
         TDexie,
-        TPKeyPathOrPaths
+        TPKeyPathOrPaths,
+        CollectionKey<TCollectionKey, string> // necessary due to Collection or
       >);
 export interface WhereClauseNonStrings<
   TGet,
@@ -91,7 +102,8 @@ export interface WhereClauseNonStrings<
   TKey,
   TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>,
   TDexie,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TCollectionKey
 > {
   /*
     above, aboveOrEqual, below, belowOrEqual, between and equals all create dexie DBCoreKeyRange
@@ -123,7 +135,7 @@ export interface WhereClauseNonStrings<
     TDatabase,
     TInsert,
     TPkey,
-    TKey,
+    TCollectionKey,
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths
@@ -136,7 +148,7 @@ export interface WhereClauseNonStrings<
     TDatabase,
     TInsert,
     TPkey,
-    TKey,
+    TCollectionKey,
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths
@@ -149,7 +161,7 @@ export interface WhereClauseNonStrings<
     TDatabase,
     TInsert,
     TPkey,
-    TKey,
+    TCollectionKey,
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths
@@ -162,7 +174,7 @@ export interface WhereClauseNonStrings<
     TDatabase,
     TInsert,
     TPkey,
-    TKey,
+    TCollectionKey,
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths
@@ -175,7 +187,7 @@ export interface WhereClauseNonStrings<
     TDatabase,
     TInsert,
     TPkey,
-    TKey,
+    TCollectionKey,
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths
@@ -188,7 +200,7 @@ export interface WhereClauseNonStrings<
     TDatabase,
     TInsert,
     TPkey,
-    TKey,
+    TCollectionKey,
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths
@@ -203,7 +215,8 @@ export interface WhereClauseNonStrings<
     TKey,
     TKeyLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TCollectionKey
   >;
   // https://dexie.org/docs/WhereClause/WhereClause.notEqual()
   notEqual(
@@ -213,7 +226,7 @@ export interface WhereClauseNonStrings<
     TDatabase,
     TInsert,
     TPkey,
-    TKey,
+    TCollectionKey,
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths
@@ -227,7 +240,8 @@ export interface WhereClauseNonStrings<
     TKey,
     TKeyLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TCollectionKey
   >;
 
   // https://dexie.org/docs/WhereClause/WhereClause.inAnyRange()
@@ -242,7 +256,7 @@ export interface WhereClauseNonStrings<
     TDatabase,
     TInsert,
     TPkey,
-    TKey,
+    TCollectionKey,
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths
@@ -256,14 +270,15 @@ interface Prefixes<
   TPkey,
   TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>,
   TDexie,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TCollectionKey
 > {
   (prefixes: string[]): Collection<
     TGet,
     TDatabase,
     TInsert,
     TPkey,
-    string,
+    TCollectionKey,
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths
@@ -273,7 +288,7 @@ interface Prefixes<
     TDatabase,
     TInsert,
     TPkey,
-    string,
+    TCollectionKey,
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths
@@ -288,14 +303,15 @@ interface ValuesOf<
   Key,
   TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>,
   TDexie,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TCollectionKey
 > {
   (values: readonly Key[]): Collection<
     TGet,
     TDatabase,
     TInsert,
     TPkey,
-    Key,
+    TCollectionKey,
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths
@@ -319,7 +335,8 @@ interface WhereStringClause<
   TPkey,
   TKeyLookup extends IndexPathRegistry<TDatabase, DexieIndexPaths<TDatabase>>,
   TDexie,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TCollectionKey
 > {
   //https://dexie.org/docs/WhereClause/WhereClause.anyOfIgnoreCase()
   anyOfIgnoreCase: ValuesOf<
@@ -327,10 +344,11 @@ interface WhereStringClause<
     TDatabase,
     TInsert,
     TPkey,
-    string,
+    TCollectionKey,
     TKeyLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TCollectionKey
   >;
 
   // https://dexie.org/docs/WhereClause/WhereClause.equalsIgnoreCase()
@@ -341,7 +359,7 @@ interface WhereStringClause<
     TDatabase,
     TInsert,
     TPkey,
-    string,
+    TCollectionKey,
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths
@@ -355,7 +373,7 @@ interface WhereStringClause<
     TDatabase,
     TInsert,
     TPkey,
-    string,
+    TCollectionKey,
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths
@@ -368,7 +386,7 @@ interface WhereStringClause<
     TDatabase,
     TInsert,
     TPkey,
-    string,
+    TCollectionKey,
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths
@@ -381,7 +399,8 @@ interface WhereStringClause<
     TPkey,
     TKeyLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TCollectionKey
   >;
 
   // https://dexie.org/docs/WhereClause/WhereClause.startsWithAnyOfIgnoreCase()
@@ -392,6 +411,7 @@ interface WhereStringClause<
     TPkey,
     TKeyLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TCollectionKey
   >;
 }

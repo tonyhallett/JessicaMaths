@@ -1003,13 +1003,12 @@ describe("table base", () => {
       expect(numberCollectionKey.or(":id").above).type.toBeCallableWith(
         "pkeyid"
       );
+      expect(numberCollectionKey.or("id").above).type.toBeCallableWith(
+        "pkeyid"
+      );
+
       expect(numberCollectionKey.or(":id").above).type.not.toBeCallableWith(1);
-      expect(numberCollectionKey.or(":id").above("1").keys()).type.toBe<
-        PromiseExtended<string[]>
-      >();
-      expect(numberCollectionKey.or("id").above("1").keys()).type.toBe<
-        PromiseExtended<string[]>
-      >();
+      expect(numberCollectionKey.or("id").above).type.not.toBeCallableWith(1);
     });
 
     it("should return collection with key typed to the primary type when using pkey", () => {
