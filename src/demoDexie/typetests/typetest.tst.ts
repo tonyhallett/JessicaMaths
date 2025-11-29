@@ -1007,6 +1007,9 @@ describe("table base", () => {
       expect(numberCollectionKey.or(":id").above("1").keys()).type.toBe<
         PromiseExtended<string[]>
       >();
+      expect(numberCollectionKey.or("id").above("1").keys()).type.toBe<
+        PromiseExtended<string[]>
+      >();
     });
 
     it("should return collection with key typed to the primary type when using pkey", () => {

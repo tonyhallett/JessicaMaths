@@ -71,6 +71,18 @@ export type Collection<
     TDexie,
     TPKeyPathOrPaths
   >;
+  or(
+    primaryKey: TPKeyPathOrPaths
+  ): WhereClause<
+    TGet,
+    TDatabase,
+    TInsert,
+    TPKey,
+    TPKey,
+    TKeyLookup,
+    TDexie,
+    TPKeyPathOrPaths
+  >;
   or<TIndex extends TKeyLookup[number]["path"]>(
     index: TIndex
   ): WhereClause<
