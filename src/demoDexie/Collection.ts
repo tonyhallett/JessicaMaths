@@ -1,6 +1,6 @@
 import type { PromiseExtended, ThenShortcut } from "dexie";
 import type { DexieIndexPaths, IndexPathRegistry } from "./indexpaths";
-import type { KeyTypeForPath, WhereClause } from "./where";
+import type { KeyTypeForPath, WhereClause, WhereClauses } from "./where";
 import type { Level2, UpdateSpec } from "./UpdateSpec";
 import type { DexiePrimaryKeyPathOrPaths, PrimaryKeyId } from "./primarykey";
 
@@ -59,42 +59,15 @@ export type Collection<
   TDexie,
   TPKeyPathOrPaths
 > & {
-  or(
-    primaryKeyId: PrimaryKeyId
-  ): WhereClause<
+  or: WhereClauses<
     TGet,
     TDatabase,
     TInsert,
     TPKey,
-    TPKey,
     TKeyLookup,
     TDexie,
     TPKeyPathOrPaths
-  >;
-  or(
-    primaryKey: TPKeyPathOrPaths
-  ): WhereClause<
-    TGet,
-    TDatabase,
-    TInsert,
-    TPKey,
-    TPKey,
-    TKeyLookup,
-    TDexie,
-    TPKeyPathOrPaths
-  >;
-  or<TIndex extends TKeyLookup[number]["path"]>(
-    index: TIndex
-  ): WhereClause<
-    TGet,
-    TDatabase,
-    TInsert,
-    TPKey,
-    KeyTypeForPath<TKeyLookup, TIndex>,
-    TKeyLookup,
-    TDexie,
-    TPKeyPathOrPaths
-  >;
+  >["where"];
 };
 
 export interface Cursor<TKey, TPkey> {

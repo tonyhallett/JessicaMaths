@@ -1021,7 +1021,11 @@ describe("table base", () => {
         1,
         {
           compound: tableBuilder<TableItem>().compoundKey("id1", "id2").build(),
-          inbound: tableBuilder<TableItem>().hiddenAuto().build(),
+          inbound: tableBuilder<TableItem>()
+            .hiddenAuto()
+            .index("id1")
+            .index("id2")
+            .build(),
         },
         ""
       );
@@ -1039,6 +1043,11 @@ describe("table base", () => {
         .each((item, cursor) => {
           expect(cursor.key).type.toBe<number>();
         });
+
+      // should be a union of keys when or
+      expect(
+        db.inbound.where("id1").equals("value").or("id2").equals(42).keys()
+      ).type.toBe<PromiseExtended<(string | number)[]>>();
     });
 
     it("should return collection with the primary key type", () => {
