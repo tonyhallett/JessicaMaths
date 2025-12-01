@@ -30,7 +30,7 @@ export interface TableConfig<
   TInsert = TDatabase,
   TOutboundPKey extends IndexableType = never
 > {
-  readonly pk: { key: TPKeyPathOrPaths; auto: TAuto };
+  readonly pk: { key: string; auto: TAuto };
   readonly indicesSchema: string;
   readonly mapToClass?: ConstructorOf<TDatabase>;
 }
@@ -281,6 +281,10 @@ type InboundAutoIncrementKeyPath<
     : never
   : never;
 
+function creteCompoundSchemaPart(keys: string[]): string {
+  return `[${keys.join("+")}]`;
+}
+
 function createTableBuilder<
   TDatabase,
   TGet,
@@ -367,7 +371,7 @@ function createTableBuilder<
           return duplicateKeysErrorInstance;
         }
         return (
-          addIfNotDuplicatePart(`[${(keys as string[]).join("+")}]`) ||
+          addIfNotDuplicatePart(creteCompoundSchemaPart(keys)) ||
           (createIndexMethods(
             key,
             auto,
@@ -378,6 +382,10 @@ function createTableBuilder<
         );
       },
       build() {
+        const primaryKeyPart =
+          typeof key === "string"
+            ? key
+            : creteCompoundSchemaPart(key as string[]);
         if (mapToClass) {
           const mapToClasstableConfig: TableConfig<
             TDatabase,
@@ -386,7 +394,7 @@ function createTableBuilder<
             TIndexPaths,
             TGet
           > = {
-            pk: { key, auto },
+            pk: { key: primaryKeyPart, auto },
             indicesSchema: indexParts.join(", "),
             mapToClass,
           };
@@ -400,7 +408,7 @@ function createTableBuilder<
           TIndexPaths,
           TGet
         > = {
-          pk: { key, auto },
+          pk: { key: primaryKeyPart, auto },
           indicesSchema: indexParts.join(", "),
         };
         return tableConfig;

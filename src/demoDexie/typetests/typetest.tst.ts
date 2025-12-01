@@ -1064,6 +1064,7 @@ describe("table base", () => {
       expect(
         stringCollectionKey.or(["compound1", "compound2"]).equals
       ).type.toBeCallableWith(["a", 1]);
+
       expect(numberCollectionKey.or(":id").above).type.toBeCallableWith(
         "pkeyid"
       );

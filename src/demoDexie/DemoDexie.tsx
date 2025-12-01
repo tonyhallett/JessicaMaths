@@ -72,6 +72,11 @@ export const DemoDexie = () => {
           },
         ]);
 
+        const primaryId = await db.demo.where(":id").equals([1, "1"]).first();
+        const idShortcut = await (
+          db.demo.where({ ":id": [1, "1"] } as any) as any
+        ).first();
+
         const compoundVirtualSingularPk = await (
           db.demo.where({ pkNumber: 1 } as any) as any
         ).first();

@@ -7,7 +7,7 @@ type KeyTypeForPath<TPathLookup extends KeyLookup, TPath> = Extract<
   { path: TPath }
 >["keyType"];
 
-export interface WhereClauses<
+export type WhereClauses<
   TGet,
   TDatabase,
   TInsert,
@@ -16,8 +16,7 @@ export interface WhereClauses<
   TDexie,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TCollectionKey
-> {
-  // includes virtual indexes
+> = {
   where<TPath extends TKeyLookup[number]["path"]>(
     indexOrPrimaryKeyPath: TPath
   ): WhereClause<
@@ -31,11 +30,13 @@ export interface WhereClauses<
     TPKeyPathOrPaths,
     TCollectionKey
   >;
-}
+};
 
 type CollectionKey<TCurrent, TKey> = [TCurrent] extends [undefined]
   ? TKey
   : TCurrent | TKey;
+
+export type PathsOf<Lookup extends KeyLookup> = Lookup[number]["path"];
 
 export type WhereClause<
   TGet,
