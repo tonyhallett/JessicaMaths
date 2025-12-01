@@ -16,7 +16,7 @@ export type MultiIndexPath<T, P extends string> = {
     : KeyPathValue<T, P>;
 };
 
-type CompoundKeyPathsAsStr = [string, string, ...string[]];
+export type CompoundKeyPathsAsStr = [string, string, ...string[]];
 
 export type CompoundIndexPaths<T, PS extends CompoundKeyPathsAsStr> = {
   paths: PS;
