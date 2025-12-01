@@ -3,6 +3,7 @@ import type {
   CompoundKeyPaths,
   ValidIndexedDBKeyPath,
 } from "./ValidIndexedDBKeyPaths";
+import type { PathWithKey } from "./utilitytypes";
 
 export type DexiePrimaryKeyPathOrPaths<T> =
   | ValidIndexedDBKeyPath<T>
@@ -117,7 +118,7 @@ type BuildPrimaryEntries<
       ]
       ? AccP extends []
         ? [
-            { path: HPath; keyType: HKey },
+            PathWithKey<HPath, HKey>,
             ...BuildPrimaryEntries<
               readonly [...RPaths],
               readonly [...RKeys],
@@ -126,7 +127,7 @@ type BuildPrimaryEntries<
             >
           ]
         : [
-            { path: [...AccP, HPath]; keyType: [...AccK, HKey] },
+            PathWithKey<[...AccP, HPath], [...AccK, HKey]>,
             ...BuildPrimaryEntries<
               readonly [...RPaths],
               readonly [...RKeys],
@@ -151,5 +152,5 @@ export type PrimaryKeyRegistry<
       >
     : readonly []
   : TPKeyPathOrPaths extends string
-  ? readonly [{ path: TPKeyPathOrPaths; keyType: TPrimaryKeyTypes }]
+  ? readonly [PathWithKey<TPKeyPathOrPaths, TPrimaryKeyTypes>]
   : readonly [];

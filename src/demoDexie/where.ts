@@ -1,5 +1,5 @@
 import type { Collection } from "./Collection";
-import type { DexiePrimaryKeyPathOrPaths, PrimaryKeyId } from "./primarykey";
+import type { DexiePrimaryKeyPathOrPaths } from "./primarykey";
 import type { KeyLookup } from "./utilitytypes";
 
 type KeyTypeForPath<TPathLookup extends KeyLookup, TPath> = Extract<

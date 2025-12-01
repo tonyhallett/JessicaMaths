@@ -1,5 +1,5 @@
 import type { KeyPathValue } from "dexie";
-import type { First } from "./utilitytypes";
+import type { First, PathWithKey } from "./utilitytypes";
 
 declare const KeyTypeBrand: unique symbol;
 export type SingleIndexPath<T, P extends string> = {
@@ -51,9 +51,9 @@ type Accumulate<
     ? // If RestPaths is a single-element tuple, include the current Paths (length 2)
       // and stop (single element handled separately).
       RestPaths extends readonly [any]
-      ? { path: Paths; keyType: Brand }
+      ? PathWithKey<Paths, Brand>
       : // Otherwise include current full tuple and recurse dropping the last element.
-        { path: Paths; keyType: Brand } | Accumulate<RestBrand, RestPaths>
+        PathWithKey<Paths, Brand> | Accumulate<RestBrand, RestPaths>
     : never
   : never;
 
@@ -65,20 +65,16 @@ export type IndexPathRegistry<
     path: infer P;
     [KeyTypeBrand]?: infer Brand;
   }
-    ? {
+    ? PathWithKey<P, Brand> /*  {
         path: P;
         keyType: Brand;
-      }
+      } */
     : TIndexPaths[K] extends {
         paths: infer Paths extends readonly string[];
         [KeyTypeBrand]?: infer Brand extends readonly any[];
       }
     ? // note that single entry array is not supported
-      | {
-            path: First<Paths>;
-            keyType: First<Brand>;
-          }
-        | Accumulate<Brand, Paths>
+      PathWithKey<First<Paths>, First<Brand>> | Accumulate<Brand, Paths>
     : never;
 };
 
