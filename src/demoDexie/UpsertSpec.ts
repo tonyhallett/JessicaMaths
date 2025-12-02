@@ -5,7 +5,7 @@ import type {
 import type { PropModificationTyped } from "./propmodifications";
 
 export type DeepPropertyOrModification<T> = T extends object
-  ? T extends (...args: any[]) => any // Method
+  ? T extends (...args: any[]) => any
     ? T
     : T extends Array<any>
     ? T | PropModificationTyped<T>

@@ -543,6 +543,54 @@ describe("table base", () => {
     expect(db.leafPropertyTable.get).type.toBeCallableWith(5);
   });
 
+  it("should get with equality", () => {
+    interface TableItem {
+      id: string;
+      compound1: string;
+      compound2: number;
+      compound3: Date;
+    }
+    interface TableCompoundPKeyItem {
+      pkString: string;
+      pkNumber: number;
+      compound1: string;
+      compound2: number;
+      compound3: Date;
+    }
+    const db = dexieFactory(
+      1,
+      {
+        table: tableBuilder<TableItem>()
+          .primaryKey("id")
+          .compound("compound1", "compound2", "compound3")
+          .build(),
+        tableCompoundPk: tableBuilder<TableCompoundPKeyItem>()
+          .compoundKey("pkString", "pkNumber")
+          .build(),
+      },
+      ""
+    );
+    expect(db.table.get({ compound1: "value" })).type.toBe<
+      PromiseExtended<TableItem | undefined>
+    >();
+    expect(db.table.get({ compound1: "value", compound2: 42 })).type.toBe<
+      PromiseExtended<TableItem | undefined>
+    >();
+    expect(
+      db.table.get({ compound1: "value", compound2: 42, compound3: new Date() })
+    ).type.toBe<PromiseExtended<TableItem | undefined>>();
+    expect(db.table.get({ id: "value" })).type.toBe<
+      PromiseExtended<TableItem | undefined>
+    >();
+
+    expect(
+      db.tableCompoundPk.get({ pkString: "value", pkNumber: 42 })
+    ).type.toBe<PromiseExtended<TableCompoundPKeyItem | undefined>>();
+    expect(db.tableCompoundPk.get({ pkString: "value" })).type.toBe<
+      PromiseExtended<TableCompoundPKeyItem | undefined>
+    >();
+  });
+
   it("should get the correct type", () => {
     expect(db.string.get("stringId")).type.toBe<
       PromiseExtended<StringId | undefined>
@@ -973,6 +1021,57 @@ describe("table base", () => {
       );
       db.table.where("index1").equals(123);
       db.table.where(["index1", "index2"]).equals([123, "stringValue"]);
+    });
+
+    describe("where equality", () => {
+      it("should accept single index object", () => {
+        db.table.where({ stringIndex: "value" }).each((item, cursor) => {
+          expect(cursor.key).type.toBe<string>();
+        });
+        expect(db.table.where).type.not.toBeCallableWith({ stringIndex: 42 });
+        expect(db.table.where).type.not.toBeCallableWith({ notAnIndex: 123 });
+      });
+      it("should accept compound index object", () => {
+        interface TableItem {
+          id: string;
+          compound1: string;
+          compound2: number;
+          compound3: Date;
+        }
+        const db = dexieFactory(
+          1,
+          {
+            table: tableBuilder<TableItem, "I">()
+              .primaryKey("id")
+              .compound("compound1", "compound2", "compound3")
+              .build(),
+          },
+          ""
+        );
+        db.table
+          .where({ compound1: "a", compound2: 1, compound3: new Date() })
+          .each((item, cursor) => {
+            expect(cursor.key).type.toBe<[string, number, Date]>();
+          });
+        // virtual multiple
+        db.table
+          .where({ compound1: "a", compound2: 1 })
+          .each((item, cursor) => {
+            expect(cursor.key).type.toBe<[string, number]>();
+          });
+
+        db.table
+          .where({ compound2: 1, compound1: "a" })
+          .each((item, cursor) => {
+            expect(cursor.key).type.toBe<[string, number]>();
+          });
+
+        // virtual singular
+        db.table.where({ compound1: "a" }).each((item, cursor) => {
+          expect(cursor.key).type.toBe<string>();
+        });
+        expect(db.table.where).type.not.toBeCallableWith({ compound2: 1 });
+      });
     });
 
     it("should return collection with key typed to the index type when using index", () => {

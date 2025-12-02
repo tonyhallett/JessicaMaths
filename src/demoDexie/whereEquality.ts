@@ -4,23 +4,28 @@ type CompoundType<T extends readonly any[]> = T extends readonly [infer Only]
   ? Only
   : T;
 
-type CompoundKeyLookupUnion<
+type CompoundKeyLookupArray<
   Keys extends readonly string[],
   Values extends readonly any[],
   AccObj extends object = {},
-  AccTuple extends readonly any[] = []
+  AccTuple extends readonly any[] = [],
+  Out extends readonly any[] = []
 > = Keys extends [infer K extends string, ...infer RestKeys extends string[]]
   ? Values extends [infer V, ...infer RestValues]
-    ? // next accumulated object and tuple
-      AccObj & { [P in K]: V } extends infer NextObj extends object
-      ? [...AccTuple, V] extends infer NextTuple extends readonly any[]
-        ? // union: this level OR recurse
-          | { equality: Flatten<NextObj>; keyType: CompoundType<NextTuple> }
-            | CompoundKeyLookupUnion<RestKeys, RestValues, NextObj, NextTuple>
-        : never
-      : never
-    : never
-  : never;
+    ? AccObj & { [P in K]: V } extends infer NextObj extends object
+      ? CompoundKeyLookupArray<
+          RestKeys,
+          RestValues,
+          NextObj,
+          [...AccTuple, V],
+          [
+            ...Out,
+            EqualityKeyType<Flatten<NextObj>, CompoundType<[...AccTuple, V]>>
+          ]
+        >
+      : Out
+    : Out
+  : Out;
 
 type Flatten<T> = {
   [K in keyof T]: T[K];
@@ -29,39 +34,50 @@ type Flatten<T> = {
 type PKValueTuple<TPkey extends any | readonly any[]> =
   TPkey extends readonly any[] ? TPkey : never;
 
-type PkLookupEquality<
+export type WhereEqualityRegistry<
+  TDatabase,
+  TDexieIndexPaths extends DexieIndexPaths<TDatabase>,
+  TPKeyPathOrPaths extends string | readonly string[] | never,
+  TPkey extends any | readonly any[]
+> = readonly [
+  ...PkEqualityEntries<TPKeyPathOrPaths, TPkey>,
+  ...IndexEqualityArray<TDatabase, TDexieIndexPaths>
+];
+
+type PkEqualityEntries<
   TPKeyPathOrPaths extends string | readonly string[],
   TPkey extends any | readonly any[]
 > = TPKeyPathOrPaths extends string
-  ? { equality: { [K in TPKeyPathOrPaths]: TPkey }; keyType: [TPkey] }
+  ? readonly [EqualityKeyType<{ [K in TPKeyPathOrPaths]: TPkey }, TPkey>]
   : TPKeyPathOrPaths extends readonly string[]
-  ? CompoundKeyLookupUnion<TPKeyPathOrPaths, PKValueTuple<TPkey>>
-  : never;
+  ? CompoundKeyLookupArray<TPKeyPathOrPaths, PKValueTuple<TPkey>>
+  : readonly [];
 
-export type WhereEqualityLookup<
+type IndexEqualityArray<
   TDatabase,
-  TDexieIndexPaths extends DexieIndexPaths<TDatabase>,
-  TPKeyPathOrPaths extends string | readonly string[],
-  TPkey extends any | readonly any[]
-> = [TPkey] extends [never]
-  ? EqualityLookupFromDexieIndexPaths<TDatabase, TDexieIndexPaths>
-  :
-      | PkLookupEquality<TPKeyPathOrPaths, TPkey>
-      | EqualityLookupFromDexieIndexPaths<TDatabase, TDexieIndexPaths>;
-
-export type EqualityLookupFromDexieIndexPaths<
-  TDatabase,
-  TPaths extends DexieIndexPaths<TDatabase>
-> = {
-  [I in keyof TPaths]: TPaths[I] extends {
-    path: infer P;
-    [KeyTypeBrand]?: infer K;
-  }
-    ? { equality: { [KPath in P & string]: K }; keyType: K }
-    : TPaths[I] extends {
+  TPaths extends DexieIndexPaths<TDatabase>,
+  Out extends readonly EqualityKeyType<any, any>[] = []
+> = TPaths extends [infer H, ...infer R extends DexieIndexPaths<TDatabase>]
+  ? H extends { path: infer P extends string; [KeyTypeBrand]?: infer K }
+    ? IndexEqualityArray<
+        TDatabase,
+        R,
+        [...Out, EqualityKeyType<{ [KPath in P]: K }, CompoundType<[K]>>]
+      >
+    : H extends {
         paths: infer PS extends readonly string[];
-        [KeyTypeBrand]?: infer K extends readonly any[];
+        [KeyTypeBrand]?: infer KS extends readonly any[];
       }
-    ? CompoundKeyLookupUnion<PS, K>
-    : never;
-}[number];
+    ? IndexEqualityArray<
+        TDatabase,
+        R,
+        [...Out, ...CompoundKeyLookupArray<PS, KS>]
+      >
+    : IndexEqualityArray<TDatabase, R, Out>
+  : Out;
+
+export type EqualityKeyType<TEquality, TKey> = {
+  readonly equality: TEquality;
+  readonly keyType: TKey;
+};
+export type EqualityKeyTypes = readonly EqualityKeyType<any, any>[];

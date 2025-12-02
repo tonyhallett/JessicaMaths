@@ -1,34 +1,70 @@
 import type { Collection } from "./Collection";
 import type { DexiePrimaryKeyPathOrPaths } from "./primarykey";
 import type { PathKeyTypes } from "./utilitytypes";
+import type { EqualityKeyTypes } from "./whereEquality";
 
 type KeyTypeForPath<TPathLookup extends PathKeyTypes, TPath> = Extract<
   TPathLookup[number],
   { path: TPath }
 >["keyType"];
 
+type IsExactly<A, B> = (<T>() => T extends A ? 1 : 2) extends <
+  T
+>() => T extends B ? 1 : 2
+  ? true
+  : false;
+
+type KeyTypeForEquality<
+  TLookup extends readonly { equality: any; keyType: any }[],
+  TEquality
+> = TLookup[number] extends infer Entry
+  ? Entry extends { equality: infer E; keyType: infer K }
+    ? IsExactly<E, TEquality> extends true
+      ? K
+      : never
+    : never
+  : never;
+
 export type WhereClauses<
   TGet,
   TDatabase,
   TInsert,
   TPKey,
-  TPathKeyTypes extends PathKeyTypes,
+  TWherePathKeyTypes extends PathKeyTypes,
+  TWhereEqualityKeyTypes extends EqualityKeyTypes,
   TDexie,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TCollectionKey
 > = {
-  where<TPath extends TPathKeyTypes[number]["path"]>(
+  where<TPath extends TWherePathKeyTypes[number]["path"]>(
     indexOrPrimaryKeyPath: TPath
   ): WhereClause<
     TGet,
     TDatabase,
     TInsert,
     TPKey,
-    KeyTypeForPath<TPathKeyTypes, TPath>,
-    TPathKeyTypes,
+    KeyTypeForPath<TWherePathKeyTypes, TPath>,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths,
     TCollectionKey
+  >;
+  where<TEquality extends TWhereEqualityKeyTypes[number]["equality"]>(
+    equality: TEquality
+  ): Collection<
+    TGet,
+    TDatabase,
+    TInsert,
+    TPKey,
+    CollectionKey<
+      TCollectionKey,
+      KeyTypeForEquality<TWhereEqualityKeyTypes, TEquality>
+    >,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
+    TDexie,
+    TPKeyPathOrPaths
   >;
 };
 
@@ -44,7 +80,8 @@ export type WhereClause<
   TInsert,
   TPKey,
   TKey,
-  TPathKeyTypes extends PathKeyTypes,
+  TWherePathKeyTypes extends PathKeyTypes,
+  TWhereEqualityKeyTypes extends EqualityKeyTypes,
   TDexie,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TCollectionKey // this will union with TKey,
@@ -54,7 +91,8 @@ export type WhereClause<
   TInsert,
   TPKey,
   TKey,
-  TPathKeyTypes,
+  TWherePathKeyTypes,
+  TWhereEqualityKeyTypes,
   TDexie,
   TPKeyPathOrPaths,
   CollectionKey<TCollectionKey, TKey> // necessary due to Collection or,
@@ -65,7 +103,8 @@ export type WhereClause<
         TDatabase,
         TInsert,
         TPKey,
-        TPathKeyTypes,
+        TWherePathKeyTypes,
+        TWhereEqualityKeyTypes,
         TDexie,
         TPKeyPathOrPaths,
         CollectionKey<TCollectionKey, string> // necessary due to Collection or
@@ -76,7 +115,8 @@ export interface WhereClauseNonStrings<
   TInsert,
   TPKey,
   TKey,
-  TPathKeyTypes extends PathKeyTypes,
+  TWherePathKeyTypes extends PathKeyTypes,
+  TWhereEqualityKeyTypes extends EqualityKeyTypes,
   TDexie,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TCollectionKey
@@ -112,7 +152,8 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TCollectionKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -125,7 +166,8 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TCollectionKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -138,7 +180,8 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TCollectionKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -151,7 +194,8 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TCollectionKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -164,7 +208,8 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TCollectionKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -177,7 +222,8 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TCollectionKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -189,7 +235,8 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths,
     TCollectionKey
@@ -203,7 +250,8 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TCollectionKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -214,7 +262,8 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths,
     TCollectionKey
@@ -233,7 +282,8 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TCollectionKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -244,7 +294,8 @@ interface Prefixes<
   TDatabase,
   TInsert,
   TPKey,
-  TPathKeyTypes extends PathKeyTypes,
+  TWherePathKeyTypes extends PathKeyTypes,
+  TWhereEqualityKeyTypes extends EqualityKeyTypes,
   TDexie,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TCollectionKey
@@ -255,7 +306,8 @@ interface Prefixes<
     TInsert,
     TPKey,
     TCollectionKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -265,7 +317,8 @@ interface Prefixes<
     TInsert,
     TPKey,
     TCollectionKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -277,7 +330,8 @@ interface ValuesOf<
   TInsert,
   TPKey,
   Key,
-  TPathKeyTypes extends PathKeyTypes,
+  TWherePathKeyTypes extends PathKeyTypes,
+  TWhereEqualityKeyTypes extends EqualityKeyTypes,
   TDexie,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TCollectionKey
@@ -288,7 +342,8 @@ interface ValuesOf<
     TInsert,
     TPKey,
     TCollectionKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -298,7 +353,8 @@ interface ValuesOf<
     TInsert,
     TPKey,
     Key,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -309,7 +365,8 @@ interface WhereStringClause<
   TDatabase,
   TInsert,
   TPKey,
-  TPathKeyTypes extends PathKeyTypes,
+  TWherePathKeyTypes extends PathKeyTypes,
+  TWhereEqualityKeyTypes extends EqualityKeyTypes,
   TDexie,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TCollectionKey
@@ -321,7 +378,8 @@ interface WhereStringClause<
     TInsert,
     TPKey,
     TCollectionKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths,
     TCollectionKey
@@ -336,7 +394,8 @@ interface WhereStringClause<
     TInsert,
     TPKey,
     TCollectionKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -350,7 +409,8 @@ interface WhereStringClause<
     TInsert,
     TPKey,
     TCollectionKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -363,7 +423,8 @@ interface WhereStringClause<
     TInsert,
     TPKey,
     TCollectionKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -373,7 +434,8 @@ interface WhereStringClause<
     TDatabase,
     TInsert,
     TPKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths,
     TCollectionKey
@@ -385,7 +447,8 @@ interface WhereStringClause<
     TDatabase,
     TInsert,
     TPKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths,
     TCollectionKey

@@ -1,5 +1,5 @@
 import type { KeyPathValue } from "dexie";
-import type { First, PathKeyType } from "./utilitytypes";
+import type { PathKeyType } from "./utilitytypes";
 
 export declare const KeyTypeBrand: unique symbol;
 export type SingleIndexPath<T, P extends string> = {

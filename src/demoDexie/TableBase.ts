@@ -24,6 +24,7 @@ import type { BulkUpdate } from "./BulkUpdate";
 import type { UpsertSpec } from "./UpsertSpec";
 import type { WhereClauses } from "./where";
 import type { PathKeyTypes, PathKeyType } from "./utilitytypes";
+import type { EqualityKeyTypes, WhereEqualityRegistry } from "./whereEquality";
 
 type PathRegistry<
   TDatabase,
@@ -44,22 +45,28 @@ export interface TableCore<
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TPKey,
-  TPathKeyTypes extends PathKeyTypes,
+  TWherePathKeyTypes extends PathKeyTypes,
+  TWhereEqualityKeyTypes extends EqualityKeyTypes,
   TDexie
 > {
   db: TDexie;
   readonly name: TName;
   schema: TableSchema;
-  // todo TGet needs to be mapped to TExisting - TGet if entity class is incorrect
   hook: TableHooks<TDatabase, TGet, TPKey>;
   core: DBCoreTable;
 
-  // todo object overload
   get(key: TPKey): PromiseExtended<TGet | undefined>;
+  get<TEquality extends TWhereEqualityKeyTypes[number]["equality"]>(
+    equality: TEquality
+  ): PromiseExtended<TGet | undefined>;
   get<R>(
     key: TPKey,
     thenShortcut: ThenShortcut<TGet | undefined, R>
   ): PromiseExtended<R>;
+  get<R, TEquality extends TWhereEqualityKeyTypes[number]["equality"]>(
+    equality: TEquality,
+    thenShortcut: ThenShortcut<TGet | undefined, R>
+  ): PromiseExtended<TGet | undefined>;
   bulkGet(keys: TPKey[]): PromiseExtended<(TGet | undefined)[]>;
 
   filter: ReturnType<this["toCollection"]>["and"];
@@ -77,7 +84,8 @@ export interface TableCore<
     TInsert,
     TPKey,
     TPKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -89,7 +97,8 @@ export interface TableCore<
     TInsert,
     TPKey,
     KeyForIndexPath<TDatabase, IndexPathForPath<TDatabase, TIndexPaths, Path>>,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -101,7 +110,8 @@ export interface TableCore<
     TInsert,
     TPKey,
     TPKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -155,7 +165,13 @@ export type TableBase<
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TPKey,
   TDexie = any,
-  TPathKeyTypes extends PathKeyTypes = PathRegistry<
+  TWherePathKeyTypes extends PathKeyTypes = PathRegistry<
+    TDatabase,
+    TIndexPaths,
+    TPKeyPathOrPaths,
+    TPKey
+  >,
+  TWhereEqualityKeyTypes extends EqualityKeyTypes = WhereEqualityRegistry<
     TDatabase,
     TIndexPaths,
     TPKeyPathOrPaths,
@@ -169,7 +185,8 @@ export type TableBase<
   TPKeyPathOrPaths,
   TIndexPaths,
   TPKey,
-  TPathKeyTypes,
+  TWherePathKeyTypes,
+  TWhereEqualityKeyTypes,
   TDexie
 > &
   WhereClauses<
@@ -177,7 +194,8 @@ export type TableBase<
     TDatabase,
     TInsert,
     TPKey,
-    TPathKeyTypes,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
     TDexie,
     TPKeyPathOrPaths,
     undefined
