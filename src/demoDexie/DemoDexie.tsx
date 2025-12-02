@@ -79,17 +79,17 @@ export const DemoDexie = () => {
 
         const compoundVirtualSingularPk = await (
           db.demo.where({ pkNumber: 1 } as any) as any
-        ).first();
+        ).keys();
 
         const compoundVirtualSingular = await (
           db.demo.where({ indexNumber: 1 } as any) as any
-        ).first();
+        ).keys();
         /*         const compoundVirtualSingularBad = await (
           db.demo.where({ indexString: "1" } as any) as any
         ).first(); */
         const compoundVirtualMultiple = await (
           db.demo.where({ indexNumber: 1, indexString: "1" } as any) as any
-        ).first();
+        ).keys();
 
         /* const noSingle = await (
           db.demo.where({ indexNumber: 1, notAnIndex: 1 } as any) as any

@@ -104,8 +104,8 @@ export type First<T extends readonly any[]> = T extends readonly [
   ? A
   : never;
 
-export type PathWithKey<TPath, TKey> = {
+export type PathKeyType<TPath, TKey> = {
   readonly path: TPath;
   readonly keyType: TKey;
 };
-export type KeyLookup = readonly PathWithKey<any, any>[];
+export type PathKeyTypes = readonly PathKeyType<any, any>[];

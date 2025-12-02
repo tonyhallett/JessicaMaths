@@ -23,7 +23,7 @@ import type { Level2, UpdateSpec } from "./UpdateSpec";
 import type { BulkUpdate } from "./BulkUpdate";
 import type { UpsertSpec } from "./UpsertSpec";
 import type { WhereClauses } from "./where";
-import type { KeyLookup, PathWithKey } from "./utilitytypes";
+import type { PathKeyTypes, PathKeyType } from "./utilitytypes";
 
 type PathRegistry<
   TDatabase,
@@ -33,7 +33,7 @@ type PathRegistry<
 > = readonly [
   ...IndexPathRegistry<TDatabase, TIndexPaths>,
   ...PrimaryKeyRegistry<TPKeyPathOrPaths, TPKey>,
-  PathWithKey<PrimaryKeyId, TPKey>
+  PathKeyType<PrimaryKeyId, TPKey>
 ];
 
 export interface TableCore<
@@ -44,7 +44,7 @@ export interface TableCore<
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TPKey,
-  TKeyLookup extends KeyLookup,
+  TPathKeyTypes extends PathKeyTypes,
   TDexie
 > {
   db: TDexie;
@@ -77,7 +77,7 @@ export interface TableCore<
     TInsert,
     TPKey,
     TPKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -89,7 +89,7 @@ export interface TableCore<
     TInsert,
     TPKey,
     KeyForIndexPath<TDatabase, IndexPathForPath<TDatabase, TIndexPaths, Path>>,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -101,7 +101,7 @@ export interface TableCore<
     TInsert,
     TPKey,
     TPKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -155,7 +155,7 @@ export type TableBase<
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TPKey,
   TDexie = any,
-  TKeyLookup extends KeyLookup = PathRegistry<
+  TPathKeyTypes extends PathKeyTypes = PathRegistry<
     TDatabase,
     TIndexPaths,
     TPKeyPathOrPaths,
@@ -169,7 +169,7 @@ export type TableBase<
   TPKeyPathOrPaths,
   TIndexPaths,
   TPKey,
-  TKeyLookup,
+  TPathKeyTypes,
   TDexie
 > &
   WhereClauses<
@@ -177,7 +177,7 @@ export type TableBase<
     TDatabase,
     TInsert,
     TPKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths,
     undefined

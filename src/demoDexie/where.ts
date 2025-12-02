@@ -1,8 +1,8 @@
 import type { Collection } from "./Collection";
 import type { DexiePrimaryKeyPathOrPaths } from "./primarykey";
-import type { KeyLookup } from "./utilitytypes";
+import type { PathKeyTypes } from "./utilitytypes";
 
-type KeyTypeForPath<TPathLookup extends KeyLookup, TPath> = Extract<
+type KeyTypeForPath<TPathLookup extends PathKeyTypes, TPath> = Extract<
   TPathLookup[number],
   { path: TPath }
 >["keyType"];
@@ -12,20 +12,20 @@ export type WhereClauses<
   TDatabase,
   TInsert,
   TPKey,
-  TKeyLookup extends KeyLookup,
+  TPathKeyTypes extends PathKeyTypes,
   TDexie,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TCollectionKey
 > = {
-  where<TPath extends TKeyLookup[number]["path"]>(
+  where<TPath extends TPathKeyTypes[number]["path"]>(
     indexOrPrimaryKeyPath: TPath
   ): WhereClause<
     TGet,
     TDatabase,
     TInsert,
     TPKey,
-    KeyTypeForPath<TKeyLookup, TPath>,
-    TKeyLookup,
+    KeyTypeForPath<TPathKeyTypes, TPath>,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths,
     TCollectionKey
@@ -36,7 +36,7 @@ type CollectionKey<TCurrent, TKey> = [TCurrent] extends [undefined]
   ? TKey
   : TCurrent | TKey;
 
-export type PathsOf<Lookup extends KeyLookup> = Lookup[number]["path"];
+export type PathsOf<Lookup extends PathKeyTypes> = Lookup[number]["path"];
 
 export type WhereClause<
   TGet,
@@ -44,7 +44,7 @@ export type WhereClause<
   TInsert,
   TPKey,
   TKey,
-  TKeyLookup extends KeyLookup,
+  TPathKeyTypes extends PathKeyTypes,
   TDexie,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TCollectionKey // this will union with TKey,
@@ -54,7 +54,7 @@ export type WhereClause<
   TInsert,
   TPKey,
   TKey,
-  TKeyLookup,
+  TPathKeyTypes,
   TDexie,
   TPKeyPathOrPaths,
   CollectionKey<TCollectionKey, TKey> // necessary due to Collection or,
@@ -65,7 +65,7 @@ export type WhereClause<
         TDatabase,
         TInsert,
         TPKey,
-        TKeyLookup,
+        TPathKeyTypes,
         TDexie,
         TPKeyPathOrPaths,
         CollectionKey<TCollectionKey, string> // necessary due to Collection or
@@ -76,7 +76,7 @@ export interface WhereClauseNonStrings<
   TInsert,
   TPKey,
   TKey,
-  TKeyLookup extends KeyLookup,
+  TPathKeyTypes extends PathKeyTypes,
   TDexie,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TCollectionKey
@@ -112,7 +112,7 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TCollectionKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -125,7 +125,7 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TCollectionKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -138,7 +138,7 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TCollectionKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -151,7 +151,7 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TCollectionKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -164,7 +164,7 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TCollectionKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -177,7 +177,7 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TCollectionKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -189,7 +189,7 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths,
     TCollectionKey
@@ -203,7 +203,7 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TCollectionKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -214,7 +214,7 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths,
     TCollectionKey
@@ -233,7 +233,7 @@ export interface WhereClauseNonStrings<
     TInsert,
     TPKey,
     TCollectionKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -244,7 +244,7 @@ interface Prefixes<
   TDatabase,
   TInsert,
   TPKey,
-  TKeyLookup extends KeyLookup,
+  TPathKeyTypes extends PathKeyTypes,
   TDexie,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TCollectionKey
@@ -255,7 +255,7 @@ interface Prefixes<
     TInsert,
     TPKey,
     TCollectionKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -265,7 +265,7 @@ interface Prefixes<
     TInsert,
     TPKey,
     TCollectionKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -277,7 +277,7 @@ interface ValuesOf<
   TInsert,
   TPKey,
   Key,
-  TKeyLookup extends KeyLookup,
+  TPathKeyTypes extends PathKeyTypes,
   TDexie,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TCollectionKey
@@ -288,7 +288,7 @@ interface ValuesOf<
     TInsert,
     TPKey,
     TCollectionKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -298,7 +298,7 @@ interface ValuesOf<
     TInsert,
     TPKey,
     Key,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -309,7 +309,7 @@ interface WhereStringClause<
   TDatabase,
   TInsert,
   TPKey,
-  TKeyLookup extends KeyLookup,
+  TPathKeyTypes extends PathKeyTypes,
   TDexie,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TCollectionKey
@@ -321,7 +321,7 @@ interface WhereStringClause<
     TInsert,
     TPKey,
     TCollectionKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths,
     TCollectionKey
@@ -336,7 +336,7 @@ interface WhereStringClause<
     TInsert,
     TPKey,
     TCollectionKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -350,7 +350,7 @@ interface WhereStringClause<
     TInsert,
     TPKey,
     TCollectionKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -363,7 +363,7 @@ interface WhereStringClause<
     TInsert,
     TPKey,
     TCollectionKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -373,7 +373,7 @@ interface WhereStringClause<
     TDatabase,
     TInsert,
     TPKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths,
     TCollectionKey
@@ -385,7 +385,7 @@ interface WhereStringClause<
     TDatabase,
     TInsert,
     TPKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths,
     TCollectionKey

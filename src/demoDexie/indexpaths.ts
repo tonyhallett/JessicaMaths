@@ -1,5 +1,5 @@
 import type { KeyPathValue } from "dexie";
-import type { First, PathWithKey } from "./utilitytypes";
+import type { First, PathKeyType } from "./utilitytypes";
 
 export declare const KeyTypeBrand: unique symbol;
 export type SingleIndexPath<T, P extends string> = {
@@ -36,8 +36,8 @@ type Accumulate<
 > = Paths extends [...infer Rest extends string[], infer Last extends string]
   ? Brand extends [...infer RestB extends any[], infer LastB]
     ? Rest["length"] extends 0
-      ? readonly [PathWithKey<Last, LastB>] // single element tuple
-      : readonly [...Accumulate<RestB, Rest>, PathWithKey<Paths, Brand>] // recurse dropping the last
+      ? readonly [PathKeyType<Last, LastB>] // single element tuple
+      : readonly [...Accumulate<RestB, Rest>, PathKeyType<Paths, Brand>] // recurse dropping the last
     : []
   : [];
 
@@ -45,7 +45,7 @@ type PathWithKeysForDexieIndexPath<T extends DexieIndexPath<any>> = T extends {
   path: infer P;
   [KeyTypeBrand]?: infer Brand;
 }
-  ? readonly [PathWithKey<P, Brand>]
+  ? readonly [PathKeyType<P, Brand>]
   : T extends {
       paths: infer Paths extends readonly string[];
       [KeyTypeBrand]?: infer Brand extends readonly any[];

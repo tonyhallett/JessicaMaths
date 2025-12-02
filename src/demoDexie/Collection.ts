@@ -2,7 +2,7 @@ import type { PromiseExtended, ThenShortcut } from "dexie";
 import type { WhereClauses } from "./where";
 import type { Level2, UpdateSpec } from "./UpdateSpec";
 import type { DexiePrimaryKeyPathOrPaths } from "./primarykey";
-import type { KeyLookup } from "./utilitytypes";
+import type { PathKeyTypes } from "./utilitytypes";
 
 type Comparable =
   | number
@@ -46,7 +46,7 @@ export type Collection<
   TInsert,
   TPKey,
   TKey,
-  TKeyLookup extends KeyLookup,
+  TPathKeyTypes extends PathKeyTypes,
   TDexie,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>
 > = CollectionBase<
@@ -55,7 +55,7 @@ export type Collection<
   TInsert,
   TPKey,
   TKey,
-  TKeyLookup,
+  TPathKeyTypes,
   TDexie,
   TPKeyPathOrPaths
 > & {
@@ -64,7 +64,7 @@ export type Collection<
     TDatabase,
     TInsert,
     TPKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths,
     TKey
@@ -105,7 +105,7 @@ interface CollectionBase<
   TInsert,
   TPKey,
   TKey,
-  TKeyLookup extends KeyLookup,
+  TPathKeyTypes extends PathKeyTypes,
   TDexie,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>
 > {
@@ -118,7 +118,7 @@ interface CollectionBase<
     TInsert,
     TPKey,
     TKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -202,7 +202,7 @@ interface CollectionBase<
     TInsert,
     TPKey,
     TKey,
-    TKeyLookup,
+    TPathKeyTypes,
     TDexie,
     TPKeyPathOrPaths
   >;
