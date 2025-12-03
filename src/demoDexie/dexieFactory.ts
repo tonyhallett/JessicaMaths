@@ -3,10 +3,12 @@ import { buildStores } from "./buildStores";
 import type { TableConfig } from "./tableBuilder";
 import { AddAutoReturnObjectAddon } from "./AddAutoReturnObjectAddOn";
 import { TableBulkTupleAddOn } from "./TableBulkTupleAddOn";
+import { WhereOrEqualityAddOn } from "./WhereOrEqualityAddOn";
 import type { TypedDexie } from "./TypedDexie";
 
 Dexie.addons.push(TableBulkTupleAddOn);
 Dexie.addons.push(AddAutoReturnObjectAddon);
+Dexie.addons.push(WhereOrEqualityAddOn);
 
 export function dexieFactory<
   S extends Record<string, TableConfig<any, any, any, any, any, any, any>>

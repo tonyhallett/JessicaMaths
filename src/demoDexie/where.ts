@@ -1,3 +1,4 @@
+import type Dexie from "dexie";
 import type { Collection } from "./Collection";
 import type { DexiePrimaryKeyPathOrPaths } from "./primarykey";
 import type { PathKeyTypes } from "./utilitytypes";
@@ -25,7 +26,7 @@ type KeyTypeForEquality<
     : never
   : never;
 
-export type WhereClauses<
+export interface WhereClauses<
   TGet,
   TDatabase,
   TInsert,
@@ -35,7 +36,7 @@ export type WhereClauses<
   TDexie,
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TCollectionKey
-> = {
+> {
   where<TPath extends TWherePathKeyTypes[number]["path"]>(
     indexOrPrimaryKeyPath: TPath
   ): WhereClause<
@@ -50,6 +51,7 @@ export type WhereClauses<
     TPKeyPathOrPaths,
     TCollectionKey
   >;
+
   where<TEquality extends TWhereEqualityKeyTypes[number]["equality"]>(
     equality: TEquality
   ): Collection<
@@ -66,7 +68,23 @@ export type WhereClauses<
     TDexie,
     TPKeyPathOrPaths
   >;
-};
+  whereEquality<TEquality extends TWhereEqualityKeyTypes[number]["equality"]>(
+    equality: TEquality
+  ): Collection<
+    TGet,
+    TDatabase,
+    TInsert,
+    TPKey,
+    CollectionKey<
+      TCollectionKey,
+      KeyTypeForEquality<TWhereEqualityKeyTypes, TEquality>
+    >,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
+    TDexie,
+    TPKeyPathOrPaths
+  >;
+}
 
 type CollectionKey<TCurrent, TKey> = [TCurrent] extends [undefined]
   ? TKey
