@@ -77,7 +77,7 @@ export const DemoDexie = () => {
           db.demo.where({ ":id": [1, "1"] } as any) as any
         ).first();
 
-        const compoundVirtualSingularPk = await db.demo
+        let compoundVirtualSingularPk = await db.demo
           .where({ pkNumber: 1 })
           .keys();
         const compoundVirtualSingular = await db.demo

@@ -1023,11 +1023,16 @@ describe("table base", () => {
       db.table.where(["index1", "index2"]).equals([123, "stringValue"]);
     });
 
-    describe("where equality", () => {
+    describe("where equality or alias whereEquality", () => {
       it("should accept single index object", () => {
         db.table.where({ stringIndex: "value" }).each((item, cursor) => {
           expect(cursor.key).type.toBe<string>();
         });
+        db.table
+          .whereEquality({ stringIndex: "value" })
+          .each((item, cursor) => {
+            expect(cursor.key).type.toBe<string>();
+          });
         expect(db.table.where).type.not.toBeCallableWith({ stringIndex: 42 });
         expect(db.table.where).type.not.toBeCallableWith({ notAnIndex: 123 });
       });
@@ -1174,6 +1179,11 @@ describe("table base", () => {
 
       expect(numberCollectionKey.or(":id").above).type.not.toBeCallableWith(1);
       expect(numberCollectionKey.or("id").above).type.not.toBeCallableWith(1);
+
+      // or does not have equality
+      expect(stringCollectionKey.or).type.not.toBeCallableWith({
+        compound1: "a",
+      });
     });
 
     it("should return collection with key typed to the primary type when using pkey", () => {

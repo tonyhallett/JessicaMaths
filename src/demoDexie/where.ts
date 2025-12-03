@@ -51,7 +51,19 @@ export interface WhereClauses<
     TPKeyPathOrPaths,
     TCollectionKey
   >;
+}
 
+export interface WhereClausesEquality<
+  TGet,
+  TDatabase,
+  TInsert,
+  TPKey,
+  TWherePathKeyTypes extends PathKeyTypes,
+  TWhereEqualityKeyTypes extends EqualityKeyTypes,
+  TDexie,
+  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TCollectionKey
+> {
   where<TEquality extends TWhereEqualityKeyTypes[number]["equality"]>(
     equality: TEquality
   ): Collection<
@@ -68,6 +80,7 @@ export interface WhereClauses<
     TDexie,
     TPKeyPathOrPaths
   >;
+
   whereEquality<TEquality extends TWhereEqualityKeyTypes[number]["equality"]>(
     equality: TEquality
   ): Collection<

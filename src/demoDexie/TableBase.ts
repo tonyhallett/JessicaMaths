@@ -22,7 +22,7 @@ import type { TableHooks } from "./TableHooks";
 import type { Level2, UpdateSpec } from "./UpdateSpec";
 import type { BulkUpdate } from "./BulkUpdate";
 import type { UpsertSpec } from "./UpsertSpec";
-import type { WhereClauses } from "./where";
+import type { WhereClauses, WhereClausesEquality } from "./where";
 import type { PathKeyTypes, PathKeyType } from "./utilitytypes";
 import type { EqualityKeyTypes, WhereEqualityRegistry } from "./whereEquality";
 
@@ -190,6 +190,17 @@ export type TableBase<
   TDexie
 > &
   WhereClauses<
+    TGet,
+    TDatabase,
+    TInsert,
+    TPKey,
+    TWherePathKeyTypes,
+    TWhereEqualityKeyTypes,
+    TDexie,
+    TPKeyPathOrPaths,
+    undefined
+  > &
+  WhereClausesEquality<
     TGet,
     TDatabase,
     TInsert,

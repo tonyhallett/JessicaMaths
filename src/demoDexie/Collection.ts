@@ -73,17 +73,6 @@ export type Collection<
     TPKeyPathOrPaths,
     TKey
   >["where"];
-  orEquality: WhereClauses<
-    TGet,
-    TDatabase,
-    TInsert,
-    TPKey,
-    TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
-    TDexie,
-    TPKeyPathOrPaths,
-    TKey
-  >["whereEquality"];
 };
 
 export interface Cursor<TKey, TPKey> {
