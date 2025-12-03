@@ -1031,6 +1031,7 @@ describe("table base", () => {
         expect(db.table.where).type.not.toBeCallableWith({ stringIndex: 42 });
         expect(db.table.where).type.not.toBeCallableWith({ notAnIndex: 123 });
       });
+
       it("should accept compound index object", () => {
         interface TableItem {
           id: string;
