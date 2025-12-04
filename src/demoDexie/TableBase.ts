@@ -24,7 +24,12 @@ import type { BulkUpdate } from "./BulkUpdate";
 import type { UpsertSpec } from "./UpsertSpec";
 import type { WhereClauses, WhereClausesEquality } from "./where";
 import type { PathKeyTypes, PathKeyType } from "./utilitytypes";
-import type { EqualityKeyTypes, WhereEqualityRegistry } from "./whereEquality";
+import type {
+  EqualityKeyTypes,
+  EqualityRegistryLookup,
+  WhereEqualityRegistry,
+  WhereEqualityRegistryLookup,
+} from "./whereEquality";
 
 type PathRegistry<
   TDatabase,
@@ -46,10 +51,10 @@ export interface TableCore<
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TPKey,
   TWherePathKeyTypes extends PathKeyTypes,
-  TWhereEqualityKeyTypes extends EqualityKeyTypes,
+  TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie
 > {
-  equalityKeyTypes: TWhereEqualityKeyTypes;
+  equalityKeyTypes: TEqualityRegistryLookup;
   db: TDexie;
   readonly name: TName;
   schema: TableSchema;
@@ -57,14 +62,14 @@ export interface TableCore<
   core: DBCoreTable;
 
   get(key: TPKey): PromiseExtended<TGet | undefined>;
-  get<TEquality extends TWhereEqualityKeyTypes[number]["equality"]>(
+  get<TEquality extends TEqualityRegistryLookup["all"][number]["equality"]>(
     equality: TEquality
   ): PromiseExtended<TGet | undefined>;
   get<R>(
     key: TPKey,
     thenShortcut: ThenShortcut<TGet | undefined, R>
   ): PromiseExtended<R>;
-  get<R, TEquality extends TWhereEqualityKeyTypes[number]["equality"]>(
+  get<R, TEquality extends TEqualityRegistryLookup["all"][number]["equality"]>(
     equality: TEquality,
     thenShortcut: ThenShortcut<TGet | undefined, R>
   ): PromiseExtended<TGet | undefined>;
@@ -86,7 +91,7 @@ export interface TableCore<
     TPKey,
     TPKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -99,7 +104,7 @@ export interface TableCore<
     TPKey,
     KeyForIndexPath<TDatabase, IndexPathForPath<TDatabase, TIndexPaths, Path>>,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -112,7 +117,7 @@ export interface TableCore<
     TPKey,
     TPKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -172,7 +177,7 @@ export type TableBase<
     TPKeyPathOrPaths,
     TPKey
   >,
-  TWhereEqualityKeyTypes extends EqualityKeyTypes = WhereEqualityRegistry<
+  TEqualityRegistryLookup extends EqualityRegistryLookup = WhereEqualityRegistryLookup<
     TDatabase,
     TIndexPaths,
     TPKeyPathOrPaths,
@@ -187,7 +192,7 @@ export type TableBase<
   TIndexPaths,
   TPKey,
   TWherePathKeyTypes,
-  TWhereEqualityKeyTypes,
+  TEqualityRegistryLookup,
   TDexie
 > &
   WhereClauses<
@@ -196,7 +201,7 @@ export type TableBase<
     TInsert,
     TPKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths,
     undefined
@@ -207,7 +212,7 @@ export type TableBase<
     TInsert,
     TPKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths,
     undefined

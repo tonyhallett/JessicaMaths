@@ -3,7 +3,7 @@ import type { WhereClauses } from "./where";
 import type { Level2, UpdateSpec } from "./UpdateSpec";
 import type { PrimaryKeyPathOrPaths } from "./primarykey";
 import type { PathKeyTypes } from "./utilitytypes";
-import type { EqualityKeyTypes } from "./whereEquality";
+import type { EqualityKeyTypes, EqualityRegistryLookup } from "./whereEquality";
 
 type Comparable =
   | number
@@ -48,7 +48,7 @@ export type Collection<
   TPKey,
   TKey,
   TWherePathKeyTypes extends PathKeyTypes,
-  TWhereEqualityKeyTypes extends EqualityKeyTypes,
+  TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
   TPKeyPathOrPaths extends PrimaryKeyPathOrPaths
 > = CollectionBase<
@@ -58,7 +58,7 @@ export type Collection<
   TPKey,
   TKey,
   TWherePathKeyTypes,
-  TWhereEqualityKeyTypes,
+  TEqualityRegistryLookup,
   TDexie,
   TPKeyPathOrPaths
 > & {
@@ -68,7 +68,7 @@ export type Collection<
     TInsert,
     TPKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths,
     TKey
@@ -110,7 +110,7 @@ interface CollectionBase<
   TPKey,
   TKey,
   TWherePathKeyTypes extends PathKeyTypes,
-  TWhereEqualityKeyTypes extends EqualityKeyTypes,
+  TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
   TPKeyPathOrPaths extends PrimaryKeyPathOrPaths
 > {
@@ -124,7 +124,7 @@ interface CollectionBase<
     TPKey,
     TKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -209,7 +209,7 @@ interface CollectionBase<
     TPKey,
     TKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;

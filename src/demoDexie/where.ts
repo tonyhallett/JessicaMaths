@@ -1,7 +1,11 @@
 import type { Collection } from "./Collection";
 import type { PrimaryKeyPathOrPaths } from "./primarykey";
 import type { PathKeyTypes } from "./utilitytypes";
-import type { EqualityKeyTypes, KeyTypeForEquality } from "./whereEquality";
+import type {
+  EqualityKeyTypes,
+  EqualityRegistryLookup,
+  KeyTypeForEquality,
+} from "./whereEquality";
 
 type KeyTypeForPath<TPathLookup extends PathKeyTypes, TPath> = Extract<
   TPathLookup[number],
@@ -14,7 +18,7 @@ export interface WhereClauses<
   TInsert,
   TPKey,
   TWherePathKeyTypes extends PathKeyTypes,
-  TWhereEqualityKeyTypes extends EqualityKeyTypes,
+  TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
   TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TCollectionKey
@@ -28,7 +32,7 @@ export interface WhereClauses<
     TPKey,
     KeyTypeForPath<TWherePathKeyTypes, TPath>,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths,
     TCollectionKey
@@ -41,14 +45,14 @@ export interface WhereClausesEquality<
   TInsert,
   TPKey,
   TWherePathKeyTypes extends PathKeyTypes,
-  TWhereEqualityKeyTypes extends EqualityKeyTypes,
+  TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
   TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TCollectionKey
 > {
   where<
-    TEquality extends TWhereEqualityKeyTypes[number]["equality"],
-    TKey = KeyTypeForEquality<TWhereEqualityKeyTypes, TEquality>
+    TEquality extends TEqualityRegistryLookup["all"][number]["equality"],
+    TKey = KeyTypeForEquality<TEqualityRegistryLookup["all"], TEquality>
   >(
     equality: TEquality
   ): [TKey] extends [never]
@@ -60,7 +64,7 @@ export interface WhereClausesEquality<
         TPKey,
         CollectionKey<TCollectionKey, TKey>,
         TWherePathKeyTypes,
-        TWhereEqualityKeyTypes,
+        TEqualityRegistryLookup,
         TDexie,
         TPKeyPathOrPaths
       >;
@@ -80,7 +84,7 @@ export type WhereClause<
   TPKey,
   TKey,
   TWherePathKeyTypes extends PathKeyTypes,
-  TWhereEqualityKeyTypes extends EqualityKeyTypes,
+  TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
   TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TCollectionKey // this will union with TKey,
@@ -91,7 +95,7 @@ export type WhereClause<
   TPKey,
   TKey,
   TWherePathKeyTypes,
-  TWhereEqualityKeyTypes,
+  TEqualityRegistryLookup,
   TDexie,
   TPKeyPathOrPaths,
   CollectionKey<TCollectionKey, TKey> // necessary due to Collection or,
@@ -103,7 +107,7 @@ export type WhereClause<
         TInsert,
         TPKey,
         TWherePathKeyTypes,
-        TWhereEqualityKeyTypes,
+        TEqualityRegistryLookup,
         TDexie,
         TPKeyPathOrPaths,
         CollectionKey<TCollectionKey, string> // necessary due to Collection or
@@ -115,7 +119,7 @@ export interface WhereClauseNonStrings<
   TPKey,
   TKey,
   TWherePathKeyTypes extends PathKeyTypes,
-  TWhereEqualityKeyTypes extends EqualityKeyTypes,
+  TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
   TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TCollectionKey
@@ -152,7 +156,7 @@ export interface WhereClauseNonStrings<
     TPKey,
     TCollectionKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -166,7 +170,7 @@ export interface WhereClauseNonStrings<
     TPKey,
     TCollectionKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -180,7 +184,7 @@ export interface WhereClauseNonStrings<
     TPKey,
     TCollectionKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -194,7 +198,7 @@ export interface WhereClauseNonStrings<
     TPKey,
     TCollectionKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -208,7 +212,7 @@ export interface WhereClauseNonStrings<
     TPKey,
     TCollectionKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -222,7 +226,7 @@ export interface WhereClauseNonStrings<
     TPKey,
     TCollectionKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -235,7 +239,7 @@ export interface WhereClauseNonStrings<
     TPKey,
     TKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths,
     TCollectionKey
@@ -250,7 +254,7 @@ export interface WhereClauseNonStrings<
     TPKey,
     TCollectionKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -262,7 +266,7 @@ export interface WhereClauseNonStrings<
     TPKey,
     TKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths,
     TCollectionKey
@@ -282,7 +286,7 @@ export interface WhereClauseNonStrings<
     TPKey,
     TCollectionKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -294,7 +298,7 @@ interface Prefixes<
   TInsert,
   TPKey,
   TWherePathKeyTypes extends PathKeyTypes,
-  TWhereEqualityKeyTypes extends EqualityKeyTypes,
+  TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
   TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TCollectionKey
@@ -306,7 +310,7 @@ interface Prefixes<
     TPKey,
     TCollectionKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -317,7 +321,7 @@ interface Prefixes<
     TPKey,
     TCollectionKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -330,7 +334,7 @@ interface ValuesOf<
   TPKey,
   Key,
   TWherePathKeyTypes extends PathKeyTypes,
-  TWhereEqualityKeyTypes extends EqualityKeyTypes,
+  TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
   TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TCollectionKey
@@ -342,7 +346,7 @@ interface ValuesOf<
     TPKey,
     TCollectionKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -353,7 +357,7 @@ interface ValuesOf<
     TPKey,
     Key,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -365,7 +369,7 @@ interface WhereStringClause<
   TInsert,
   TPKey,
   TWherePathKeyTypes extends PathKeyTypes,
-  TWhereEqualityKeyTypes extends EqualityKeyTypes,
+  TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
   TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TCollectionKey
@@ -378,7 +382,7 @@ interface WhereStringClause<
     TPKey,
     TCollectionKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths,
     TCollectionKey
@@ -394,7 +398,7 @@ interface WhereStringClause<
     TPKey,
     TCollectionKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -409,7 +413,7 @@ interface WhereStringClause<
     TPKey,
     TCollectionKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -423,7 +427,7 @@ interface WhereStringClause<
     TPKey,
     TCollectionKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths
   >;
@@ -434,7 +438,7 @@ interface WhereStringClause<
     TInsert,
     TPKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths,
     TCollectionKey
@@ -447,7 +451,7 @@ interface WhereStringClause<
     TInsert,
     TPKey,
     TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
+    TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths,
     TCollectionKey
