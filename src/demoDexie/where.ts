@@ -8,23 +8,6 @@ type KeyTypeForPath<TPathLookup extends PathKeyTypes, TPath> = Extract<
   { path: TPath }
 >["keyType"];
 
-type IsExactly<A, B> = (<T>() => T extends A ? 1 : 2) extends <
-  T
->() => T extends B ? 1 : 2
-  ? true
-  : false;
-
-/* type KeyTypeForEquality<
-  TLookup extends EqualityKeyTypes,
-  TEquality
-> = TLookup[number] extends infer Entry
-  ? Entry extends { equality: infer E; keyType: infer K }
-    ? IsExactly<E, TEquality> extends true
-      ? K
-      : never
-    : never
-  : never; */
-
 export interface WhereClauses<
   TGet,
   TDatabase,
