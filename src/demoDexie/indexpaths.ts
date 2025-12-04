@@ -42,7 +42,7 @@ type Accumulate<
   : [];
 
 type PathWithKeysForDexieIndexPath<T extends DexieIndexPath<any>> = T extends {
-  path: infer P;
+  path: infer P extends string | readonly string[];
   [KeyTypeBrand]?: infer Brand;
 }
   ? readonly [PathKeyType<P, Brand>]

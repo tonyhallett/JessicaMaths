@@ -43,6 +43,90 @@ export type WhereEqualityRegistry<
   ...PkEqualityEntries<TPKeyPathOrPaths, TPkey>,
   ...IndexEqualityArray<TDatabase, TDexieIndexPaths>
 ];
+type IndexKeyTypesSplit<
+  TDatabase,
+  TPaths extends DexieIndexPaths<TDatabase>,
+  Out extends { single: EqualityKeyTypes; composite: EqualityKeyTypes } = {
+    single: [];
+    composite: [];
+  }
+> = TPaths extends [infer H, ...infer R extends DexieIndexPaths<TDatabase>]
+  ? H extends { path: infer P extends string; [KeyTypeBrand]?: infer K }
+    ? IndexKeyTypesSplit<
+        TDatabase,
+        R,
+        {
+          single: [...Out["single"], EqualityKeyType<{ [KPath in P]: K }, K>];
+          composite: Out["composite"];
+        }
+      >
+    : H extends {
+        paths: infer PS extends readonly string[];
+        [KeyTypeBrand]?: infer KS extends readonly any[];
+      }
+    ? IndexKeyTypesSplit<
+        TDatabase,
+        R,
+        {
+          single: Out["single"];
+          composite: [...Out["composite"], ...CompoundKeyLookupArray<PS, KS>];
+        }
+      >
+    : IndexKeyTypesSplit<TDatabase, R, Out>
+  : Out;
+
+type ComputeIndexKeyTypes<
+  TDatabase,
+  TPaths extends DexieIndexPaths<TDatabase>
+> = IndexKeyTypesSplit<TDatabase, TPaths>;
+
+type PrimaryKeyTypes<
+  TPKeyPathOrPaths extends string | readonly string[],
+  TPkey extends any | readonly any[]
+> = {
+  single: TPKeyPathOrPaths extends string
+    ? PkEqualityEntries<TPKeyPathOrPaths, TPkey>
+    : [];
+  composite: TPKeyPathOrPaths extends readonly string[]
+    ? PkEqualityEntries<TPKeyPathOrPaths, TPkey>
+    : [];
+};
+
+type ComputePrimaryKeyTypes<
+  TPKeyPathOrPaths extends string | readonly string[] | never,
+  TPkey extends any | readonly any[]
+> = PrimaryKeyTypes<TPKeyPathOrPaths, TPkey>;
+
+type SingleCompositeKeys = {
+  single: EqualityKeyTypes;
+  composite: EqualityKeyTypes;
+};
+
+export type WhereEqualityRegistryLookup<
+  TDatabase,
+  TPaths extends DexieIndexPaths<TDatabase>,
+  TPKeyPathOrPaths extends string | readonly string[] | never,
+  TPkey extends any | readonly any[]
+> = ComputePrimaryKeyTypes<TPKeyPathOrPaths, TPkey> extends infer PKs extends {
+  single: EqualityKeyTypes;
+  composite: EqualityKeyTypes;
+}
+  ? ComputeIndexKeyTypes<TDatabase, TPaths> extends infer IndexKeys extends {
+      single: EqualityKeyTypes;
+      composite: EqualityKeyTypes;
+    }
+    ? {
+        single: [...PKs["single"], ...IndexKeys["single"]];
+        composite: [...PKs["composite"], ...IndexKeys["composite"]];
+        all: [
+          ...PKs["single"],
+          ...PKs["composite"],
+          ...IndexKeys["single"],
+          ...IndexKeys["composite"]
+        ];
+      }
+    : never
+  : never;
 
 type PkEqualityEntries<
   TPKeyPathOrPaths extends string | readonly string[],
