@@ -1023,12 +1023,7 @@ describe("table base", () => {
       db.table.where(["index1", "index2"]).equals([123, "stringValue"]);
     });
 
-    describe("where equality or alias whereEquality", () => {
-      it("temp", () => {
-        db.table.where({ stringIndex: "value" }).each((item, cursor) => {
-          expect(cursor.key).type.toBe<string>();
-        });
-      });
+    describe("where equality or alias", () => {
       it("should accept single index object", () => {
         db.table.where({ stringIndex: "value" }).each((item, cursor) => {
           expect(cursor.key).type.toBe<string>();
@@ -1040,6 +1035,17 @@ describe("table base", () => {
           });
         expect(db.table.where).type.not.toBeCallableWith({ stringIndex: 42 });
         expect(db.table.where).type.not.toBeCallableWith({ notAnIndex: 123 });
+
+        // alias of whereEquality - only single allowed
+        db.table
+          .whereSingleEquality({ stringIndex: "value" })
+          .each((item, cursor) => {
+            expect(cursor.key).type.toBe<string>();
+          });
+
+        expect(db.table.whereSingleEquality).type.not.toBeCallableWith({
+          compound1: "a",
+        });
       });
 
       it("should accept compound index object", () => {
@@ -1082,6 +1088,48 @@ describe("table base", () => {
         ).type.toBe<never>();
         expect(
           db.table.where({ compound1: "a", additional: 1 })
+        ).type.toBe<never>();
+
+        // alias of whereEquality - only composite allowed
+
+        db.table
+          .whereCompositeEquality({
+            compound1: "a",
+            compound2: 1,
+            compound3: new Date(),
+          })
+          .each((item, cursor) => {
+            expect(cursor.key).type.toBe<[string, number, Date]>();
+          });
+        // virtual multiple
+        db.table
+          .whereCompositeEquality({ compound1: "a", compound2: 1 })
+          .each((item, cursor) => {
+            expect(cursor.key).type.toBe<[string, number]>();
+          });
+
+        // virtual singular
+        db.table
+          .whereCompositeEquality({ compound1: "a" })
+          .each((item, cursor) => {
+            expect(cursor.key).type.toBe<string>();
+          });
+
+        // not sigular index or pkey
+        expect(db.table.whereCompositeEquality).type.not.toBeCallableWith({
+          id: "",
+        });
+        expect(db.table.whereCompositeEquality).type.not.toBeCallableWith({
+          compound2: 1,
+        });
+        expect(
+          db.table.whereCompositeEquality({
+            compound1: "a",
+            compound3: new Date(),
+          })
+        ).type.toBe<never>();
+        expect(
+          db.table.whereCompositeEquality({ compound1: "a", additional: 1 })
         ).type.toBe<never>();
       });
     });

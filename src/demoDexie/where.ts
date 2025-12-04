@@ -69,6 +69,42 @@ export interface WhereClausesEquality<
         TPKeyPathOrPaths
       >;
   whereEquality: this["where"];
+  whereCompositeEquality<
+    TEquality extends TEqualityRegistryLookup["composite"][number]["equality"],
+    TKey = KeyTypeForEquality<TEqualityRegistryLookup["composite"], TEquality>
+  >(
+    equality: TEquality
+  ): [TKey] extends [never]
+    ? never
+    : Collection<
+        TGet,
+        TDatabase,
+        TInsert,
+        TPKey,
+        CollectionKey<TCollectionKey, TKey>,
+        TWherePathKeyTypes,
+        TEqualityRegistryLookup,
+        TDexie,
+        TPKeyPathOrPaths
+      >;
+  whereSingleEquality<
+    TEquality extends TEqualityRegistryLookup["single"][number]["equality"],
+    TKey = KeyTypeForEquality<TEqualityRegistryLookup["single"], TEquality>
+  >(
+    equality: TEquality
+  ): [TKey] extends [never]
+    ? never
+    : Collection<
+        TGet,
+        TDatabase,
+        TInsert,
+        TPKey,
+        CollectionKey<TCollectionKey, TKey>,
+        TWherePathKeyTypes,
+        TEqualityRegistryLookup,
+        TDexie,
+        TPKeyPathOrPaths
+      >;
 }
 
 type CollectionKey<TCurrent, TKey> = [TCurrent] extends [undefined]

@@ -78,11 +78,18 @@ export const DemoDexie = () => {
         ).first();
 
         let compoundVirtualSingularPk = await db.demo
-          .where({ pkNumber: 1 })
+          .whereEquality({ pkNumber: 1 })
           .keys();
         const compoundVirtualSingular = await db.demo
-          .where({ indexNumber: 1 })
+          .whereEquality({ indexNumber: 1 })
           .keys();
+        const singleEquality = await db.demo
+          .whereSingleEquality({ index: 1 })
+          .keys();
+        const compoundEquality = await db.demo
+          .whereCompositeEquality({ indexNumber: 1, indexString: "1" })
+          .keys();
+
         /*         const compoundVirtualSingularBad = await (
           db.demo.where({ indexString: "1" } as any) as any
         ).first(); */
