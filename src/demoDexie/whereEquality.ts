@@ -1,4 +1,9 @@
-import type { DexieIndexPaths, KeyTypeBrand } from "./indexpaths";
+import type {
+  CompoundIndexPaths,
+  DexieIndexPaths,
+  KeyTypeBrand,
+  SingleIndexPath,
+} from "./indexpaths";
 
 type CompoundType<T extends readonly any[]> = T extends readonly [infer Only]
   ? Only
@@ -43,20 +48,27 @@ export type WhereEqualityRegistry<
   ...PkEqualityEntries<TPKeyPathOrPaths, TPkey>,
   ...IndexEqualityArray<TDatabase, TDexieIndexPaths>
 ];
+
 type IndexKeyTypesSplit<
   TDatabase,
   TPaths extends DexieIndexPaths<TDatabase>,
-  Out extends { single: EqualityKeyTypes; composite: EqualityKeyTypes } = {
-    single: [];
-    composite: [];
+  Out extends SplitEqualityKeyTypes = {
+    single: readonly [];
+    composite: readonly [];
   }
-> = TPaths extends [infer H, ...infer R extends DexieIndexPaths<TDatabase>]
+> = TPaths extends readonly [
+  infer H,
+  ...infer R extends DexieIndexPaths<TDatabase>
+]
   ? H extends { path: infer P extends string; [KeyTypeBrand]?: infer K }
     ? IndexKeyTypesSplit<
         TDatabase,
         R,
         {
-          single: [...Out["single"], EqualityKeyType<{ [KPath in P]: K }, K>];
+          single: readonly [
+            ...Out["single"],
+            EqualityKeyType<{ [KPath in P]: K }, K>
+          ];
           composite: Out["composite"];
         }
       >
@@ -69,16 +81,14 @@ type IndexKeyTypesSplit<
         R,
         {
           single: Out["single"];
-          composite: [...Out["composite"], ...CompoundKeyLookupArray<PS, KS>];
+          composite: readonly [
+            ...Out["composite"],
+            ...CompoundKeyLookupArray<PS, KS>
+          ];
         }
       >
     : IndexKeyTypesSplit<TDatabase, R, Out>
   : Out;
-
-type ComputeIndexKeyTypes<
-  TDatabase,
-  TPaths extends DexieIndexPaths<TDatabase>
-> = IndexKeyTypesSplit<TDatabase, TPaths>;
 
 type PrimaryKeyTypes<
   TPKeyPathOrPaths extends string | readonly string[],
@@ -97,7 +107,7 @@ type ComputePrimaryKeyTypes<
   TPkey extends any | readonly any[]
 > = PrimaryKeyTypes<TPKeyPathOrPaths, TPkey>;
 
-type SingleCompositeKeys = {
+type SplitEqualityKeyTypes = {
   single: EqualityKeyTypes;
   composite: EqualityKeyTypes;
 };
@@ -107,18 +117,18 @@ export type WhereEqualityRegistryLookup<
   TPaths extends DexieIndexPaths<TDatabase>,
   TPKeyPathOrPaths extends string | readonly string[] | never,
   TPkey extends any | readonly any[]
-> = ComputePrimaryKeyTypes<TPKeyPathOrPaths, TPkey> extends infer PKs extends {
-  single: EqualityKeyTypes;
-  composite: EqualityKeyTypes;
-}
-  ? ComputeIndexKeyTypes<TDatabase, TPaths> extends infer IndexKeys extends {
-      single: EqualityKeyTypes;
-      composite: EqualityKeyTypes;
-    }
+> = ComputePrimaryKeyTypes<
+  TPKeyPathOrPaths,
+  TPkey
+> extends infer PKs extends SplitEqualityKeyTypes
+  ? IndexKeyTypesSplit<
+      TDatabase,
+      TPaths
+    > extends infer IndexKeys extends SplitEqualityKeyTypes
     ? {
-        single: [...PKs["single"], ...IndexKeys["single"]];
-        composite: [...PKs["composite"], ...IndexKeys["composite"]];
-        all: [
+        single: readonly [...PKs["single"], ...IndexKeys["single"]];
+        composite: readonly [...PKs["composite"], ...IndexKeys["composite"]];
+        all: readonly [
           ...PKs["single"],
           ...PKs["composite"],
           ...IndexKeys["single"],
@@ -171,6 +181,11 @@ export type EqualityKeyType<
 };
 
 export type EqualityKeyTypes = readonly EqualityKeyType<any, any, any>[];
+export type EqualityRegistryLookup = {
+  single: EqualityKeyTypes;
+  composite: EqualityKeyTypes;
+  all: EqualityKeyTypes;
+};
 
 type Same<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B
   ? 1
