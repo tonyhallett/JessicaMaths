@@ -1,7 +1,7 @@
 import type { PromiseExtended, ThenShortcut } from "dexie";
 import type { WhereClauses } from "./where";
 import type { Level2, UpdateSpec } from "./UpdateSpec";
-import type { DexiePrimaryKeyPathOrPaths } from "./primarykey";
+import type { PrimaryKeyPathOrPaths } from "./primarykey";
 import type { PathKeyTypes } from "./utilitytypes";
 import type { EqualityKeyTypes } from "./whereEquality";
 
@@ -50,7 +50,7 @@ export type Collection<
   TWherePathKeyTypes extends PathKeyTypes,
   TWhereEqualityKeyTypes extends EqualityKeyTypes,
   TDexie,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths
 > = CollectionBase<
   TGet,
   TDatabase,
@@ -112,7 +112,7 @@ interface CollectionBase<
   TWherePathKeyTypes extends PathKeyTypes,
   TWhereEqualityKeyTypes extends EqualityKeyTypes,
   TDexie,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths
 > {
   db: TDexie;
   clone(

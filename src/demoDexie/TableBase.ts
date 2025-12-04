@@ -13,10 +13,10 @@ import type {
   IndexPathRegistry,
 } from "./indexpaths";
 import type {
-  DexiePrimaryKeyPathOrPaths,
   PrimaryKey,
   PrimaryKeyId,
   PrimaryKeyRegistry,
+  PrimaryKeyPathOrPaths,
 } from "./primarykey";
 import type { TableHooks } from "./TableHooks";
 import type { Level2, UpdateSpec } from "./UpdateSpec";
@@ -29,7 +29,7 @@ import type { EqualityKeyTypes, WhereEqualityRegistry } from "./whereEquality";
 type PathRegistry<
   TDatabase,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TPKey
 > = readonly [
   ...IndexPathRegistry<TDatabase, TIndexPaths>,
@@ -42,7 +42,7 @@ export interface TableCore<
   TGet,
   TDatabase,
   TInsert,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TPKey,
   TWherePathKeyTypes extends PathKeyTypes,
@@ -162,7 +162,7 @@ export type TableBase<
   TGet,
   TDatabase,
   TInsert,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TPKey,
   TDexie = any,

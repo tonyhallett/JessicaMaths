@@ -2,13 +2,13 @@ import { type PromiseExtended } from "dexie";
 import type { ChangeCallback } from "./Collection";
 import type { DexieIndexPaths } from "./indexpaths";
 import type { Level2, UpdateSpec } from "./UpdateSpec";
-import type { DexiePrimaryKeyPathOrPaths, PrimaryKey } from "./primarykey";
+import type { PrimaryKey, PrimaryKeyPathOrPaths } from "./primarykey";
 import type { TableInboundBase } from "./TableInboundBase";
 
 export type TableInbound<
   TName extends string,
   TDatabase,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet,
   TInsert,

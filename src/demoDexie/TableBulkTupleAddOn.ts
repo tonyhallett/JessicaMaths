@@ -4,15 +4,15 @@ import Dexie, {
   type Table,
 } from "dexie";
 import type {
-  DexiePrimaryKeyPathOrPaths,
   PrimaryKey,
   PromiseExtendedPKeyOrKeys,
+  PrimaryKeyPathOrPaths,
 } from "./primarykey";
 import type { NoExcessDataPropertiesArray } from "./utilitytypes";
 
 export interface TableInboundBaseBulkTuple<
   TDatabase,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TInsert
 > {
   bulkAddTuple<TArr extends readonly [...any[]]>(
@@ -25,7 +25,7 @@ export interface TableInboundBaseBulkTuple<
 
 export interface TableInboundAutoBulkTuple<
   TDatabase,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TInsert
 > {
   bulkAddTuple<B extends boolean, TArr extends readonly [...any[]]>(

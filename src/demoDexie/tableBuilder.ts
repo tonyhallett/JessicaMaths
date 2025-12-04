@@ -10,7 +10,11 @@ import type {
   CompoundKeyPaths,
   ValidIndexedDBKeyPath,
 } from "./ValidIndexedDBKeyPaths";
-import type { DeletePrimaryKeys, OptionalPrimaryKeys } from "./primarykey";
+import type {
+  DeletePrimaryKeys,
+  OptionalPrimaryKeys,
+  PrimaryKeyPathOrPaths,
+} from "./primarykey";
 import type {
   ConstructorOf,
   IncludesNumber,
@@ -23,7 +27,7 @@ import type {
 
 export interface TableConfig<
   TDatabase,
-  TPKeyPathOrPaths,
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TAuto extends boolean,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet = TDatabase,

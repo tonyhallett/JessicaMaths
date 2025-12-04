@@ -1,17 +1,11 @@
 import type { KeyPathValue, PromiseExtended } from "dexie";
-import type {
-  CompoundKeyPaths,
-  ValidIndexedDBKeyPath,
-} from "./ValidIndexedDBKeyPaths";
 import type { PathKeyType } from "./utilitytypes";
 
-export type DexiePrimaryKeyPathOrPaths<T> =
-  | ValidIndexedDBKeyPath<T>
-  | CompoundKeyPaths<T>;
+export type PrimaryKeyPathOrPaths = string | readonly string[];
 
 export type PrimaryKey<
   T,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<T>
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths
 > = TPKeyPathOrPaths extends readonly any[]
   ? {
       [I in keyof TPKeyPathOrPaths]: KeyPathValue<
@@ -23,7 +17,7 @@ export type PrimaryKey<
 
 export type PrimaryKeyPaths<
   T,
-  TPKeyPathOrPths extends DexiePrimaryKeyPathOrPaths<T>
+  TPKeyPathOrPths extends PrimaryKeyPathOrPaths
 > = TPKeyPathOrPths extends readonly (infer U)[]
   ? U extends string
     ? U
@@ -85,7 +79,7 @@ type DeleteByPath<T, Parts extends readonly string[]> = Parts extends [
 // Handles single string key or array of string keys
 export type DeletePrimaryKeys<
   T,
-  TKey extends string | readonly string[]
+  TKey extends PrimaryKeyPathOrPaths
 > = TKey extends readonly string[]
   ? TKey extends [infer First, ...infer Rest]
     ? First extends string

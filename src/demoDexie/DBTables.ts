@@ -1,3 +1,4 @@
+import type { PrimaryKeyPathOrPaths } from "./primarykey";
 import type { TableConfig } from "./tableBuilder";
 import type { TableInbound } from "./TableInbound";
 import type { TableInboundAuto } from "./TableInboundAuto";
@@ -12,7 +13,7 @@ export type DBTables<
     ? TName
     : never]: TConfig[TName] extends TableConfig<
     infer TDatabase,
-    infer TPKeyPathOrPaths,
+    infer TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
     infer TAuto,
     infer TIndexPaths,
     infer TGet,

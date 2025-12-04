@@ -1,5 +1,5 @@
 import type { Collection } from "./Collection";
-import type { DexiePrimaryKeyPathOrPaths } from "./primarykey";
+import type { PrimaryKeyPathOrPaths } from "./primarykey";
 import type { PathKeyTypes } from "./utilitytypes";
 import type { EqualityKeyTypes, KeyTypeForEquality } from "./whereEquality";
 
@@ -33,7 +33,7 @@ export interface WhereClauses<
   TWherePathKeyTypes extends PathKeyTypes,
   TWhereEqualityKeyTypes extends EqualityKeyTypes,
   TDexie,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TCollectionKey
 > {
   where<TPath extends TWherePathKeyTypes[number]["path"]>(
@@ -60,7 +60,7 @@ export interface WhereClausesEquality<
   TWherePathKeyTypes extends PathKeyTypes,
   TWhereEqualityKeyTypes extends EqualityKeyTypes,
   TDexie,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TCollectionKey
 > {
   where<
@@ -99,7 +99,7 @@ export type WhereClause<
   TWherePathKeyTypes extends PathKeyTypes,
   TWhereEqualityKeyTypes extends EqualityKeyTypes,
   TDexie,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TCollectionKey // this will union with TKey,
 > = WhereClauseNonStrings<
   TGet,
@@ -134,7 +134,7 @@ export interface WhereClauseNonStrings<
   TWherePathKeyTypes extends PathKeyTypes,
   TWhereEqualityKeyTypes extends EqualityKeyTypes,
   TDexie,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TCollectionKey
 > {
   /*
@@ -313,7 +313,7 @@ interface Prefixes<
   TWherePathKeyTypes extends PathKeyTypes,
   TWhereEqualityKeyTypes extends EqualityKeyTypes,
   TDexie,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TCollectionKey
 > {
   (prefixes: string[]): Collection<
@@ -349,7 +349,7 @@ interface ValuesOf<
   TWherePathKeyTypes extends PathKeyTypes,
   TWhereEqualityKeyTypes extends EqualityKeyTypes,
   TDexie,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TCollectionKey
 > {
   (values: readonly Key[]): Collection<
@@ -384,7 +384,7 @@ interface WhereStringClause<
   TWherePathKeyTypes extends PathKeyTypes,
   TWhereEqualityKeyTypes extends EqualityKeyTypes,
   TDexie,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TCollectionKey
 > {
   //https://dexie.org/docs/WhereClause/WhereClause.anyOfIgnoreCase()

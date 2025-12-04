@@ -1,6 +1,6 @@
 import type { PromiseExtended } from "dexie";
 import type { DexieIndexPaths } from "./indexpaths";
-import type { DexiePrimaryKeyPathOrPaths, PrimaryKey } from "./primarykey";
+import type { PrimaryKey, PrimaryKeyPathOrPaths } from "./primarykey";
 import type { TableBase } from "./TableBase";
 import type { NoExcessDataProperties } from "./utilitytypes";
 import type { TableInboundBaseBulkTuple } from "./TableBulkTupleAddOn";
@@ -8,7 +8,7 @@ import type { TableInboundBaseBulkTuple } from "./TableBulkTupleAddOn";
 export type TableInboundBase<
   TName extends string,
   TDatabase,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet,
   TInsert,

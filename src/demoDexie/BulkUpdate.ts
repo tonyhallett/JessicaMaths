@@ -1,7 +1,7 @@
 import type {
-  DexiePrimaryKeyPathOrPaths,
   PrimaryKey,
   PrimaryKeyPaths,
+  PrimaryKeyPathOrPaths,
 } from "./primarykey";
 import type { Level2, UpdateSpec } from "./UpdateSpec";
 
@@ -12,13 +12,13 @@ import type { Level2, UpdateSpec } from "./UpdateSpec";
 */
 type BulkUpdateChanges<
   T,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<T>,
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TMAXDEPTH extends string = Level2
 > = Omit<UpdateSpec<T, TMAXDEPTH>, PrimaryKeyPaths<T, TPKeyPathOrPaths>>;
 
 export interface BulkUpdate<
   T,
-  TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<T>,
+  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
   TMAXDEPTH extends string = Level2
 > {
   key: PrimaryKey<T, TPKeyPathOrPaths>;
