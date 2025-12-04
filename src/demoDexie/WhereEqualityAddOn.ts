@@ -6,7 +6,6 @@ export function WhereEqualityAddOn(db: Dexie) {
     "whereEquality",
     "whereCompositeEquality",
     "whereSingleEquality",
-    "whereSingleFilterEquality",
   ];
 
   for (const method of methods) {
@@ -17,4 +16,12 @@ export function WhereEqualityAddOn(db: Dexie) {
       return tablePrototype.where.call(this, equality);
     };
   }
+  (tablePrototype as any).whereSingleFilterEquality = function (
+    this: Table,
+    index: Record<string, any>,
+    filter: Record<string, any>
+  ): any {
+    const equality = { ...index, ...filter };
+    return tablePrototype.where.call(this, equality);
+  };
 }
