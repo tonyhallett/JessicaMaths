@@ -1024,6 +1024,11 @@ describe("table base", () => {
     });
 
     describe("where equality or alias whereEquality", () => {
+      it("temp", () => {
+        db.table.where({ stringIndex: "value" }).each((item, cursor) => {
+          expect(cursor.key).type.toBe<string>();
+        });
+      });
       it("should accept single index object", () => {
         db.table.where({ stringIndex: "value" }).each((item, cursor) => {
           expect(cursor.key).type.toBe<string>();
@@ -1066,17 +1071,18 @@ describe("table base", () => {
             expect(cursor.key).type.toBe<[string, number]>();
           });
 
-        db.table
-          .where({ compound2: 1, compound1: "a" })
-          .each((item, cursor) => {
-            expect(cursor.key).type.toBe<[string, number]>();
-          });
-
         // virtual singular
         db.table.where({ compound1: "a" }).each((item, cursor) => {
           expect(cursor.key).type.toBe<string>();
         });
         expect(db.table.where).type.not.toBeCallableWith({ compound2: 1 });
+
+        expect(
+          db.table.where({ compound1: "a", compound3: new Date() })
+        ).type.toBe<never>();
+        expect(
+          db.table.where({ compound1: "a", additional: 1 })
+        ).type.toBe<never>();
       });
     });
 

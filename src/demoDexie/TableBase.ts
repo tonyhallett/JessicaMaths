@@ -49,6 +49,7 @@ export interface TableCore<
   TWhereEqualityKeyTypes extends EqualityKeyTypes,
   TDexie
 > {
+  equalityKeyTypes: TWhereEqualityKeyTypes;
   db: TDexie;
   readonly name: TName;
   schema: TableSchema;

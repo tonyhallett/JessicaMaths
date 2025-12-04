@@ -1,8 +1,7 @@
-import type Dexie from "dexie";
 import type { Collection } from "./Collection";
 import type { DexiePrimaryKeyPathOrPaths } from "./primarykey";
 import type { PathKeyTypes } from "./utilitytypes";
-import type { EqualityKeyTypes } from "./whereEquality";
+import type { EqualityKeyTypes, KeyTypeForEquality } from "./whereEquality";
 
 type KeyTypeForPath<TPathLookup extends PathKeyTypes, TPath> = Extract<
   TPathLookup[number],
@@ -15,8 +14,8 @@ type IsExactly<A, B> = (<T>() => T extends A ? 1 : 2) extends <
   ? true
   : false;
 
-type KeyTypeForEquality<
-  TLookup extends readonly { equality: any; keyType: any }[],
+/* type KeyTypeForEquality<
+  TLookup extends EqualityKeyTypes,
   TEquality
 > = TLookup[number] extends infer Entry
   ? Entry extends { equality: infer E; keyType: infer K }
@@ -24,7 +23,7 @@ type KeyTypeForEquality<
       ? K
       : never
     : never
-  : never;
+  : never; */
 
 export interface WhereClauses<
   TGet,
@@ -64,39 +63,25 @@ export interface WhereClausesEquality<
   TPKeyPathOrPaths extends DexiePrimaryKeyPathOrPaths<TDatabase>,
   TCollectionKey
 > {
-  where<TEquality extends TWhereEqualityKeyTypes[number]["equality"]>(
+  where<
+    TEquality extends TWhereEqualityKeyTypes[number]["equality"],
+    TKey = KeyTypeForEquality<TWhereEqualityKeyTypes, TEquality>
+  >(
     equality: TEquality
-  ): Collection<
-    TGet,
-    TDatabase,
-    TInsert,
-    TPKey,
-    CollectionKey<
-      TCollectionKey,
-      KeyTypeForEquality<TWhereEqualityKeyTypes, TEquality>
-    >,
-    TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
-    TDexie,
-    TPKeyPathOrPaths
-  >;
-
-  whereEquality<TEquality extends TWhereEqualityKeyTypes[number]["equality"]>(
-    equality: TEquality
-  ): Collection<
-    TGet,
-    TDatabase,
-    TInsert,
-    TPKey,
-    CollectionKey<
-      TCollectionKey,
-      KeyTypeForEquality<TWhereEqualityKeyTypes, TEquality>
-    >,
-    TWherePathKeyTypes,
-    TWhereEqualityKeyTypes,
-    TDexie,
-    TPKeyPathOrPaths
-  >;
+  ): [TKey] extends [never]
+    ? never
+    : Collection<
+        TGet,
+        TDatabase,
+        TInsert,
+        TPKey,
+        CollectionKey<TCollectionKey, TKey>,
+        TWherePathKeyTypes,
+        TWhereEqualityKeyTypes,
+        TDexie,
+        TPKeyPathOrPaths
+      >;
+  whereEquality: this["where"];
 }
 
 type CollectionKey<TCurrent, TKey> = [TCurrent] extends [undefined]

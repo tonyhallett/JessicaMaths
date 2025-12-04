@@ -76,8 +76,79 @@ type IndexEqualityArray<
     : IndexEqualityArray<TDatabase, R, Out>
   : Out;
 
-export type EqualityKeyType<TEquality, TKey> = {
+export type EqualityKeyType<
+  TEquality,
+  TKey,
+  TIndexProperty extends keyof TEquality | never = never
+> = {
   readonly equality: TEquality;
   readonly keyType: TKey;
+  readonly indexProperty: TIndexProperty;
 };
-export type EqualityKeyTypes = readonly EqualityKeyType<any, any>[];
+
+export type EqualityKeyTypes = readonly EqualityKeyType<any, any, any>[];
+
+type Same<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B
+  ? 1
+  : 2
+  ? true
+  : false;
+
+type HasOptionalProperties<T> = {
+  [K in keyof T]-?: {} extends Pick<T, K> ? true : never;
+}[keyof T] extends never
+  ? false
+  : true;
+
+type UnionOfMatchIndexTypes<
+  TMatch extends Record<string, any>,
+  TIndexLookup
+> = TIndexLookup extends Record<string, any>
+  ? TIndexLookup[keyof Pick<TIndexLookup, keyof TMatch & keyof TIndexLookup>]
+  : never;
+
+type CorrectPropertyTypes<TEquality, TMatch> =
+  keyof TMatch extends keyof TEquality
+    ? false extends {
+        [K in keyof TMatch]: Same<TMatch[K], Required<TEquality>[K]>;
+      }[keyof TMatch]
+      ? false
+      : true
+    : false;
+
+type IndexPropertyIsNever<TIndexProperty> = [TIndexProperty] extends [never]
+  ? true
+  : false;
+
+type Condition<
+  TEquality,
+  TMatch,
+  TIndexProperty extends keyof TEquality
+> = Same<TEquality, TMatch> extends true
+  ? true
+  : IndexPropertyIsNever<TIndexProperty> extends true
+  ? false
+  : TMatch extends { [K in TIndexProperty]: TEquality[TIndexProperty] }
+  ? CorrectPropertyTypes<TEquality, TMatch> extends true
+    ? true
+    : false
+  : false;
+
+export type KeyTypeForEquality<
+  T extends EqualityKeyTypes,
+  TMatch extends Record<string, any>
+> = T extends readonly [infer First, ...infer Rest]
+  ? First extends EqualityKeyType<
+      infer Equality,
+      infer KeyType,
+      infer IndexProperty
+    >
+    ? Condition<Equality, TMatch, IndexProperty> extends true
+      ? HasOptionalProperties<Equality> extends true
+        ? UnionOfMatchIndexTypes<TMatch, KeyType>
+        : KeyType
+      : Rest extends any[]
+      ? KeyTypeForEquality<Rest, TMatch>
+      : never
+    : never
+  : never;
