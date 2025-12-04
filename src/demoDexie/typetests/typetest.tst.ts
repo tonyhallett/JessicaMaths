@@ -1048,6 +1048,46 @@ describe("table base", () => {
         });
       });
 
+      it("should accept an equality filter", () => {
+        interface TableItem {
+          id: string;
+          stringIndex: string;
+          numberIndex: number;
+          nestedIndex: { subIndex: number };
+          notAnIndex: number;
+          compound1: string;
+          compound2: number;
+          multiEntry: string[];
+        }
+
+        const db = dexieFactory(
+          1,
+          {
+            table: tableBuilder<TableItem, "I">()
+              .primaryKey("id")
+              .index("stringIndex")
+              .index("numberIndex")
+              .build(),
+          },
+          ""
+        );
+        db.table
+          .whereSingleFilterEquality(
+            { stringIndex: "value" },
+            { multiEntry: ["a"] }
+          )
+          .each((item, cursor) => {
+            expect(cursor.key).type.toBe<string>();
+          });
+
+        expect(
+          db.table.whereSingleFilterEquality(
+            { stringIndex: "value", additional: 1 },
+            { multiEntry: ["a"] }
+          )
+        ).type.toBe<never>();
+      });
+
       it("should accept compound index object", () => {
         interface TableItem {
           id: string;

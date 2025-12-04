@@ -2,7 +2,7 @@ import type { Collection } from "./Collection";
 import type { PrimaryKeyPathOrPaths } from "./primarykey";
 import type { PathKeyTypes } from "./utilitytypes";
 import type {
-  EqualityKeyTypes,
+  EqualityFilter,
   EqualityRegistryLookup,
   KeyTypeForEquality,
 } from "./whereEquality";
@@ -100,6 +100,29 @@ export interface WhereClausesEquality<
         TInsert,
         TPKey,
         CollectionKey<TCollectionKey, TKey>,
+        TWherePathKeyTypes,
+        TEqualityRegistryLookup,
+        TDexie,
+        TPKeyPathOrPaths
+      >;
+
+  whereSingleFilterEquality<
+    TEquality extends TEqualityRegistryLookup["single"][number]["equality"],
+    TKey = KeyTypeForEquality<TEqualityRegistryLookup["single"], TEquality>
+  >(
+    equality: TEquality,
+    equalityFilter: EqualityFilter<TDatabase>
+  ): [TKey] extends [never]
+    ? never
+    : Collection<
+        TGet,
+        TDatabase,
+        TInsert,
+        TPKey,
+        CollectionKey<
+          TCollectionKey,
+          KeyTypeForEquality<TEqualityRegistryLookup["single"], TEquality>
+        >,
         TWherePathKeyTypes,
         TEqualityRegistryLookup,
         TDexie,

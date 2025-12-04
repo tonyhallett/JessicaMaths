@@ -25,9 +25,7 @@ import type { UpsertSpec } from "./UpsertSpec";
 import type { WhereClauses, WhereClausesEquality } from "./where";
 import type { PathKeyTypes, PathKeyType } from "./utilitytypes";
 import type {
-  EqualityKeyTypes,
   EqualityRegistryLookup,
-  WhereEqualityRegistry,
   WhereEqualityRegistryLookup,
 } from "./whereEquality";
 

@@ -6,6 +6,7 @@ export function WhereEqualityAddOn(db: Dexie) {
     "whereEquality",
     "whereCompositeEquality",
     "whereSingleEquality",
+    "whereSingleFilterEquality",
   ];
 
   for (const method of methods) {
