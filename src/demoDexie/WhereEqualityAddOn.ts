@@ -14,7 +14,7 @@ const getMethods: GetEqualityMethods = [
   "getSingleEquality",
 ];
 type WhereEqualityMethods = ExcludeKeysTuple<
-  WhereEquality<any, any, any, any, any, any, any, any, any>,
+  WhereEquality<any, any, any, any, any, any, any, any>,
   "whereSingleFilterEquality" | "where"
 >;
 const whereMethods: WhereEqualityMethods = [
@@ -26,7 +26,7 @@ const whereMethods: WhereEqualityMethods = [
 export function WhereEqualityAddOn(db: Dexie) {
   const tablePrototype = db.Table.prototype as Table &
     TableGetEquality<any, any, any> &
-    WhereEquality<any, any, any, any, any, any, any, any, any>;
+    WhereEquality<any, any, any, any, any, any, any, any>;
 
   aliasMethodsTs(tablePrototype, whereMethods, "where");
 

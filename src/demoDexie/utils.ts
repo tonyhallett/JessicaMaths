@@ -28,7 +28,7 @@ export function aliasMethodsTs<
   TAliases extends readonly (keyof TProto)[],
   TKey extends keyof TProto
 >(proto: TProto, aliases: TAliases, original: TKey) {
-  aliasMethodsTs(proto, aliases, original);
+  aliasMethods(proto, aliases, original);
 }
 
 export function aliasMethods<TProto extends object, TKey extends keyof TProto>(
