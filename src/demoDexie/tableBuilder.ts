@@ -118,7 +118,7 @@ type CompoundMatchesPK<TCompound, PK> = PK extends readonly any[]
 
 type SingleIndexKeyPathExcludePrimaryKey<
   TDatabase,
-  PkPathOrPaths /*  extends string | readonly string[] */,
+  PkPathOrPaths,
   TAllowTypeSpecificProperties extends boolean,
   TMaxDepth extends string
 > = TMaxDepth extends MaxDepth<TMaxDepth>
@@ -131,16 +131,15 @@ type SingleIndexKeyPathExcludePrimaryKey<
 
 type MultiIndexKeyPathExcludePrimaryKey<
   TDatabase,
-  PkPathOrPaths /* extends string | readonly string[] */,
+  PkPathOrPaths,
   TMaxDepth extends string
 > = TMaxDepth extends MaxDepth<TMaxDepth>
   ? MultiEntryKeyPath<ApplySinglePkRemoval<TDatabase, PkPathOrPaths>, TMaxDepth>
   : never;
 
-type ApplySinglePkRemoval<
-  TDatabase,
-  PkPathOrPaths /* extends string | readonly string[] */
-> = [PkPathOrPaths] extends [never]
+type ApplySinglePkRemoval<TDatabase, PkPathOrPaths> = [PkPathOrPaths] extends [
+  never
+]
   ? TDatabase
   : PkPathOrPaths extends readonly string[]
   ? TDatabase
@@ -148,7 +147,7 @@ type ApplySinglePkRemoval<
 
 interface IndexMethods<
   TDatabase,
-  PkPathOrPaths /*  extends string | readonly string[] */,
+  PkPathOrPaths,
   Auto extends boolean,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet = TDatabase,

@@ -121,10 +121,9 @@ type BuildPrimaryEntries<
     : []
   : [];
 
-export type PrimaryKeyRegistry<
-  TPKeyPathOrPaths /* extends string | readonly string[] */,
-  TPrimaryKeyTypes
-> = [TPKeyPathOrPaths] extends [never]
+export type PrimaryKeyRegistry<TPKeyPathOrPaths, TPrimaryKeyTypes> = [
+  TPKeyPathOrPaths
+] extends [never]
   ? readonly []
   : TPKeyPathOrPaths extends readonly string[]
   ? TPrimaryKeyTypes extends readonly any[]

@@ -88,10 +88,7 @@ type IndexKeyTypesSplit<
     : IndexKeyTypesSplit<TDatabase, R, Out>
   : Out;
 
-type PrimaryKeyTypes<
-  TPKeyPathOrPaths /* extends string | readonly string[] */,
-  TPkey extends any | readonly any[]
-> = {
+type PrimaryKeyTypes<TPKeyPathOrPaths, TPkey extends any | readonly any[]> = {
   single: TPKeyPathOrPaths extends string
     ? PkEqualityEntries<TPKeyPathOrPaths, TPkey>
     : [];
@@ -101,7 +98,7 @@ type PrimaryKeyTypes<
 };
 
 type ComputePrimaryKeyTypes<
-  TPKeyPathOrPaths /* extends string | readonly string[] | never */,
+  TPKeyPathOrPaths,
   TPkey extends any | readonly any[]
 > = PrimaryKeyTypes<TPKeyPathOrPaths, TPkey>;
 
@@ -113,7 +110,7 @@ type SplitEqualityKeyTypes = {
 export type WhereEqualityRegistryLookup<
   TDatabase,
   TPaths extends DexieIndexPaths<TDatabase>,
-  TPKeyPathOrPaths /* extends string | readonly string[] | never */,
+  TPKeyPathOrPaths,
   TPkey extends any | readonly any[]
 > = ComputePrimaryKeyTypes<
   TPKeyPathOrPaths,
