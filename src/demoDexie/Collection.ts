@@ -1,9 +1,8 @@
 import type { PromiseExtended, ThenShortcut } from "dexie";
-import type { WhereClauses } from "./where";
+import type { WherePaths } from "./where";
 import type { Level2, UpdateSpec } from "./UpdateSpec";
-import type { PrimaryKeyPathOrPaths } from "./primarykey";
 import type { PathKeyTypes } from "./utilitytypes";
-import type { EqualityKeyTypes, EqualityRegistryLookup } from "./whereEquality";
+import type { EqualityRegistryLookup } from "./whereEquality";
 
 type Comparable =
   | number
@@ -50,7 +49,7 @@ export type Collection<
   TWherePathKeyTypes extends PathKeyTypes,
   TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
-  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths
+  TPKeyPathOrPaths
 > = CollectionBase<
   TGet,
   TDatabase,
@@ -62,7 +61,7 @@ export type Collection<
   TDexie,
   TPKeyPathOrPaths
 > & {
-  or: WhereClauses<
+  or: WherePaths<
     TGet,
     TDatabase,
     TInsert,
@@ -112,7 +111,7 @@ interface CollectionBase<
   TWherePathKeyTypes extends PathKeyTypes,
   TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
-  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths
+  TPKeyPathOrPaths
 > {
   db: TDexie;
   clone(

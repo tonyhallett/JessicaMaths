@@ -1,5 +1,4 @@
 import type { Collection } from "./Collection";
-import type { PrimaryKeyPathOrPaths } from "./primarykey";
 import type { PathKeyTypes } from "./utilitytypes";
 import type {
   EqualityFilter,
@@ -12,7 +11,7 @@ type KeyTypeForPath<TPathLookup extends PathKeyTypes, TPath> = Extract<
   { path: TPath }
 >["keyType"];
 
-export interface WhereClauses<
+export interface WherePaths<
   TGet,
   TDatabase,
   TInsert,
@@ -20,7 +19,7 @@ export interface WhereClauses<
   TWherePathKeyTypes extends PathKeyTypes,
   TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
-  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
+  TPKeyPathOrPaths,
   TCollectionKey
 > {
   where<TPath extends TWherePathKeyTypes[number]["path"]>(
@@ -39,7 +38,7 @@ export interface WhereClauses<
   >;
 }
 
-export interface WhereClausesEquality<
+export interface WhereEquality<
   TGet,
   TDatabase,
   TInsert,
@@ -47,8 +46,7 @@ export interface WhereClausesEquality<
   TWherePathKeyTypes extends PathKeyTypes,
   TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
-  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
-  TCollectionKey
+  TPKeyPathOrPaths
 > {
   where<
     TEquality extends TEqualityRegistryLookup["all"][number]["equality"],
@@ -62,13 +60,30 @@ export interface WhereClausesEquality<
         TDatabase,
         TInsert,
         TPKey,
-        CollectionKey<TCollectionKey, TKey>,
+        TKey,
         TWherePathKeyTypes,
         TEqualityRegistryLookup,
         TDexie,
         TPKeyPathOrPaths
       >;
-  whereEquality: this["where"];
+  whereEquality<
+    TEquality extends TEqualityRegistryLookup["all"][number]["equality"],
+    TKey = KeyTypeForEquality<TEqualityRegistryLookup["all"], TEquality>
+  >(
+    equality: TEquality
+  ): [TKey] extends [never]
+    ? never
+    : Collection<
+        TGet,
+        TDatabase,
+        TInsert,
+        TPKey,
+        TKey,
+        TWherePathKeyTypes,
+        TEqualityRegistryLookup,
+        TDexie,
+        TPKeyPathOrPaths
+      >;
   whereCompositeEquality<
     TEquality extends TEqualityRegistryLookup["composite"][number]["equality"],
     TKey = KeyTypeForEquality<TEqualityRegistryLookup["composite"], TEquality>
@@ -81,7 +96,7 @@ export interface WhereClausesEquality<
         TDatabase,
         TInsert,
         TPKey,
-        CollectionKey<TCollectionKey, TKey>,
+        TKey,
         TWherePathKeyTypes,
         TEqualityRegistryLookup,
         TDexie,
@@ -99,7 +114,7 @@ export interface WhereClausesEquality<
         TDatabase,
         TInsert,
         TPKey,
-        CollectionKey<TCollectionKey, TKey>,
+        TKey,
         TWherePathKeyTypes,
         TEqualityRegistryLookup,
         TDexie,
@@ -119,10 +134,7 @@ export interface WhereClausesEquality<
         TDatabase,
         TInsert,
         TPKey,
-        CollectionKey<
-          TCollectionKey,
-          KeyTypeForEquality<TEqualityRegistryLookup["single"], TEquality>
-        >,
+        KeyTypeForEquality<TEqualityRegistryLookup["single"], TEquality>,
         TWherePathKeyTypes,
         TEqualityRegistryLookup,
         TDexie,
@@ -145,7 +157,7 @@ export type WhereClause<
   TWherePathKeyTypes extends PathKeyTypes,
   TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
-  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
+  TPKeyPathOrPaths,
   TCollectionKey // this will union with TKey,
 > = WhereClauseNonStrings<
   TGet,
@@ -180,7 +192,7 @@ export interface WhereClauseNonStrings<
   TWherePathKeyTypes extends PathKeyTypes,
   TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
-  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
+  TPKeyPathOrPaths,
   TCollectionKey
 > {
   /*
@@ -359,7 +371,7 @@ interface Prefixes<
   TWherePathKeyTypes extends PathKeyTypes,
   TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
-  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
+  TPKeyPathOrPaths,
   TCollectionKey
 > {
   (prefixes: string[]): Collection<
@@ -395,7 +407,7 @@ interface ValuesOf<
   TWherePathKeyTypes extends PathKeyTypes,
   TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
-  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
+  TPKeyPathOrPaths,
   TCollectionKey
 > {
   (values: readonly Key[]): Collection<
@@ -430,7 +442,7 @@ interface WhereStringClause<
   TWherePathKeyTypes extends PathKeyTypes,
   TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
-  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
+  TPKeyPathOrPaths,
   TCollectionKey
 > {
   //https://dexie.org/docs/WhereClause/WhereClause.anyOfIgnoreCase()

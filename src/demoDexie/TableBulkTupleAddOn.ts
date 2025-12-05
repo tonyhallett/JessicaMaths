@@ -3,16 +3,13 @@ import Dexie, {
   type PromiseExtended,
   type Table,
 } from "dexie";
-import type {
-  PrimaryKey,
-  PromiseExtendedPKeyOrKeys,
-  PrimaryKeyPathOrPaths,
-} from "./primarykey";
+import type { PrimaryKey, PromiseExtendedPKeyOrKeys } from "./primarykey";
 import type { NoExcessDataPropertiesArray } from "./utilitytypes";
+import { aliasMethodTs } from "./utils";
 
 export interface TableInboundBaseBulkTuple<
   TDatabase,
-  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
+  TPKeyPathOrPaths,
   TInsert
 > {
   bulkAddTuple<TArr extends readonly [...any[]]>(
@@ -25,7 +22,7 @@ export interface TableInboundBaseBulkTuple<
 
 export interface TableInboundAutoBulkTuple<
   TDatabase,
-  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
+  TPKeyPathOrPaths,
   TInsert
 > {
   bulkAddTuple<B extends boolean, TArr extends readonly [...any[]]>(
@@ -94,31 +91,6 @@ export function TableBulkTupleAddOn(db: Dexie) {
     TableInboundAutoBulkTuple<any, any, any> &
     TableOutboundBulkTuple<any, any> &
     TableOutboundAutoBulkTuple<any, any>;
-
-  tablePrototype.bulkAddTuple = function (
-    this: Table,
-    items: readonly any[],
-    keysOrOptions?: any,
-    options?: { allKeys: boolean }
-  ): PromiseExtended<any> {
-    return db.Table.prototype.bulkAdd.call(
-      this,
-      items,
-      keysOrOptions,
-      options as any
-    );
-  };
-  tablePrototype.bulkPutTuple = function (
-    this: Table,
-    items: readonly any[],
-    keysOrOptions?: any,
-    options?: { allKeys: boolean }
-  ): PromiseExtended<any> {
-    return db.Table.prototype.bulkPut.call(
-      this,
-      items,
-      keysOrOptions,
-      options as any
-    );
-  };
+  aliasMethodTs(tablePrototype, "bulkAddTuple", "bulkAdd");
+  aliasMethodTs(tablePrototype, "bulkPutTuple", "bulkPut");
 }

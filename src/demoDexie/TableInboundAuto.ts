@@ -1,9 +1,5 @@
 import type { DexieIndexPaths } from "./indexpaths";
-import type {
-  PrimaryKey,
-  PromiseExtendedPKeyOrKeys,
-  PrimaryKeyPathOrPaths,
-} from "./primarykey";
+import type { PrimaryKey, PromiseExtendedPKeyOrKeys } from "./primarykey";
 import type { TableInboundBase } from "./TableInboundBase";
 import type { TableInboundAutoAdd } from "./AddAutoReturnObjectAddOn";
 import type { TableInboundAutoBulkTuple } from "./TableBulkTupleAddOn";
@@ -11,7 +7,7 @@ import type { TableInboundAutoBulkTuple } from "./TableBulkTupleAddOn";
 export type TableInboundAuto<
   TName extends string,
   TDatabase,
-  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
+  TPKeyPathOrPaths,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet,
   TInsert,

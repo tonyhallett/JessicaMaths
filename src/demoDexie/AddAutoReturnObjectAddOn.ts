@@ -1,12 +1,8 @@
 import Dexie, { type Table } from "dexie";
-import type { PrimaryKey, PrimaryKeyPathOrPaths } from "./primarykey";
+import type { PrimaryKey } from "./primarykey";
 import type { NoExcessDataProperties } from "./utilitytypes";
 
-export interface TableInboundAutoAdd<
-  TDatabase,
-  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
-  TInsert
-> {
+export interface TableInboundAutoAdd<TDatabase, TPKeyPathOrPaths, TInsert> {
   addObject<T extends TInsert>(
     item: NoExcessDataProperties<T, TInsert>
   ): Promise<

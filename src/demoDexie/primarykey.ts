@@ -1,30 +1,24 @@
 import type { KeyPathValue, PromiseExtended } from "dexie";
 import type { PathKeyType } from "./utilitytypes";
 
-export type PrimaryKeyPathOrPaths = string | readonly string[];
+export type PrimaryKey<T, TPKeyPathOrPaths> =
+  TPKeyPathOrPaths extends readonly string[]
+    ? {
+        [I in keyof TPKeyPathOrPaths]: KeyPathValue<
+          T,
+          TPKeyPathOrPaths[I] & keyof T
+        >;
+      }
+    : KeyPathValue<T, TPKeyPathOrPaths>;
 
-export type PrimaryKey<
-  T,
-  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths
-> = TPKeyPathOrPaths extends readonly any[]
-  ? {
-      [I in keyof TPKeyPathOrPaths]: KeyPathValue<
-        T,
-        TPKeyPathOrPaths[I] & keyof T
-      >;
-    }
-  : KeyPathValue<T, TPKeyPathOrPaths>;
-
-export type PrimaryKeyPaths<
-  T,
-  TPKeyPathOrPths extends PrimaryKeyPathOrPaths
-> = TPKeyPathOrPths extends readonly (infer U)[]
-  ? U extends string
-    ? U
-    : never
-  : TPKeyPathOrPths extends string
-  ? TPKeyPathOrPths
-  : never;
+export type PrimaryKeyPaths<T, TPKeyPathOrPths> =
+  TPKeyPathOrPths extends readonly (infer U)[]
+    ? U extends string
+      ? U
+      : never
+    : TPKeyPathOrPths extends string
+    ? TPKeyPathOrPths
+    : never;
 
 // Split a dotted key path into tuple
 type Split<Path extends string> = Path extends `${infer Head}.${infer Rest}`
@@ -45,10 +39,7 @@ type OptionalByPath<T, Parts extends readonly string[]> = Parts extends [
     : T
   : T;
 
-export type OptionalPrimaryKeys<
-  T,
-  TKey extends string | readonly string[]
-> = TKey extends readonly string[]
+export type OptionalPrimaryKeys<T, TKey> = TKey extends readonly string[]
   ? TKey extends [infer First, ...infer Rest]
     ? First extends string
       ? Rest extends readonly string[]
@@ -77,10 +68,7 @@ type DeleteByPath<T, Parts extends readonly string[]> = Parts extends [
   : T;
 
 // Handles single string key or array of string keys
-export type DeletePrimaryKeys<
-  T,
-  TKey extends PrimaryKeyPathOrPaths
-> = TKey extends readonly string[]
+export type DeletePrimaryKeys<T, TKey> = TKey extends readonly string[]
   ? TKey extends [infer First, ...infer Rest]
     ? First extends string
       ? Rest extends readonly string[]
@@ -134,7 +122,7 @@ type BuildPrimaryEntries<
   : [];
 
 export type PrimaryKeyRegistry<
-  TPKeyPathOrPaths extends string | readonly string[],
+  TPKeyPathOrPaths /* extends string | readonly string[] */,
   TPrimaryKeyTypes
 > = [TPKeyPathOrPaths] extends [never]
   ? readonly []

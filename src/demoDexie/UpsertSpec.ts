@@ -1,4 +1,4 @@
-import type { DeletePrimaryKeys, PrimaryKeyPathOrPaths } from "./primarykey";
+import type { DeletePrimaryKeys } from "./primarykey";
 import type { PropModificationTyped } from "./propmodifications";
 
 export type DeepPropertyOrModification<T> = T extends object
@@ -13,10 +13,7 @@ export type DeepPropertyOrModification<T> = T extends object
       }
   : T | PropModificationTyped<T>;
 
-export type UpsertSpec<
-  T,
-  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths
-> = DeletePrimaryKeys<
+export type UpsertSpec<T, TPKeyPathOrPaths> = DeletePrimaryKeys<
   {
     [K in keyof T]:
       | DeepPropertyOrModification<T[K]>

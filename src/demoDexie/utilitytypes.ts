@@ -112,3 +112,24 @@ export type PathKeyTypes = readonly PathKeyType<
   string | readonly string[],
   any
 >[];
+
+// helper: get one "last" member of the union
+type LastOf<U> = UnionToIntersection<
+  U extends any ? () => U : never
+> extends () => infer R
+  ? R
+  : never;
+
+// recursive builder: pick LastOf<U> and prepend to result until U is exhausted
+type UnionToTupleRec<U, R extends readonly any[] = readonly []> = [U] extends [
+  never
+]
+  ? R
+  : UnionToTupleRec<Exclude<U, LastOf<U>>, readonly [LastOf<U>, ...R]>;
+
+// public type
+type UnionToTuple<U> = UnionToTupleRec<U>;
+type ExcludeKeys<T, K extends keyof T> = Exclude<keyof T, K>;
+export type ExcludeKeysTuple<T, K extends keyof T> = UnionToTuple<
+  ExcludeKeys<T, K>
+>;

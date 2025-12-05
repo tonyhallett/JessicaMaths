@@ -16,23 +16,24 @@ import type {
   PrimaryKey,
   PrimaryKeyId,
   PrimaryKeyRegistry,
-  PrimaryKeyPathOrPaths,
 } from "./primarykey";
 import type { TableHooks } from "./TableHooks";
 import type { Level2, UpdateSpec } from "./UpdateSpec";
 import type { BulkUpdate } from "./BulkUpdate";
 import type { UpsertSpec } from "./UpsertSpec";
-import type { WhereClauses, WhereClausesEquality } from "./where";
+import type { WherePaths, WhereEquality } from "./where";
 import type { PathKeyTypes, PathKeyType } from "./utilitytypes";
 import type {
+  EqualityFilter,
   EqualityRegistryLookup,
+  IsValidEquality,
   WhereEqualityRegistryLookup,
 } from "./whereEquality";
 
 type PathRegistry<
   TDatabase,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
-  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
+  TPKeyPathOrPaths,
   TPKey
 > = readonly [
   ...IndexPathRegistry<TDatabase, TIndexPaths>,
@@ -40,38 +41,138 @@ type PathRegistry<
   PathKeyType<PrimaryKeyId, TPKey>
 ];
 
+export interface TableGetEquality<
+  TDatabase,
+  TGet,
+  TEqualityRegistryLookup extends EqualityRegistryLookup
+> {
+  get<TEquality extends TEqualityRegistryLookup["all"][number]["equality"]>(
+    equality: TEquality
+  ): IsValidEquality<TEqualityRegistryLookup["all"], TEquality> extends true
+    ? PromiseExtended<TGet | undefined>
+    : never;
+  get<R, TEquality extends TEqualityRegistryLookup["all"][number]["equality"]>(
+    equality: TEquality,
+    thenShortcut: ThenShortcut<TGet | undefined, R>
+  ): IsValidEquality<TEqualityRegistryLookup["all"], TEquality> extends true
+    ? PromiseExtended<R>
+    : never;
+
+  getEquality<
+    TEquality extends TEqualityRegistryLookup["all"][number]["equality"]
+  >(
+    equality: TEquality
+  ): IsValidEquality<TEqualityRegistryLookup["all"], TEquality> extends true
+    ? PromiseExtended<TGet | undefined>
+    : never;
+
+  getEquality<
+    R,
+    TEquality extends TEqualityRegistryLookup["all"][number]["equality"]
+  >(
+    equality: TEquality,
+    thenShortcut: ThenShortcut<TGet | undefined, R>
+  ): IsValidEquality<TEqualityRegistryLookup["all"], TEquality> extends true
+    ? PromiseExtended<R>
+    : never;
+
+  getCompositeEquality<
+    TEquality extends TEqualityRegistryLookup["composite"][number]["equality"]
+  >(
+    equality: TEquality
+  ): IsValidEquality<
+    TEqualityRegistryLookup["composite"],
+    TEquality
+  > extends true
+    ? PromiseExtended<TGet | undefined>
+    : never;
+
+  getCompositeEquality<
+    R,
+    TEquality extends TEqualityRegistryLookup["composite"][number]["equality"]
+  >(
+    equality: TEquality,
+    thenShortcut: ThenShortcut<TGet | undefined, R>
+  ): IsValidEquality<
+    TEqualityRegistryLookup["composite"],
+    TEquality
+  > extends true
+    ? PromiseExtended<R>
+    : never;
+
+  getSingleEquality<
+    TEquality extends TEqualityRegistryLookup["single"][number]["equality"]
+  >(
+    equality: TEquality
+  ): IsValidEquality<TEqualityRegistryLookup["single"], TEquality> extends true
+    ? PromiseExtended<TGet | undefined>
+    : never;
+
+  getSingleEquality<
+    R,
+    TEquality extends TEqualityRegistryLookup["single"][number]["equality"]
+  >(
+    equality: TEquality,
+    thenShortcut: ThenShortcut<TGet | undefined, R>
+  ): IsValidEquality<TEqualityRegistryLookup["single"], TEquality> extends true
+    ? PromiseExtended<R>
+    : never;
+
+  getSingleFilterEquality<
+    TEquality extends TEqualityRegistryLookup["single"][number]["equality"]
+  >(
+    equality: TEquality,
+    equalityFilter: EqualityFilter<TDatabase>
+  ): IsValidEquality<TEqualityRegistryLookup["single"], TEquality> extends true
+    ? PromiseExtended<TGet | undefined>
+    : never;
+
+  getSingleFilterEquality<
+    R,
+    TEquality extends TEqualityRegistryLookup["single"][number]["equality"]
+  >(
+    equality: TEquality,
+    equalityFilter: EqualityFilter<TDatabase>,
+    thenShortcut: ThenShortcut<TGet | undefined, R>
+  ): IsValidEquality<TEqualityRegistryLookup["single"], TEquality> extends true
+    ? PromiseExtended<R>
+    : never;
+}
+
+export interface TableGetKey<TGet, TPKey> {
+  get(key: TPKey): PromiseExtended<TGet | undefined>;
+  get<R>(
+    key: TPKey,
+    thenShortcut: ThenShortcut<TGet | undefined, R>
+  ): PromiseExtended<R>;
+  bulkGet(keys: TPKey[]): PromiseExtended<(TGet | undefined)[]>;
+}
+
+type TableGet<
+  TDatabase,
+  TGet,
+  TPKey,
+  TEqualityRegistryLookup extends EqualityRegistryLookup
+> = TableGetKey<TGet, TPKey> &
+  TableGetEquality<TDatabase, TGet, TEqualityRegistryLookup>;
+
 export interface TableCore<
   TName extends string,
   TGet,
   TDatabase,
   TInsert,
-  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
+  TPKeyPathOrPaths,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TPKey,
   TWherePathKeyTypes extends PathKeyTypes,
   TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie
 > {
-  equalityKeyTypes: TEqualityRegistryLookup;
   db: TDexie;
   readonly name: TName;
   schema: TableSchema;
   hook: TableHooks<TDatabase, TGet, TPKey>;
   core: DBCoreTable;
-
-  get(key: TPKey): PromiseExtended<TGet | undefined>;
-  get<TEquality extends TEqualityRegistryLookup["all"][number]["equality"]>(
-    equality: TEquality
-  ): PromiseExtended<TGet | undefined>;
-  get<R>(
-    key: TPKey,
-    thenShortcut: ThenShortcut<TGet | undefined, R>
-  ): PromiseExtended<R>;
-  get<R, TEquality extends TEqualityRegistryLookup["all"][number]["equality"]>(
-    equality: TEquality,
-    thenShortcut: ThenShortcut<TGet | undefined, R>
-  ): PromiseExtended<TGet | undefined>;
-  bulkGet(keys: TPKey[]): PromiseExtended<(TGet | undefined)[]>;
 
   filter: ReturnType<this["toCollection"]>["and"];
   count: ReturnType<this["toCollection"]>["count"];
@@ -165,7 +266,7 @@ export type TableBase<
   TGet,
   TDatabase,
   TInsert,
-  TPKeyPathOrPaths extends PrimaryKeyPathOrPaths,
+  TPKeyPathOrPaths,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TPKey,
   TDexie = any,
@@ -193,7 +294,17 @@ export type TableBase<
   TEqualityRegistryLookup,
   TDexie
 > &
-  WhereClauses<
+  /* TableWhere<
+    TGet,
+    TDatabase,
+    TInsert,
+    TPKey,
+    TWherePathKeyTypes,
+    TEqualityRegistryLookup,
+    TDexie,
+    TPKeyPathOrPaths
+  > & */
+  WherePaths<
     TGet,
     TDatabase,
     TInsert,
@@ -204,7 +315,7 @@ export type TableBase<
     TPKeyPathOrPaths,
     undefined
   > &
-  WhereClausesEquality<
+  WhereEquality<
     TGet,
     TDatabase,
     TInsert,
@@ -212,6 +323,37 @@ export type TableBase<
     TWherePathKeyTypes,
     TEqualityRegistryLookup,
     TDexie,
-    TPKeyPathOrPaths,
-    undefined
+    TPKeyPathOrPaths
+  > &
+  TableGet<TDatabase, TGet, TPKey, TEqualityRegistryLookup>;
+
+type TableWhere<
+  TGet,
+  TDatabase,
+  TInsert,
+  TPKey,
+  TWherePathKeyTypes extends PathKeyTypes,
+  TEqualityRegistryLookup extends EqualityRegistryLookup,
+  TDexie,
+  TPKeyPathOrPaths
+> = WherePaths<
+  TGet,
+  TDatabase,
+  TInsert,
+  TPKey,
+  TWherePathKeyTypes,
+  TEqualityRegistryLookup,
+  TDexie,
+  TPKeyPathOrPaths,
+  undefined
+> &
+  WhereEquality<
+    TGet,
+    TDatabase,
+    TInsert,
+    TPKey,
+    TWherePathKeyTypes,
+    TEqualityRegistryLookup,
+    TDexie,
+    TPKeyPathOrPaths
   >;
