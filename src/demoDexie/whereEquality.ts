@@ -1,10 +1,5 @@
 import type { KeyPathValue } from "dexie";
-import type {
-  CompoundIndexPaths,
-  DexieIndexPaths,
-  KeyTypeBrand,
-  SingleIndexPath,
-} from "./indexpaths";
+import type { DexieIndexPaths, KeyTypeBrand } from "./indexpaths";
 import type { Level2 } from "./UpdateSpec";
 import type { MaxDepth, NextDepth, NoDescend } from "./utilitytypes";
 

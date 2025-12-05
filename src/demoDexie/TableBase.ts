@@ -22,11 +22,16 @@ import type { Level2, UpdateSpec } from "./UpdateSpec";
 import type { BulkUpdate } from "./BulkUpdate";
 import type { UpsertSpec } from "./UpsertSpec";
 import type { WherePaths, WhereEquality } from "./where";
-import type { PathKeyTypes, PathKeyType } from "./utilitytypes";
+import type {
+  PathKeyTypes,
+  PathKeyType,
+  UnionToIntersection,
+} from "./utilitytypes";
 import type {
   EqualityFilter,
   EqualityRegistryLookup,
   IsValidEquality,
+  KeyTypeForEquality,
   WhereEqualityRegistryLookup,
 } from "./whereEquality";
 
