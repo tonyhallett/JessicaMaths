@@ -22,19 +22,22 @@ export interface WherePaths<
   TPKeyPathOrPaths,
   TCollectionKey
 > {
-  where<TPath extends TWherePathKeyTypes[number]["path"]>(
+  where<
+    TPath extends TWherePathKeyTypes[number]["path"],
+    TKey extends KeyTypeForPath<TWherePathKeyTypes, TPath>
+  >(
     indexOrPrimaryKeyPath: TPath
   ): WhereClause<
     TGet,
     TDatabase,
     TInsert,
     TPKey,
-    KeyTypeForPath<TWherePathKeyTypes, TPath>,
+    TKey,
     TWherePathKeyTypes,
     TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths,
-    TCollectionKey
+    CollectionKey<TCollectionKey, TKey>
   >;
 }
 
@@ -158,7 +161,7 @@ export type WhereClause<
   TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
   TPKeyPathOrPaths,
-  TCollectionKey // this will union with TKey,
+  TCollectionKey
 > = WhereClauseNonStrings<
   TGet,
   TDatabase,
@@ -169,7 +172,7 @@ export type WhereClause<
   TEqualityRegistryLookup,
   TDexie,
   TPKeyPathOrPaths,
-  CollectionKey<TCollectionKey, TKey> // necessary due to Collection or,
+  TCollectionKey
 > & { db: TDexie } & (Extract<TKey, string> extends never
     ? {}
     : WhereStringClause<
@@ -181,7 +184,7 @@ export type WhereClause<
         TEqualityRegistryLookup,
         TDexie,
         TPKeyPathOrPaths,
-        CollectionKey<TCollectionKey, string> // necessary due to Collection or
+        TCollectionKey
       >);
 export interface WhereClauseNonStrings<
   TGet,

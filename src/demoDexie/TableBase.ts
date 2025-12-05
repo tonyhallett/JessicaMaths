@@ -294,28 +294,7 @@ export type TableBase<
   TEqualityRegistryLookup,
   TDexie
 > &
-  /* TableWhere<
-    TGet,
-    TDatabase,
-    TInsert,
-    TPKey,
-    TWherePathKeyTypes,
-    TEqualityRegistryLookup,
-    TDexie,
-    TPKeyPathOrPaths
-  > & */
-  WherePaths<
-    TGet,
-    TDatabase,
-    TInsert,
-    TPKey,
-    TWherePathKeyTypes,
-    TEqualityRegistryLookup,
-    TDexie,
-    TPKeyPathOrPaths,
-    undefined
-  > &
-  WhereEquality<
+  TableWhere<
     TGet,
     TDatabase,
     TInsert,
