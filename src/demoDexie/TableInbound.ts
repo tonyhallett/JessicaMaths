@@ -12,7 +12,8 @@ export type TableInbound<
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet,
   TInsert,
-  TDexie
+  TDexie,
+  TMaxDepth extends string
 > = TableInboundBase<
   TName,
   TDatabase,
@@ -20,7 +21,8 @@ export type TableInbound<
   TIndexPaths,
   TGet,
   TInsert,
-  TDexie
+  TDexie,
+  TMaxDepth
 > & {
   // note that docs do not mention this ( as the key must exist on the object - so ok for this table type )
   update<TMAXDEPTH extends string = Level2>(

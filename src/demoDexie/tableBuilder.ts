@@ -15,7 +15,7 @@ import type {
   ConstructorOf,
   IncludesNumber,
   IncludesNumberInUnion,
-  MaxDepth,
+  MaxDepthOrDefault,
   NoDescend,
   NoDuplicates,
   TuplesEqual,
@@ -28,7 +28,8 @@ export interface TableConfig<
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet = TDatabase,
   TInsert = TDatabase,
-  TOutboundPKey extends IndexableType = never
+  TOutboundPKey extends IndexableType = never,
+  TMaxDepth extends string = NoDescend
 > {
   readonly pk: { key: string; auto: TAuto };
   readonly indicesSchema: string;
@@ -121,21 +122,20 @@ type SingleIndexKeyPathExcludePrimaryKey<
   PkPathOrPaths,
   TAllowTypeSpecificProperties extends boolean,
   TMaxDepth extends string
-> = TMaxDepth extends MaxDepth<TMaxDepth>
-  ? ValidIndexedDBKeyPath<
-      ApplySinglePkRemoval<TDatabase, PkPathOrPaths>,
-      TAllowTypeSpecificProperties,
-      TMaxDepth
-    >
-  : never;
+> = ValidIndexedDBKeyPath<
+  ApplySinglePkRemoval<TDatabase, PkPathOrPaths>,
+  TAllowTypeSpecificProperties,
+  TMaxDepth
+>;
 
 type MultiIndexKeyPathExcludePrimaryKey<
   TDatabase,
   PkPathOrPaths,
   TMaxDepth extends string
-> = TMaxDepth extends MaxDepth<TMaxDepth>
-  ? MultiEntryKeyPath<ApplySinglePkRemoval<TDatabase, PkPathOrPaths>, TMaxDepth>
-  : never;
+> = MultiEntryKeyPath<
+  ApplySinglePkRemoval<TDatabase, PkPathOrPaths>,
+  TMaxDepth
+>;
 
 type ApplySinglePkRemoval<TDatabase, PkPathOrPaths> = [PkPathOrPaths] extends [
   never
@@ -261,7 +261,8 @@ interface IndexMethods<
         ? OptionalPrimaryKeys<TDatabase, PkPathOrPaths>
         : TDatabase
       : TDatabase,
-    TPKeyOutbound
+    TPKeyOutbound,
+    TMaxDepth
   >;
 }
 
@@ -292,6 +293,8 @@ function createTableBuilder<
 >(mapToClass?: ConstructorOf<TDatabase>) {
   const indexParts: string[] = [];
 
+  type MaxDepth = MaxDepthOrDefault<TMaxDepth>;
+
   function createIndexMethods<
     TPKeyPathOrPaths extends string | readonly string[],
     TAuto extends boolean,
@@ -313,7 +316,7 @@ function createTableBuilder<
     TPKeyIsInbound,
     TOutboundPKey,
     TAllowTypeSpecificProperties,
-    TMaxDepth
+    MaxDepth
   > {
     const addIfNotDuplicatePart = (part: string) => {
       if (indexParts.includes(part)) {
@@ -417,7 +420,7 @@ function createTableBuilder<
 
   return {
     autoIncrement<
-      TPKeyPath extends InboundAutoIncrementKeyPath<TDatabase, TMaxDepth>
+      TPKeyPath extends InboundAutoIncrementKeyPath<TDatabase, MaxDepth>
     >(key: TPKeyPath) {
       return createIndexMethods(key, true, [] as const, true, null as never);
     },
@@ -425,7 +428,7 @@ function createTableBuilder<
       TPKeyPath extends ValidIndexedDBKeyPath<
         TDatabase,
         TAllowTypeSpecificProperties,
-        TMaxDepth
+        MaxDepth
       > &
         string
     >(key: TPKeyPath) {
@@ -435,13 +438,23 @@ function createTableBuilder<
       const TCompoundKeyPaths extends CompoundKeyPaths<
         TDatabase,
         TAllowTypeSpecificProperties,
-        TMaxDepth
+        MaxDepth
       >
     >(
       ...keys: TCompoundKeyPaths
     ): NoDuplicates<TCompoundKeyPaths> extends never
       ? DuplicateKeysError
-      : IndexMethods<TDatabase, TCompoundKeyPaths, false, [], TGet> {
+      : IndexMethods<
+          TDatabase,
+          TCompoundKeyPaths,
+          false,
+          [],
+          TGet,
+          false,
+          never,
+          TAllowTypeSpecificProperties,
+          MaxDepth
+        > {
       return createIndexMethods(
         keys,
         false,

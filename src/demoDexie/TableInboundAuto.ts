@@ -11,7 +11,8 @@ export type TableInboundAuto<
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet,
   TInsert,
-  TDexie
+  TDexie,
+  TMaxDepth extends string
 > = TableInboundBase<
   TName,
   TDatabase,
@@ -19,7 +20,8 @@ export type TableInboundAuto<
   TIndexPaths,
   TGet,
   TInsert,
-  TDexie
+  TDexie,
+  TMaxDepth
 > &
   TableInboundAutoAdd<TDatabase, TPKeyPathOrPaths, TInsert> &
   TableInboundAutoBulkTuple<TDatabase, TPKeyPathOrPaths, TInsert> & {

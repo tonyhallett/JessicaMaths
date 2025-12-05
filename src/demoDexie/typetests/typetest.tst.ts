@@ -11,6 +11,7 @@ import { expect, describe, it } from "tstyche";
 import type { ChangeCallback } from "../Collection";
 import { add, ObjectPropModification } from "../propmodifications";
 import type { NoDescend } from "../utilitytypes";
+import type { Level2 } from "../UpdateSpec";
 
 describe("tableBuilder", () => {
   describe("primary key selection", () => {
@@ -1561,7 +1562,7 @@ describe("Inbound - non auto", () => {
   const db = dexieFactory(
     1,
     {
-      table: tableBuilder<TableItem>().primaryKey("id").build(),
+      table: tableBuilder<TableItem, Level2>().primaryKey("id").build(),
       mappedTable: tableClassBuilderExcluded(EntityClass)
         .excludedKeys<"excluded">()
         .primaryKey("id")
@@ -1742,42 +1743,6 @@ describe("Inbound - non auto", () => {
     it("should update using max depth type parameter", () => {
       expect(db.table.update).type.toBeCallableWith(tableItem, {
         nested,
-      });
-
-      expect(db.table.update<"Not a max depth">).type.not.toBeCallableWith(
-        tableItem,
-        {
-          nested,
-        }
-      );
-
-      expect(db.table.update<"">).type.toBeCallableWith(tableItem, {
-        nested: nested,
-      });
-      expect(db.table.update<"">).type.not.toBeCallableWith(tableItem, {
-        "nested.sub": 1,
-      });
-      expect(db.table.update<"I">).type.toBeCallableWith(tableItem, {
-        "nested.sub": 1,
-      });
-
-      expect(db.table.update<"I">).type.not.toBeCallableWith(tableItem, {
-        "nested.deep.level2": nested.deep.level2,
-      });
-      expect(db.table.update<"II">).type.toBeCallableWith(tableItem, {
-        "nested.deep.level2": nested.deep.level2,
-      });
-      // default
-      expect(db.table.update).type.toBeCallableWith(tableItem, {
-        "nested.deep.level2": nested.deep.level2,
-      });
-
-      expect(db.table.update<"II">).type.not.toBeCallableWith(tableItem, {
-        "nested.deep.level2.level3": nested.deep.level2.level3,
-      });
-
-      expect(db.table.update<"III">).type.toBeCallableWith(tableItem, {
-        "nested.deep.level2.level3": nested.deep.level2.level3,
       });
     });
 

@@ -49,7 +49,8 @@ export type Collection<
   TWherePathKeyTypes extends PathKeyTypes,
   TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
-  TPKeyPathOrPaths
+  TPKeyPathOrPaths,
+  TMaxDepth extends string
 > = CollectionBase<
   TGet,
   TDatabase,
@@ -59,7 +60,8 @@ export type Collection<
   TWherePathKeyTypes,
   TEqualityRegistryLookup,
   TDexie,
-  TPKeyPathOrPaths
+  TPKeyPathOrPaths,
+  TMaxDepth
 > & {
   or: WherePaths<
     TGet,
@@ -70,7 +72,8 @@ export type Collection<
     TEqualityRegistryLookup,
     TDexie,
     TPKeyPathOrPaths,
-    TKey
+    TKey,
+    TMaxDepth
   >["where"];
 };
 
@@ -111,7 +114,8 @@ interface CollectionBase<
   TWherePathKeyTypes extends PathKeyTypes,
   TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
-  TPKeyPathOrPaths
+  TPKeyPathOrPaths,
+  TMaxDepth extends string
 > {
   db: TDexie;
   clone(
@@ -125,7 +129,8 @@ interface CollectionBase<
     TWherePathKeyTypes,
     TEqualityRegistryLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TMaxDepth
   >;
 
   count(): PromiseExtended<number>;
@@ -210,6 +215,7 @@ interface CollectionBase<
     TWherePathKeyTypes,
     TEqualityRegistryLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TMaxDepth
   >;
 }

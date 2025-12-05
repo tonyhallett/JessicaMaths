@@ -6,17 +6,12 @@ import type { Level2, UpdateSpec } from "./UpdateSpec";
   when the path is at the root
   https://github.com/dexie/Dexie.js/issues/2218
 */
-type BulkUpdateChanges<
-  T,
-  TPKeyPathOrPaths,
-  TMAXDEPTH extends string = Level2
-> = Omit<UpdateSpec<T, TMAXDEPTH>, PrimaryKeyPaths<T, TPKeyPathOrPaths>>;
+type BulkUpdateChanges<T, TPKeyPathOrPaths, TMaxDepth extends string> = Omit<
+  UpdateSpec<T, TMaxDepth>,
+  PrimaryKeyPaths<T, TPKeyPathOrPaths>
+>;
 
-export interface BulkUpdate<
-  T,
-  TPKeyPathOrPaths,
-  TMAXDEPTH extends string = Level2
-> {
+export interface BulkUpdate<T, TPKeyPathOrPaths, TMaxDepth extends string> {
   key: PrimaryKey<T, TPKeyPathOrPaths>;
-  changes: BulkUpdateChanges<T, TPKeyPathOrPaths, TMAXDEPTH>;
+  changes: BulkUpdateChanges<T, TPKeyPathOrPaths, TMaxDepth>;
 }

@@ -85,7 +85,7 @@ export type TuplesEqual<A, B> = A extends readonly [...infer AItems]
 
 export type NoDescend = "";
 
-export type MaxDepth<S extends string> = S extends NoDescend
+type MaxDepth<S extends string> = S extends NoDescend
   ? S
   : S extends `I${infer Rest}` // starts with "I"
   ? Rest extends "" // if nothing left, ok
@@ -94,6 +94,10 @@ export type MaxDepth<S extends string> = S extends NoDescend
     ? never
     : S
   : never; // does not start with "I"
+
+export type MaxDepthOrDefault<S extends string> = MaxDepth<S> extends never
+  ? NoDescend
+  : S;
 
 export type NextDepth<D extends string> = `${D}I`;
 

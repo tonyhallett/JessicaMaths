@@ -1,7 +1,7 @@
 import type { KeyPathValue } from "dexie";
 import type { DexieIndexPaths, KeyTypeBrand } from "./indexpaths";
 import type { Level2 } from "./UpdateSpec";
-import type { MaxDepth, NextDepth, NoDescend } from "./utilitytypes";
+import type { NextDepth, NoDescend } from "./utilitytypes";
 
 type CompoundType<T extends readonly any[]> = T extends readonly [infer Only]
   ? Only
@@ -271,14 +271,9 @@ type EqualityFilterPaths<
       : P
     : never;
 }[keyof T];
-export type EqualityFilter<
-  T,
-  TMaxDepth extends string = Level2
-> = TMaxDepth extends MaxDepth<TMaxDepth>
-  ? {
-      [KP in EqualityFilterPaths<Required<T>, TMaxDepth>]?: KeyPathValue<
-        Required<T>,
-        KP
-      >;
-    }
-  : never;
+export type EqualityFilter<T, TMaxDepth extends string = Level2> = {
+  [KP in EqualityFilterPaths<Required<T>, TMaxDepth>]?: KeyPathValue<
+    Required<T>,
+    KP
+  >;
+};

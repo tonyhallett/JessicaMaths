@@ -1,6 +1,6 @@
 // ---------- Helpers ----------
 
-import type { MaxDepth, NextDepth, NoDescend, StringKey } from "./utilitytypes";
+import type { NextDepth, NoDescend, StringKey } from "./utilitytypes";
 
 type IsValidKey<T> = T extends AllowedKeyLeaf
   ? true
@@ -178,10 +178,8 @@ export type CompoundKeyPaths<
   T,
   TAllowTypeSpecificProperties extends boolean = true,
   TMaxDepth extends string = NoDescend
-> = TMaxDepth extends MaxDepth<TMaxDepth>
-  ? [
-      ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties, TMaxDepth>,
-      ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties, TMaxDepth>,
-      ...ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties, TMaxDepth>[]
-    ]
-  : never;
+> = [
+  ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties, TMaxDepth>,
+  ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties, TMaxDepth>,
+  ...ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties, TMaxDepth>[]
+];

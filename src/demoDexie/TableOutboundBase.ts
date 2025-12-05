@@ -9,7 +9,8 @@ export type TableOutboundBase<
   TPKey extends IndexableType,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet,
-  TDexie
+  TDexie,
+  TMaxDepth extends string
 > = TableBase<
   TName,
   TGet,
@@ -18,7 +19,8 @@ export type TableOutboundBase<
   never,
   TIndexPaths,
   TPKey,
-  TDexie
+  TDexie,
+  TMaxDepth
 > & {
   /*
    making the key required, although allowed by the spec to be optional for auto-increment keys

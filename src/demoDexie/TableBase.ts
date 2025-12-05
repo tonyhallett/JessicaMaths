@@ -22,16 +22,11 @@ import type { Level2, UpdateSpec } from "./UpdateSpec";
 import type { BulkUpdate } from "./BulkUpdate";
 import type { UpsertSpec } from "./UpsertSpec";
 import type { WherePaths, WhereEquality } from "./where";
-import type {
-  PathKeyTypes,
-  PathKeyType,
-  UnionToIntersection,
-} from "./utilitytypes";
+import type { PathKeyTypes, PathKeyType, NoDescend } from "./utilitytypes";
 import type {
   EqualityFilter,
   EqualityRegistryLookup,
   IsValidEquality,
-  KeyTypeForEquality,
   WhereEqualityRegistryLookup,
 } from "./whereEquality";
 
@@ -171,7 +166,8 @@ export interface TableCore<
   TPKey,
   TWherePathKeyTypes extends PathKeyTypes,
   TEqualityRegistryLookup extends EqualityRegistryLookup,
-  TDexie
+  TDexie,
+  TMaxDepth extends string
 > {
   db: TDexie;
   readonly name: TName;
@@ -197,7 +193,8 @@ export interface TableCore<
     TWherePathKeyTypes,
     TEqualityRegistryLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TMaxDepth
   >;
   orderBy<Path extends IndexPath<TDatabase, TIndexPaths[number]>>(
     index: Path
@@ -210,7 +207,8 @@ export interface TableCore<
     TWherePathKeyTypes,
     TEqualityRegistryLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TMaxDepth
   >;
   orderBy(
     id: PrimaryKeyId
@@ -223,7 +221,8 @@ export interface TableCore<
     TWherePathKeyTypes,
     TEqualityRegistryLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TMaxDepth
   >;
   reverse: ReturnType<this["toCollection"]>["reverse"];
 
@@ -231,10 +230,9 @@ export interface TableCore<
   bulkDelete(keys: TPKey[]): PromiseExtended<void>;
   clear(): PromiseExtended<void>;
 
-  // https://dexie.org/docs/Table/Table.update()
-  update<TMAXDEPTH extends string = Level2>(
+  update(
     key: PrimaryKey<TDatabase, TPKeyPathOrPaths>,
-    changes: UpdateSpec<TDatabase, TMAXDEPTH>
+    changes: UpdateSpec<TDatabase, TMaxDepth>
   ): PromiseExtended<0 | 1>;
   update(
     key: PrimaryKey<TDatabase, TPKeyPathOrPaths>,
@@ -245,8 +243,8 @@ export interface TableCore<
     >
   ): PromiseExtended<0 | 1>;
 
-  bulkUpdate<TMAXDEPTH extends string = Level2>(
-    changes: BulkUpdate<TDatabase, TPKeyPathOrPaths, TMAXDEPTH>[]
+  bulkUpdate(
+    changes: BulkUpdate<TDatabase, TPKeyPathOrPaths, TMaxDepth>[]
   ): PromiseExtended<number>;
 
   /*
@@ -275,6 +273,7 @@ export type TableBase<
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TPKey,
   TDexie = any,
+  TMaxDepth extends string = NoDescend,
   TWherePathKeyTypes extends PathKeyTypes = PathRegistry<
     TDatabase,
     TIndexPaths,
@@ -297,7 +296,8 @@ export type TableBase<
   TPKey,
   TWherePathKeyTypes,
   TEqualityRegistryLookup,
-  TDexie
+  TDexie,
+  TMaxDepth
 > &
   TableWhere<
     TGet,
@@ -307,7 +307,8 @@ export type TableBase<
     TWherePathKeyTypes,
     TEqualityRegistryLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TMaxDepth
   > &
   TableGet<TDatabase, TGet, TPKey, TEqualityRegistryLookup>;
 
@@ -319,7 +320,8 @@ type TableWhere<
   TWherePathKeyTypes extends PathKeyTypes,
   TEqualityRegistryLookup extends EqualityRegistryLookup,
   TDexie,
-  TPKeyPathOrPaths
+  TPKeyPathOrPaths,
+  TMaxDepth extends string
 > = WherePaths<
   TGet,
   TDatabase,
@@ -329,7 +331,8 @@ type TableWhere<
   TEqualityRegistryLookup,
   TDexie,
   TPKeyPathOrPaths,
-  undefined
+  undefined,
+  TMaxDepth
 > &
   WhereEquality<
     TGet,
@@ -339,5 +342,6 @@ type TableWhere<
     TWherePathKeyTypes,
     TEqualityRegistryLookup,
     TDexie,
-    TPKeyPathOrPaths
+    TPKeyPathOrPaths,
+    TMaxDepth
   >;

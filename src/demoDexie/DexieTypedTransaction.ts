@@ -48,7 +48,7 @@ type TableInstanceForName<
 type SelectedNames<
   TConfig extends Record<
     string,
-    TableConfig<any, any, any, any, any, any, any>
+    TableConfig<any, any, any, any, any, any, any, any>
   >,
   TTables extends readonly TableArg<DBTables<TConfig>>[]
 > = TableNamesFromArgs<DBTables<TConfig>, TTables> &
@@ -68,7 +68,7 @@ type ArgNames<TTables extends readonly any[]> = ArgName<TTables[number]>;
 type TransactionWithTables<
   TConfig extends Record<
     string,
-    TableConfig<any, any, any, any, any, any, any>
+    TableConfig<any, any, any, any, any, any, any, any>
   >,
   TTables extends readonly TableArg<DBTables<TConfig>>[]
 > = Omit<Transaction, "table"> &
@@ -77,7 +77,10 @@ type TransactionWithTables<
 type DexieWithoutTransactions = Omit<Dexie, "transaction" | "on">;
 
 type TypedOn<
-  TConfig extends Record<string, TableConfig<any, any, any, any, any, any, any>>
+  TConfig extends Record<
+    string,
+    TableConfig<any, any, any, any, any, any, any, any>
+  >
 > = {
   on: DexieEventSet & {
     // DbEventFns with typed transaction for 'populate' event
@@ -111,7 +114,10 @@ type TypedOn<
 
 // todo - suppport table array, table, table array args
 type TypedTransaction<
-  TConfig extends Record<string, TableConfig<any, any, any, any, any, any, any>>
+  TConfig extends Record<
+    string,
+    TableConfig<any, any, any, any, any, any, any, any>
+  >
 > = {
   // Array form: transaction(mode, [tables], scope)
   transaction<U, TTables extends readonly TableArg<DBTables<TConfig>>[]>(
@@ -132,5 +138,8 @@ type TypedTransaction<
   ): PromiseExtended<U>;
 };
 export type DexieTypedTransaction<
-  TConfig extends Record<string, TableConfig<any, any, any, any, any, any, any>>
+  TConfig extends Record<
+    string,
+    TableConfig<any, any, any, any, any, any, any, any>
+  >
 > = DexieWithoutTransactions & TypedTransaction<TConfig> & TypedOn<TConfig>;

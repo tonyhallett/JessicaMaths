@@ -17,7 +17,8 @@ export type DBTables<
     infer TIndexPaths,
     infer TGet,
     infer TInsert,
-    infer TOutboundKey
+    infer TOutboundKey,
+    infer TMaxDepth
   >
     ? [TPKeyPathOrPaths] extends [never]
       ? TAuto extends true
@@ -27,7 +28,8 @@ export type DBTables<
             TOutboundKey,
             TIndexPaths,
             TGet,
-            TypedDexie<TConfig>
+            TypedDexie<TConfig>,
+            TMaxDepth
           >
         : TableOutbound<
             TName & string,
@@ -35,7 +37,8 @@ export type DBTables<
             TOutboundKey,
             TIndexPaths,
             TGet,
-            TypedDexie<TConfig>
+            TypedDexie<TConfig>,
+            TMaxDepth
           >
       : TAuto extends true
       ? TableInboundAuto<
@@ -45,7 +48,8 @@ export type DBTables<
           TIndexPaths,
           TGet,
           TInsert,
-          TypedDexie<TConfig>
+          TypedDexie<TConfig>,
+          TMaxDepth
         >
       : TableInbound<
           TName & string,
@@ -54,7 +58,8 @@ export type DBTables<
           TIndexPaths,
           TGet,
           TInsert,
-          TypedDexie<TConfig>
+          TypedDexie<TConfig>,
+          TMaxDepth
         >
     : never;
 };
