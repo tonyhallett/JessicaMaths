@@ -22,7 +22,7 @@ describe("tableBuilder", () => {
     });
 
     it("should allow nested primary key when opt in", () => {
-      const builder = tableBuilder<{ nested: { id: string } }, "I">();
+      const builder = tableBuilder<{ nested: { id: string } }, "II", "I">();
       expect(builder.primaryKey).type.toBeCallableWith("nested.id");
       expect(builder.primaryKey).type.not.toBeCallableWith(
         "nested.doesnotexist"
@@ -36,7 +36,7 @@ describe("tableBuilder", () => {
         fileValue: File;
         arrayValue: string[];
       }
-      const builder = tableBuilder<TableItem, NoDescend, true>();
+      const builder = tableBuilder<TableItem, NoDescend, NoDescend, true>();
       expect(builder.primaryKey).type.toBeCallableWith("stringValue.length");
       expect(builder.primaryKey).type.toBeCallableWith("blobValue.size");
       expect(builder.primaryKey).type.toBeCallableWith("blobValue.type");
@@ -83,6 +83,7 @@ describe("tableBuilder", () => {
     it("should allow compound primary key", () => {
       const builder = tableBuilder<
         { id: string; nested: { id2: number } },
+        "I",
         "I"
       >();
       expect(builder.compoundKey).type.toBeCallableWith("id", "nested.id2");
@@ -93,6 +94,7 @@ describe("tableBuilder", () => {
     it("should allow compound primary key to be allowed properties of leaf object when specified", () => {
       const builder = tableBuilder<
         { leaf1: string; leaf2: string },
+        NoDescend,
         NoDescend,
         true
       >();
@@ -203,6 +205,7 @@ describe("tableBuilder", () => {
         nested: { index: string };
         notAnIndex: { obj: string };
       },
+      "I",
       "I"
     >().primaryKey("id");
 
@@ -216,9 +219,9 @@ describe("tableBuilder", () => {
         id: string;
         nested: { index: string; multi: string[] };
       }
-      const builder = tableBuilder<Nested, "">().primaryKey("id");
-      const builderDefault = tableBuilder<Nested>().primaryKey("id");
-      const builderLevel1 = tableBuilder<Nested, "I">().primaryKey("id");
+      const builder = tableBuilder<Nested, "I", "">().primaryKey("id");
+      const builderDefault = tableBuilder<Nested, "I">().primaryKey("id");
+      const builderLevel1 = tableBuilder<Nested, "I", "I">().primaryKey("id");
 
       expect(builder.index).type.not.toBeCallableWith("nested.index");
       expect(builderDefault.index).type.not.toBeCallableWith("nested.index");
@@ -237,9 +240,12 @@ describe("tableBuilder", () => {
         fileValue: File;
         arrayValue: string[];
       }
-      const builder = tableBuilder<TableItem, NoDescend, true>().primaryKey(
-        "id"
-      );
+      const builder = tableBuilder<
+        TableItem,
+        NoDescend,
+        NoDescend,
+        true
+      >().primaryKey("id");
       expect(builder.index).type.toBeCallableWith("stringValue.length");
       expect(builder.index).type.toBeCallableWith("blobValue.size");
       expect(builder.index).type.toBeCallableWith("blobValue.type");
@@ -263,9 +269,12 @@ describe("tableBuilder", () => {
         fileValue: File;
         arrayValue: string[];
       }
-      const builder = tableBuilder<TableItem, NoDescend, true>().primaryKey(
-        "id"
-      );
+      const builder = tableBuilder<
+        TableItem,
+        NoDescend,
+        NoDescend,
+        true
+      >().primaryKey("id");
       expect(builder.compound).type.toBeCallableWith(
         "stringValue.length",
         "blobValue.size",
@@ -309,11 +318,15 @@ describe("tableBuilder", () => {
     });
 
     it("should not allow compound key to be compound primary key", () => {
-      const builder = tableBuilder<{
-        id: string;
-        id2: number;
-        index: string;
-      }>().compoundKey("id", "id2");
+      const builder = tableBuilder<
+        {
+          id: string;
+          id2: number;
+          index: string;
+        },
+        "II",
+        "I"
+      >().compoundKey("id", "id2");
       expect(builder.compound).type.toBeCallableWith("id2", "id");
       expect(builder.compound).type.toBeCallableWith("id", "id2", "index");
       expect(builder.compound).type.not.toBeCallableWith("id", "id2");
@@ -498,7 +511,7 @@ describe("table base", () => {
       compound: tableBuilder<Compound>()
         .compoundKey("stringPart", "numberPart")
         .build(),
-      leafPropertyTable: tableBuilder<StringId, NoDescend, true>()
+      leafPropertyTable: tableBuilder<StringId, NoDescend, NoDescend, true>()
         .primaryKey("id.length")
         .build(),
     },
@@ -729,7 +742,8 @@ describe("table base", () => {
             nestedIndex: { subIndex: Date };
             notAnIndex: number;
           },
-          "I"
+          "I",
+          "II"
         >()
           .primaryKey("id")
           .index("stringIndex")
@@ -819,7 +833,7 @@ describe("table base", () => {
     const db = dexieFactory(
       1,
       {
-        table: tableBuilder<TableItem, "I">()
+        table: tableBuilder<TableItem, "I", "II">()
           .primaryKey("id")
           .index("stringIndex")
           .index("numberIndex")
@@ -1367,7 +1381,7 @@ describe("table base", () => {
     const db = dexieFactory(
       1,
       {
-        table: tableBuilder<TableItem, "I">()
+        table: tableBuilder<TableItem, "I", "II">()
           .primaryKey("id")
           .index("stringIndex")
           .index("numberIndex")
@@ -1741,9 +1755,71 @@ describe("Inbound - non auto", () => {
     });
 
     it("should update using max depth type parameter", () => {
-      expect(db.table.update).type.toBeCallableWith(tableItem, {
+      const noDescend = dexieFactory(
+        1,
+        {
+          noDescend: tableBuilder<TableItem, "">().primaryKey("id").build(),
+        },
+        "NoDescend"
+      ).noDescend;
+
+      const level1 = dexieFactory(
+        1,
+        {
+          level1: tableBuilder<TableItem, "I">().primaryKey("id").build(),
+        },
+        "Level1"
+      ).level1;
+
+      const level2 = dexieFactory(
+        1,
+        {
+          level2: tableBuilder<TableItem, "II">().primaryKey("id").build(),
+        },
+        "Level2"
+      ).level2;
+
+      expect(noDescend.update).type.toBeCallableWith(tableItem, {
         nested,
       });
+      expect(noDescend.update).type.not.toBeCallableWith(tableItem, {
+        "nested.sub": 1,
+      });
+      expect(level1.update).type.toBeCallableWith(tableItem, {
+        "nested.sub": nested.sub,
+      });
+      expect(level1.update).type.toBeCallableWith(tableItem, {
+        "nested.deep": nested.deep,
+      });
+      expect(level1.update).type.not.toBeCallableWith(tableItem, {
+        "nested.deep.level2": nested.deep.level2,
+      });
+      expect(level2.update).type.toBeCallableWith(tableItem, {
+        "nested.deep.level2": nested.deep.level2,
+      });
+      expect(level2.update).type.not.toBeCallableWith(tableItem, {
+        "nested.deep.level2.level3": nested.deep.level2.level3,
+      });
+
+      const noDescendWhenIncorrect = dexieFactory(
+        1,
+        {
+          incorrectMaxDepth: tableBuilder<TableItem, "Incorrect">()
+            .primaryKey("id")
+            .build(),
+        },
+        "Level2"
+      ).incorrectMaxDepth;
+
+      expect(noDescendWhenIncorrect.update).type.toBeCallableWith(tableItem, {
+        nested,
+      });
+      expect(noDescendWhenIncorrect.update).type.not.toBeCallableWith(
+        tableItem,
+        {
+          "nested.sub": 1,
+        }
+      );
     });
 
     it("should update with typed prop modifications", () => {
@@ -1826,7 +1902,7 @@ describe("Inbound - non auto", () => {
       const db = dexieFactory(
         1,
         {
-          table: tableBuilder<TableItem, "I">()
+          table: tableBuilder<TableItem, "I", "II">()
             .primaryKey("primaryKeyParent.pkey")
             .build(),
         },

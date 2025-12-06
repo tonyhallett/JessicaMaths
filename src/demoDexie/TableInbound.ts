@@ -25,9 +25,9 @@ export type TableInbound<
   TMaxDepth
 > & {
   // note that docs do not mention this ( as the key must exist on the object - so ok for this table type )
-  update<TMAXDEPTH extends string = Level2>(
+  update(
     object: TDatabase,
-    changes: UpdateSpec<TDatabase, TMAXDEPTH>
+    changes: UpdateSpec<TDatabase, TMaxDepth>
   ): PromiseExtended<0 | 1>;
   update(
     object: TDatabase,
