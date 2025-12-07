@@ -15,7 +15,6 @@ import type {
   ConstructorOf,
   IncludesNumber,
   IncludesNumberInUnion,
-  MaxDepthOrDefault,
   NoDescend,
   NoDuplicates,
   TuplesEqual,

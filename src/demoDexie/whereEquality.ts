@@ -1,6 +1,5 @@
 import type { KeyPathValue } from "dexie";
 import type { DexieIndexPaths, KeyTypeBrand } from "./indexpaths";
-import type { Level2 } from "./UpdateSpec";
 import type { NextDepth, NoDescend } from "./utilitytypes";
 
 type CompoundType<T extends readonly any[]> = T extends readonly [infer Only]
