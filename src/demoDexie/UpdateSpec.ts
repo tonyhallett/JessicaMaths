@@ -34,7 +34,7 @@ type UpdateKeyPaths<
     : never;
 }[keyof T];
 
-export type UpdateSpec<T, TMaxDepth extends string = Level2> = {
+export type UpdateSpec<T, TMaxDepth extends string> = {
   [KP in UpdateKeyPaths<Required<T>, TMaxDepth>]?:
     | KeyPathValue<Required<T>, KP>
     | PropModificationTyped<KeyPathValue<T, KP>>
