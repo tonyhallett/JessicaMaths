@@ -1,6 +1,6 @@
 import type { PromiseExtended, ThenShortcut } from "dexie";
 import type { WherePaths } from "./where";
-import type { Level2, UpdateSpec } from "./UpdateSpec";
+import type { UpdateSpec } from "./UpdateSpec";
 import type { PathKeyTypes } from "./utilitytypes";
 import type { EqualityRegistryLookup } from "./whereEquality";
 
