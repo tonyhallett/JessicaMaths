@@ -1,7 +1,6 @@
 import type { Collection } from "./Collection";
 import type { PathKeyTypes } from "./utilitytypes";
 import type {
-  EqualityFilter,
   EqualityRegistryLookup,
   KeyTypeForEquality,
 } from "./whereEquality";
@@ -56,7 +55,11 @@ export interface WhereEquality<
 > {
   where<
     TEquality extends TEqualityRegistryLookup["all"][number]["equality"],
-    TKey = KeyTypeForEquality<TEqualityRegistryLookup["all"], TEquality>
+    TKey = KeyTypeForEquality<
+      TEqualityRegistryLookup["all"],
+      TEqualityRegistryLookup["singleLookup"],
+      TEquality
+    >
   >(
     equality: TEquality
   ): [TKey] extends [never]
@@ -75,7 +78,11 @@ export interface WhereEquality<
       >;
   whereEquality<
     TEquality extends TEqualityRegistryLookup["all"][number]["equality"],
-    TKey = KeyTypeForEquality<TEqualityRegistryLookup["all"], TEquality>
+    TKey = KeyTypeForEquality<
+      TEqualityRegistryLookup["all"],
+      TEqualityRegistryLookup["singleLookup"],
+      TEquality
+    >
   >(
     equality: TEquality
   ): [TKey] extends [never]
@@ -94,7 +101,11 @@ export interface WhereEquality<
       >;
   whereCompositeEquality<
     TEquality extends TEqualityRegistryLookup["composite"][number]["equality"],
-    TKey = KeyTypeForEquality<TEqualityRegistryLookup["composite"], TEquality>
+    TKey = KeyTypeForEquality<
+      TEqualityRegistryLookup["composite"],
+      TEqualityRegistryLookup["singleLookup"],
+      TEquality
+    >
   >(
     equality: TEquality
   ): [TKey] extends [never]
@@ -113,7 +124,11 @@ export interface WhereEquality<
       >;
   whereSingleEquality<
     TEquality extends TEqualityRegistryLookup["single"][number]["equality"],
-    TKey = KeyTypeForEquality<TEqualityRegistryLookup["single"], TEquality>
+    TKey = KeyTypeForEquality<
+      TEqualityRegistryLookup["single"],
+      TEqualityRegistryLookup["singleLookup"],
+      TEquality
+    >
   >(
     equality: TEquality
   ): [TKey] extends [never]
@@ -133,10 +148,14 @@ export interface WhereEquality<
 
   whereSingleFilterEquality<
     TEquality extends TEqualityRegistryLookup["single"][number]["equality"],
-    TKey = KeyTypeForEquality<TEqualityRegistryLookup["single"], TEquality>
+    TKey = KeyTypeForEquality<
+      TEqualityRegistryLookup["single"],
+      TEqualityRegistryLookup["singleLookup"],
+      TEquality
+    >
   >(
     equality: TEquality,
-    equalityFilter: EqualityFilter<TDatabase>
+    equalityFilter: TEqualityRegistryLookup["equalityFilterType"]
   ): [TKey] extends [never]
     ? never
     : Collection<
@@ -144,7 +163,11 @@ export interface WhereEquality<
         TDatabase,
         TInsert,
         TPKey,
-        KeyTypeForEquality<TEqualityRegistryLookup["single"], TEquality>,
+        KeyTypeForEquality<
+          TEqualityRegistryLookup["single"],
+          TEqualityRegistryLookup["singleLookup"],
+          TEquality
+        >,
         TWherePathKeyTypes,
         TEqualityRegistryLookup,
         TDexie,

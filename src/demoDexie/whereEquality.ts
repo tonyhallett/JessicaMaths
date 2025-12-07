@@ -37,16 +37,6 @@ type Flatten<T> = {
 type PKValueTuple<TPkey extends any | readonly any[]> =
   TPkey extends readonly any[] ? TPkey : never;
 
-export type WhereEqualityRegistry<
-  TDatabase,
-  TDexieIndexPaths extends DexieIndexPaths<TDatabase>,
-  TPKeyPathOrPaths extends string | readonly string[] | never,
-  TPkey extends any | readonly any[]
-> = readonly [
-  ...PkEqualityEntries<TPKeyPathOrPaths, TPkey>,
-  ...IndexEqualityArray<TDatabase, TDexieIndexPaths>
-];
-
 type IndexKeyTypesSplit<
   TDatabase,
   TPaths extends DexieIndexPaths<TDatabase>,
@@ -107,11 +97,26 @@ type SplitEqualityKeyTypes = {
   composite: EqualityKeyTypes;
 };
 
+type IndexAndNormalPaths<
+  TNormalPaths,
+  TIndexEqualityKeyTypes extends EqualityKeyTypes
+> = TIndexEqualityKeyTypes extends readonly [infer First, ...infer Rest]
+  ? First extends EqualityKeyType<infer E, infer K, infer I>
+    ? Rest extends EqualityKeyTypes
+      ? readonly [
+          IndexAndNormalPathsEqualityKeyType<First, TNormalPaths>,
+          ...IndexAndNormalPaths<TNormalPaths, Rest>
+        ]
+      : readonly [IndexAndNormalPathsEqualityKeyType<First, TNormalPaths>]
+    : []
+  : [];
+
 export type WhereEqualityRegistryLookup<
   TDatabase,
   TPaths extends DexieIndexPaths<TDatabase>,
   TPKeyPathOrPaths,
-  TPkey extends any | readonly any[]
+  TPkey extends any | readonly any[],
+  TMaxDepth extends string
 > = ComputePrimaryKeyTypes<
   TPKeyPathOrPaths,
   TPkey
@@ -120,18 +125,35 @@ export type WhereEqualityRegistryLookup<
       TDatabase,
       TPaths
     > extends infer IndexKeys extends SplitEqualityKeyTypes
-    ? {
-        single: readonly [...PKs["single"], ...IndexKeys["single"]];
-        composite: readonly [...PKs["composite"], ...IndexKeys["composite"]];
-        all: readonly [
-          ...PKs["single"],
-          ...PKs["composite"],
-          ...IndexKeys["single"],
-          ...IndexKeys["composite"]
-        ];
-      }
+    ? EqualityFilter<TDatabase, TMaxDepth> extends infer Filter
+      ? {
+          single: readonly [...PKs["single"], ...IndexKeys["single"]];
+          composite: readonly [...PKs["composite"], ...IndexKeys["composite"]];
+
+          all: readonly [
+            ...PKs["single"],
+            ...PKs["composite"],
+            ...IndexKeys["single"],
+            ...IndexKeys["composite"],
+            ...IndexAndNormalPaths<Filter, IndexKeys["single"]>
+          ];
+
+          singleLookup: SingleIndexLookup<IndexKeys["single"]>;
+
+          equalityFilterType: Filter;
+        }
+      : never
     : never
   : never;
+
+type SingleIndexLookup<TEqualityKeyTypes extends EqualityKeyTypes> =
+  TEqualityKeyTypes extends readonly [infer First, ...infer Rest]
+    ? First extends EqualityKeyType<infer E, infer K, any>
+      ? Rest extends EqualityKeyTypes
+        ? E & SingleIndexLookup<Rest>
+        : E
+      : {}
+    : {};
 
 type PkEqualityEntries<
   TPKeyPathOrPaths extends string | readonly string[],
@@ -141,29 +163,6 @@ type PkEqualityEntries<
   : TPKeyPathOrPaths extends readonly string[]
   ? CompoundKeyLookupArray<TPKeyPathOrPaths, PKValueTuple<TPkey>>
   : readonly [];
-
-type IndexEqualityArray<
-  TDatabase,
-  TPaths extends DexieIndexPaths<TDatabase>,
-  Out extends readonly EqualityKeyType<any, any>[] = []
-> = TPaths extends [infer H, ...infer R extends DexieIndexPaths<TDatabase>]
-  ? H extends { path: infer P extends string; [KeyTypeBrand]?: infer K }
-    ? IndexEqualityArray<
-        TDatabase,
-        R,
-        [...Out, EqualityKeyType<{ [KPath in P]: K }, CompoundType<[K]>>]
-      >
-    : H extends {
-        paths: infer PS extends readonly string[];
-        [KeyTypeBrand]?: infer KS extends readonly any[];
-      }
-    ? IndexEqualityArray<
-        TDatabase,
-        R,
-        [...Out, ...CompoundKeyLookupArray<PS, KS>]
-      >
-    : IndexEqualityArray<TDatabase, R, Out>
-  : Out;
 
 export type EqualityKeyType<
   TEquality,
@@ -175,11 +174,18 @@ export type EqualityKeyType<
   readonly indexProperty: TIndexProperty;
 };
 
+type IndexAndNormalPathsEqualityKeyType<TEqualityKeyType, TNormalPaths> =
+  TEqualityKeyType extends EqualityKeyType<infer E, infer K, infer I>
+    ? EqualityKeyType<E & Omit<TNormalPaths, keyof E>, K, keyof E>
+    : never;
+
 export type EqualityKeyTypes = readonly EqualityKeyType<any, any, any>[];
 export type EqualityRegistryLookup = {
   single: EqualityKeyTypes;
   composite: EqualityKeyTypes;
   all: EqualityKeyTypes;
+  singleLookup: Record<string, any>;
+  equalityFilterType: any;
 };
 
 type Same<A, B> = (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B
@@ -230,6 +236,7 @@ type Condition<
 
 export type KeyTypeForEquality<
   T extends EqualityKeyTypes,
+  TSingleLookup extends Record<string, any>,
   TMatch extends Record<string, any>
 > = T extends readonly [infer First, ...infer Rest]
   ? First extends EqualityKeyType<
@@ -239,22 +246,23 @@ export type KeyTypeForEquality<
     >
     ? Condition<Equality, TMatch, IndexProperty> extends true
       ? HasOptionalProperties<Equality> extends true
-        ? UnionOfMatchIndexTypes<TMatch, KeyType>
+        ? UnionOfMatchIndexTypes<TMatch, TSingleLookup>
         : KeyType
       : Rest extends any[]
-      ? KeyTypeForEquality<Rest, TMatch>
+      ? KeyTypeForEquality<Rest, TSingleLookup, TMatch>
       : never
     : never
   : never;
 
 export type IsValidEquality<
   T extends EqualityKeyTypes,
+  TSingleLookup extends Record<string, any>,
   TMatch extends Record<string, any>
-> = KeyTypeForEquality<T, TMatch> extends never ? false : true;
+> = KeyTypeForEquality<T, TSingleLookup, TMatch> extends never ? false : true;
 
 type EqualityFilterPaths<
   T,
-  TMaxDepth = Level2,
+  TMaxDepth extends string,
   TCurrDepth extends string = NoDescend
 > = {
   [P in keyof T]: P extends string
@@ -271,7 +279,7 @@ type EqualityFilterPaths<
       : P
     : never;
 }[keyof T];
-export type EqualityFilter<T, TMaxDepth extends string = Level2> = {
+type EqualityFilter<T, TMaxDepth extends string> = {
   [KP in EqualityFilterPaths<Required<T>, TMaxDepth>]?: KeyPathValue<
     Required<T>,
     KP

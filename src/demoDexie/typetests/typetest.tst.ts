@@ -11,7 +11,7 @@ import { expect, describe, it } from "tstyche";
 import type { ChangeCallback } from "../Collection";
 import { add, ObjectPropModification } from "../propmodifications";
 import type { NoDescend } from "../utilitytypes";
-import type { Level2 } from "../UpdateSpec";
+import type { Level2, UpdateSpec } from "../UpdateSpec";
 
 describe("tableBuilder", () => {
   describe("primary key selection", () => {
@@ -1051,6 +1051,29 @@ describe("table base", () => {
         expect(db.table.where).type.not.toBeCallableWith({ stringIndex: 42 });
         expect(db.table.where).type.not.toBeCallableWith({ notAnIndex: 123 });
 
+        // where with filter
+        db.table
+          .whereEquality({ stringIndex: "value", notAnIndex: 123 })
+          .each((item, cursor) => {
+            expect(cursor.key).type.toBe<string>();
+          });
+        db.table
+          .whereEquality({ numberIndex: 1, notAnIndex: 123 })
+          .each((item, cursor) => {
+            expect(cursor.key).type.toBe<number>();
+          });
+
+        // two indexes cannot determine the key type so union
+        db.table
+          .whereEquality({ numberIndex: 1, stringIndex: "" })
+          .each((item, cursor) => {
+            expect(cursor.key).type.toBe<number | string>();
+          });
+
+        expect(
+          db.table.whereEquality({ numberIndex: 1, notAPath: 123 })
+        ).type.toBe<never>();
+
         // alias of whereEquality - only single allowed
         db.table
           .whereSingleEquality({ stringIndex: "value" })
@@ -1061,6 +1084,9 @@ describe("table base", () => {
         expect(db.table.whereSingleEquality).type.not.toBeCallableWith({
           compound1: "a",
         });
+        expect(
+          db.table.whereSingleEquality({ numberIndex: 42, additional: 1 })
+        ).type.toBe<never>();
       });
 
       it("should accept an equality filter", () => {
@@ -1801,25 +1827,17 @@ describe("Inbound - non auto", () => {
         "nested.deep.level2.level3": nested.deep.level2.level3,
       });
 
-      const noDescendWhenIncorrect = dexieFactory(
+      const allDepths = dexieFactory(
         1,
         {
-          incorrectMaxDepth: tableBuilder<TableItem, "Incorrect">()
-            .primaryKey("id")
-            .build(),
+          allDepths: tableBuilder<TableItem, "All">().primaryKey("id").build(),
         },
-        "Level2"
-      ).incorrectMaxDepth;
+        "AllDepths"
+      ).allDepths;
 
-      expect(noDescendWhenIncorrect.update).type.toBeCallableWith(tableItem, {
-        nested,
+      expect(allDepths.update).type.toBeCallableWith(tableItem, {
+        "nested.deep.level2.level3": nested.deep.level2.level3,
       });
-      expect(noDescendWhenIncorrect.update).type.not.toBeCallableWith(
-        tableItem,
-        {
-          "nested.sub": 1,
-        }
-      );
     });
 
     it("should update with typed prop modifications", () => {

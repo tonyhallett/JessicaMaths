@@ -300,9 +300,6 @@ function createTableBuilder<
 >(mapToClass?: ConstructorOf<TDatabase>) {
   const indexParts: string[] = [];
 
-  type KeyMaxDepth = MaxDepthOrDefault<TKeyMaxDepth>;
-  type MaxDepth = MaxDepthOrDefault<TMaxDepth>;
-
   function createIndexMethods<
     TPKeyPathOrPaths extends string | readonly string[],
     TAuto extends boolean,
@@ -324,8 +321,8 @@ function createTableBuilder<
     TPKeyIsInbound,
     TOutboundPKey,
     TAllowTypeSpecificProperties,
-    KeyMaxDepth,
-    MaxDepth
+    TKeyMaxDepth,
+    TMaxDepth
   > {
     const addIfNotDuplicatePart = (part: string) => {
       if (indexParts.includes(part)) {
@@ -429,7 +426,7 @@ function createTableBuilder<
 
   return {
     autoIncrement<
-      TPKeyPath extends InboundAutoIncrementKeyPath<TDatabase, KeyMaxDepth>
+      TPKeyPath extends InboundAutoIncrementKeyPath<TDatabase, TKeyMaxDepth>
     >(key: TPKeyPath) {
       return createIndexMethods(key, true, [] as const, true, null as never);
     },
@@ -437,7 +434,7 @@ function createTableBuilder<
       TPKeyPath extends ValidIndexedDBKeyPath<
         TDatabase,
         TAllowTypeSpecificProperties,
-        KeyMaxDepth
+        TKeyMaxDepth
       > &
         string
     >(key: TPKeyPath) {
@@ -447,7 +444,7 @@ function createTableBuilder<
       const TCompoundKeyPaths extends CompoundKeyPaths<
         TDatabase,
         TAllowTypeSpecificProperties,
-        KeyMaxDepth
+        TKeyMaxDepth
       >
     >(
       ...keys: TCompoundKeyPaths
@@ -462,7 +459,7 @@ function createTableBuilder<
           false,
           never,
           TAllowTypeSpecificProperties,
-          KeyMaxDepth
+          TKeyMaxDepth
         > {
       return createIndexMethods(
         keys,
@@ -501,14 +498,14 @@ function createTableBuilder<
 }
 
 export function tableBuilder<
-  T,
+  TDatabase,
   TMaxDepth extends string = Level2,
   TKeyMaxDepth extends string = NoDescend,
   TAllowTypeSpecificProperties extends boolean = false
 >() {
   return createTableBuilder<
-    T,
-    T,
+    TDatabase,
+    TDatabase,
     TAllowTypeSpecificProperties,
     TKeyMaxDepth,
     TMaxDepth
@@ -516,12 +513,12 @@ export function tableBuilder<
 }
 
 export function tableClassBuilder<
-  TCtor extends new (...args: any) => any,
+  TGetCtor extends new (...args: any) => any,
   TMaxDepth extends string = Level2,
   TKeyMaxDepth extends string = NoDescend,
   TAllowTypeSpecificProperties extends boolean = false
->(ctor: TCtor) {
-  type TEntity = InstanceType<TCtor>;
+>(ctor: TGetCtor) {
+  type TEntity = InstanceType<TGetCtor>;
   type TDatabase = InsertType<TEntity, never>;
 
   return createTableBuilder<
@@ -534,20 +531,20 @@ export function tableClassBuilder<
 }
 
 export function tableClassBuilderExcluded<
-  TCtor extends new (...args: any) => any,
+  TGetCtor extends new (...args: any) => any,
   TMaxDepth extends string = Level2,
   TKeyMaxDepth extends string = NoDescend,
   TAllowTypeSpecificProperties extends boolean = false
->(ctor: TCtor) {
-  type TEntity = InstanceType<TCtor>;
+>(ctor: TGetCtor) {
+  type TGet = InstanceType<TGetCtor>;
   return {
-    excludedKeys<TExcludeProps extends keyof TEntity & string>() {
-      type T = Omit<TEntity, TExcludeProps>;
+    excludedKeys<TExcludeProps extends keyof TGet & string>() {
+      type T = Omit<TGet, TExcludeProps>;
       type TDatabase = InsertType<T, never>;
 
       return createTableBuilder<
         TDatabase,
-        TEntity,
+        TGet,
         TAllowTypeSpecificProperties,
         TKeyMaxDepth,
         TMaxDepth

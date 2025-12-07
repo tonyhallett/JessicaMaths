@@ -24,7 +24,6 @@ import type { UpsertSpec } from "./UpsertSpec";
 import type { WherePaths, WhereEquality } from "./where";
 import type { PathKeyTypes, PathKeyType, NoDescend } from "./utilitytypes";
 import type {
-  EqualityFilter,
   EqualityRegistryLookup,
   IsValidEquality,
   WhereEqualityRegistryLookup,
@@ -48,13 +47,21 @@ export interface TableGetEquality<
 > {
   get<TEquality extends TEqualityRegistryLookup["all"][number]["equality"]>(
     equality: TEquality
-  ): IsValidEquality<TEqualityRegistryLookup["all"], TEquality> extends true
+  ): IsValidEquality<
+    TEqualityRegistryLookup["all"],
+    TEqualityRegistryLookup["singleLookup"],
+    TEquality
+  > extends true
     ? PromiseExtended<TGet | undefined>
     : never;
   get<R, TEquality extends TEqualityRegistryLookup["all"][number]["equality"]>(
     equality: TEquality,
     thenShortcut: ThenShortcut<TGet | undefined, R>
-  ): IsValidEquality<TEqualityRegistryLookup["all"], TEquality> extends true
+  ): IsValidEquality<
+    TEqualityRegistryLookup["all"],
+    TEqualityRegistryLookup["singleLookup"],
+    TEquality
+  > extends true
     ? PromiseExtended<R>
     : never;
 
@@ -62,7 +69,11 @@ export interface TableGetEquality<
     TEquality extends TEqualityRegistryLookup["all"][number]["equality"]
   >(
     equality: TEquality
-  ): IsValidEquality<TEqualityRegistryLookup["all"], TEquality> extends true
+  ): IsValidEquality<
+    TEqualityRegistryLookup["all"],
+    TEqualityRegistryLookup["singleLookup"],
+    TEquality
+  > extends true
     ? PromiseExtended<TGet | undefined>
     : never;
 
@@ -72,7 +83,11 @@ export interface TableGetEquality<
   >(
     equality: TEquality,
     thenShortcut: ThenShortcut<TGet | undefined, R>
-  ): IsValidEquality<TEqualityRegistryLookup["all"], TEquality> extends true
+  ): IsValidEquality<
+    TEqualityRegistryLookup["all"],
+    TEqualityRegistryLookup["singleLookup"],
+    TEquality
+  > extends true
     ? PromiseExtended<R>
     : never;
 
@@ -82,6 +97,7 @@ export interface TableGetEquality<
     equality: TEquality
   ): IsValidEquality<
     TEqualityRegistryLookup["composite"],
+    TEqualityRegistryLookup["singleLookup"],
     TEquality
   > extends true
     ? PromiseExtended<TGet | undefined>
@@ -95,6 +111,7 @@ export interface TableGetEquality<
     thenShortcut: ThenShortcut<TGet | undefined, R>
   ): IsValidEquality<
     TEqualityRegistryLookup["composite"],
+    TEqualityRegistryLookup["singleLookup"],
     TEquality
   > extends true
     ? PromiseExtended<R>
@@ -104,7 +121,11 @@ export interface TableGetEquality<
     TEquality extends TEqualityRegistryLookup["single"][number]["equality"]
   >(
     equality: TEquality
-  ): IsValidEquality<TEqualityRegistryLookup["single"], TEquality> extends true
+  ): IsValidEquality<
+    TEqualityRegistryLookup["single"],
+    TEqualityRegistryLookup["singleLookup"],
+    TEquality
+  > extends true
     ? PromiseExtended<TGet | undefined>
     : never;
 
@@ -114,7 +135,11 @@ export interface TableGetEquality<
   >(
     equality: TEquality,
     thenShortcut: ThenShortcut<TGet | undefined, R>
-  ): IsValidEquality<TEqualityRegistryLookup["single"], TEquality> extends true
+  ): IsValidEquality<
+    TEqualityRegistryLookup["single"],
+    TEqualityRegistryLookup["singleLookup"],
+    TEquality
+  > extends true
     ? PromiseExtended<R>
     : never;
 
@@ -122,8 +147,12 @@ export interface TableGetEquality<
     TEquality extends TEqualityRegistryLookup["single"][number]["equality"]
   >(
     equality: TEquality,
-    equalityFilter: EqualityFilter<TDatabase>
-  ): IsValidEquality<TEqualityRegistryLookup["single"], TEquality> extends true
+    equalityFilter: TEqualityRegistryLookup["equalityFilterType"]
+  ): IsValidEquality<
+    TEqualityRegistryLookup["single"],
+    TEqualityRegistryLookup["singleLookup"],
+    TEquality
+  > extends true
     ? PromiseExtended<TGet | undefined>
     : never;
 
@@ -132,9 +161,13 @@ export interface TableGetEquality<
     TEquality extends TEqualityRegistryLookup["single"][number]["equality"]
   >(
     equality: TEquality,
-    equalityFilter: EqualityFilter<TDatabase>,
+    equalityFilter: TEqualityRegistryLookup["equalityFilterType"],
     thenShortcut: ThenShortcut<TGet | undefined, R>
-  ): IsValidEquality<TEqualityRegistryLookup["single"], TEquality> extends true
+  ): IsValidEquality<
+    TEqualityRegistryLookup["single"],
+    TEqualityRegistryLookup["singleLookup"],
+    TEquality
+  > extends true
     ? PromiseExtended<R>
     : never;
 }
@@ -284,7 +317,8 @@ export type TableBase<
     TDatabase,
     TIndexPaths,
     TPKeyPathOrPaths,
-    TPKey
+    TPKey,
+    TMaxDepth
   >
 > = TableCore<
   TName,

@@ -200,9 +200,7 @@ interface CollectionBase<
   modify(
     changeCallback: ChangeCallback<TDatabase, TInsert, TPKey>
   ): PromiseExtended<number>;
-  modify<TMAXDEPTH extends string = Level2>(
-    changes: UpdateSpec<TDatabase, TMAXDEPTH>
-  ): PromiseExtended<number>;
+  modify(changes: UpdateSpec<TDatabase, TMaxDepth>): PromiseExtended<number>;
 
   // Other methods
   // https://dexie.org/docs/Collection/Collection.raw()
