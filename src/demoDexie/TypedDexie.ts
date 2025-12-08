@@ -1,10 +1,109 @@
+import type { Transaction } from "dexie";
 import type { DBTables } from "./DBTables";
 import type { DexieTypedTransaction } from "./DexieTypedTransaction";
 import type { TableConfig } from "./tableBuilder";
+import type { StringKeyOf } from "./utilitytypes";
+
+type AnyTableConfig = TableConfig<any, any, any, any, any, any, any>;
+
+type KeepOldNotInNew<
+  TOldConfig extends Record<string, AnyTableConfig>,
+  TNewConfig extends Record<string, AnyTableConfig | null>
+> = {
+  [K in keyof TOldConfig as K extends keyof TNewConfig
+    ? never
+    : K]: TOldConfig[K];
+};
+type NewThatAreNotNull<
+  TNewConfig extends Record<string, AnyTableConfig | null>
+> = {
+  // 2) Add keys from new config that are NOT null
+  [K in keyof TNewConfig as TNewConfig[K] extends null ? never : K]: Exclude<
+    TNewConfig[K],
+    null
+  >;
+};
+
+type MergedConfig<
+  TOldConfig extends Record<string, AnyTableConfig>,
+  TNewConfig extends Record<string, AnyTableConfig | null>
+> = KeepOldNotInNew<TOldConfig, TNewConfig> & NewThatAreNotNull<TNewConfig>;
+
+type UpgradedDexie<
+  TOldConfig extends Record<string, AnyTableConfig>,
+  TNewConfig extends Record<string, AnyTableConfig | null>
+> = TypedDexie<MergedConfig<TOldConfig, TNewConfig>>;
+
+type ReplaceInsert<
+  T extends AnyTableConfig,
+  TNewInsert
+> = T extends TableConfig<
+  infer TDatabase,
+  infer TPKeyPathOrPaths,
+  infer TAuto,
+  infer TIndexPaths,
+  infer TGet,
+  any, // old insert ignored
+  infer TOutboundPKey,
+  infer TMaxDepth
+>
+  ? TableConfig<
+      TDatabase,
+      TPKeyPathOrPaths,
+      TAuto,
+      TIndexPaths,
+      TGet,
+      TNewInsert,
+      TOutboundPKey,
+      TMaxDepth
+    >
+  : never;
+
+type UpgradeConfig<
+  TOldConfig extends Record<string, AnyTableConfig>,
+  TNewConfig extends Record<string, AnyTableConfig | null>
+> = {
+  [K in keyof TOldConfig]: K extends keyof TNewConfig
+    ? TNewConfig[K] extends TableConfig<
+        any,
+        any,
+        any,
+        any,
+        any,
+        infer TNewInsert,
+        any,
+        any
+      >
+      ? ReplaceInsert<TOldConfig[K], TNewInsert>
+      : TOldConfig[K] // null → unchanged
+    : TOldConfig[K];
+};
+
+export type TransactionWithTables<
+  TConfig extends Record<
+    string,
+    TableConfig<any, any, any, any, any, any, any, any>
+  >
+> = Omit<Transaction, "table"> &
+  Pick<DBTables<TConfig>, StringKeyOf<DBTables<TConfig>>>;
+
+type UpgradeTransaction<
+  TOldConfig extends Record<string, AnyTableConfig>,
+  TNewConfig extends Record<string, AnyTableConfig | null>
+> = TransactionWithTables<UpgradeConfig<TOldConfig, TNewConfig>>;
 
 export type TypedDexie<
   TConfig extends Record<
     string,
     TableConfig<any, any, any, any, any, any, any, any>
   >
-> = DBTables<TConfig> & DexieTypedTransaction<TConfig>;
+> = DBTables<TConfig> &
+  DexieTypedTransaction<TConfig> & {
+    config: TConfig;
+    upgrade<TNewConfig extends Record<string, AnyTableConfig | null>>(
+      config: TNewConfig,
+      upgradeFunction?: (
+        trans: UpgradeTransaction<TConfig, TNewConfig>
+      ) => PromiseLike<any> | void
+    ): UpgradedDexie<TConfig, TNewConfig>;
+  };

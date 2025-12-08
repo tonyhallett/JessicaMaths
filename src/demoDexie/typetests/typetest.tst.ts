@@ -2280,3 +2280,68 @@ describe("Outbound auto", () => {
     expect(db.unionPKeyTable.db).type.toBe<typeof db>();
   });
 });
+
+describe("upgrade", () => {
+  it("should return the new typed dexie", () => {
+    interface TableRemain {
+      id: string;
+      stringIndex: string;
+    }
+    interface TableRemoved {
+      id: number;
+      other: string;
+    }
+    interface TableUpdate1 {
+      id: string;
+      v1: string;
+    }
+    const db = dexieFactory(
+      1,
+      {
+        tableRemain: tableBuilder<TableRemain>()
+          .primaryKey("id")
+          .index("stringIndex")
+          .build(),
+        tableRemoved: tableBuilder<TableRemoved>()
+          .primaryKey("id")
+          .index("other")
+          .build(),
+        tableUpdate: tableBuilder<TableUpdate1>()
+          .primaryKey("id")
+          .index("v1")
+          .build(),
+      },
+      ""
+    );
+    interface TableUpdate2 {
+      id: string;
+      v2: string;
+    }
+    // could clash with table name
+
+    const db2 = db.upgrade(
+      {
+        tableRemoved: null,
+        tableUpdate: tableBuilder<TableUpdate2>()
+          .primaryKey("id")
+          .index("v2")
+          .build(),
+      },
+      (tx) => {
+        expect(tx).type.toHaveProperty("tableRemain");
+        expect(tx).type.toHaveProperty("tableRemoved");
+        tx.tableUpdate.toCollection().modify((item, ctx) => {
+          ctx.value = {
+            id: item.id,
+            v2: item.v1,
+          };
+        });
+      }
+    );
+    expect(db2).type.not.toHaveProperty("tableRemoved");
+    expect(db2).type.toHaveProperty("tableRemain");
+    expect(db2.tableUpdate.toArray()).type.toBe<
+      PromiseExtended<TableUpdate2[]>
+    >();
+  });
+});
