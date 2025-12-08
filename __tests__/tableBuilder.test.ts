@@ -1,4 +1,9 @@
-import { tableBuilder, TableConfig } from "../src/demoDexie/tableBuilder";
+import {
+  duplicateIndexErrorInstance,
+  duplicateKeysErrorInstance,
+  tableBuilder,
+  TableConfig,
+} from "../src/demoDexie/tableBuilder";
 
 describe("tableBuilder", () => {
   describe("primary key only", () => {
@@ -62,11 +67,11 @@ describe("tableBuilder", () => {
         .build();
       expect(tableConfig.indicesSchema).toBe("theindex");
     });
-    // do I now need unique compound, multi
+
     it("should do unique single index", () => {
       const tableConfig = tableBuilder<{ id: number; theindex: string }>()
         .primaryKey("id")
-        .unique("theindex")
+        .uniqueIndex("theindex")
         .build();
       expect(tableConfig.indicesSchema).toBe("&theindex");
     });
@@ -78,6 +83,15 @@ describe("tableBuilder", () => {
         .build();
       expect(tableConfig.indicesSchema).toBe("*multi");
     });
+
+    it("should do unique multi index", () => {
+      const tableConfig = tableBuilder<{ id: number; multi: string[] }>()
+        .primaryKey("id")
+        .uniqueMulti("multi")
+        .build();
+      expect(tableConfig.indicesSchema).toBe("&*multi");
+    });
+
     it("should do compound index", () => {
       const tableConfig = tableBuilder<{
         id: number;
@@ -90,6 +104,20 @@ describe("tableBuilder", () => {
       expect(tableConfig.indicesSchema).toBe("[compoundIndex1+compoundIndex2]");
     });
 
+    it("should do unique compound index", () => {
+      const tableConfig = tableBuilder<{
+        id: number;
+        compoundIndex1: string;
+        compoundIndex2: string;
+      }>()
+        .primaryKey("id")
+        .uniqueCompound("compoundIndex1", "compoundIndex2")
+        .build();
+      expect(tableConfig.indicesSchema).toBe(
+        "&[compoundIndex1+compoundIndex2]"
+      );
+    });
+
     it("should join all indexes together", () => {
       const tableConfig = tableBuilder<{
         id: number;
@@ -100,7 +128,7 @@ describe("tableBuilder", () => {
         multi: string[];
       }>()
         .primaryKey("id")
-        .unique("uniqueIndex")
+        .uniqueIndex("uniqueIndex")
         .index("index2")
         .compound("compoundIndex1", "compoundIndex2")
         .multi("multi")
@@ -108,6 +136,29 @@ describe("tableBuilder", () => {
       expect(tableConfig.indicesSchema).toBe(
         "&uniqueIndex,index2,[compoundIndex1+compoundIndex2],*multi"
       );
+    });
+
+    describe("error return cases", () => {
+      it("should error on duplicate index", () => {
+        const error = tableBuilder<{ id: number; index: string }>()
+          .primaryKey("id")
+          .index("index")
+          .uniqueIndex("index");
+
+        expect(error).toBe(duplicateIndexErrorInstance);
+      });
+
+      it("should error on duplicate compound entries", () => {
+        const error = tableBuilder<{
+          id: number;
+          index1: string;
+          index2: string;
+        }>()
+          .primaryKey("id")
+          .compound("index1", "index1");
+
+        expect(error).toBe(duplicateKeysErrorInstance);
+      });
     });
   });
 });

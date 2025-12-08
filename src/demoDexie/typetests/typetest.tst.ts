@@ -304,7 +304,7 @@ describe("tableBuilder", () => {
     });
 
     it("should not allow primary key as unique index", () => {
-      expect(builder.unique).type.not.toBeCallableWith("id");
+      expect(builder.uniqueIndex).type.not.toBeCallableWith("id");
     });
 
     it("should allow component of compound primary key as index", () => {

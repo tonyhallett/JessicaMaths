@@ -63,7 +63,7 @@ export type DuplicateKeysError = {
   readonly error: "Duplicate keys in compound key are not allowed";
 };
 
-const duplicateKeysErrorInstance: DuplicateKeysError = {
+export const duplicateKeysErrorInstance: DuplicateKeysError = {
   error: "Duplicate keys in compound key are not allowed",
 };
 
@@ -71,7 +71,7 @@ export type DuplicateIndexError = {
   readonly error: "Duplicate index name is not allowed";
 };
 
-const duplicateIndexErrorInstance: DuplicateIndexError = {
+export const duplicateIndexErrorInstance: DuplicateIndexError = {
   error: "Duplicate index name is not allowed",
 };
 
@@ -186,29 +186,7 @@ interface IndexMethods<
         TKeyMaxDepth,
         TMaxDepth
       >;
-  unique<
-    TIndexPath extends SingleIndexKeyPathExcludePrimaryKey<
-      TDatabase,
-      PkPathOrPaths,
-      TAllowTypeSpecificProperties,
-      TKeyMaxDepth
-    >
-  >(
-    indexPath: TIndexPath
-  ): IsIndexDuplicate<TIndexPath, TIndexPaths> extends true
-    ? DuplicateIndexError
-    : IndexMethods<
-        TDatabase,
-        PkPathOrPaths,
-        Auto,
-        [...TIndexPaths, SingleIndexPath<TDatabase, TIndexPath>],
-        TGet,
-        TPKeyIsInbound,
-        TPKeyOutbound,
-        TAllowTypeSpecificProperties,
-        TKeyMaxDepth,
-        TMaxDepth
-      >;
+  uniqueIndex: this["index"];
   multi<
     TIndexPath extends MultiIndexKeyPathExcludePrimaryKey<
       TDatabase,
@@ -231,6 +209,7 @@ interface IndexMethods<
         TKeyMaxDepth,
         TMaxDepth
       >;
+  uniqueMulti: this["multi"];
   compound<
     const TCompoundIndexPaths extends CompoundKeyPaths<
       TDatabase,
@@ -260,6 +239,7 @@ interface IndexMethods<
         TKeyMaxDepth,
         TMaxDepth
       >;
+  uniqueCompound: this["compound"];
   build(): TableConfig<
     TDatabase,
     PkPathOrPaths,
@@ -303,6 +283,7 @@ function createTableBuilder<
   TMaxDepth extends string
 >(mapToClass?: ConstructorOf<TDatabase>) {
   const indexParts: string[] = [];
+  const indexPartsNoUnique: string[] = [];
 
   function createIndexMethods<
     TPKeyPathOrPaths extends string | readonly string[] | null,
@@ -328,70 +309,101 @@ function createTableBuilder<
     TKeyMaxDepth,
     TMaxDepth
   > {
-    const addIfNotDuplicatePart = (part: string) => {
-      if (indexParts.includes(part)) {
+    const addIfNotDuplicatePart = (part: string, unique: boolean) => {
+      if (indexPartsNoUnique.includes(part)) {
         return duplicateIndexErrorInstance;
       }
-      indexParts.push(part);
+      indexPartsNoUnique.push(part);
+      indexParts.push(unique ? `&${part}` : part);
     };
+
+    function doIndex<
+      TIndexPath extends SingleIndexKeyPathExcludePrimaryKey<
+        TDatabase,
+        TPKeyPathOrPaths,
+        TAllowTypeSpecificProperties,
+        TKeyMaxDepth
+      >
+    >(indexKey: TIndexPath, unique: boolean) {
+      return (
+        addIfNotDuplicatePart(indexKey, unique) ||
+        (createIndexMethods(
+          key,
+          auto,
+          [
+            ...indices,
+            {
+              kind: "single",
+              path: indexKey,
+              multi: false,
+            },
+          ],
+          pkeyIsInbound,
+          outboundPKey
+        ) as any)
+      );
+    }
+
+    function doMulti<
+      TIndexPath extends MultiIndexKeyPathExcludePrimaryKey<
+        TDatabase,
+        TPKeyPathOrPaths,
+        TKeyMaxDepth
+      >
+    >(indexKey: TIndexPath, unique: boolean) {
+      return (
+        addIfNotDuplicatePart(`*${indexKey}`, unique) ||
+        (createIndexMethods(
+          key,
+          auto,
+          [...indices, { kind: "multi", path: indexKey, multi: true }],
+          pkeyIsInbound,
+          outboundPKey
+        ) as any)
+      );
+    }
+
+    function doCompound<
+      const TCompoundIndexPaths extends CompoundKeyPaths<
+        TDatabase,
+        TAllowTypeSpecificProperties,
+        TKeyMaxDepth
+      >
+    >(unique: boolean, ...keys: TCompoundIndexPaths) {
+      if (!isDistinctArray(keys)) {
+        return duplicateKeysErrorInstance;
+      }
+      return (
+        addIfNotDuplicatePart(createCompoundSchemaPart(keys), unique) ||
+        (createIndexMethods(
+          key,
+          auto,
+          [...indices, { kind: "compound", paths: keys }],
+          pkeyIsInbound,
+          outboundPKey
+        ) as any)
+      );
+    }
+
     return {
       index(indexKey) {
-        return (
-          addIfNotDuplicatePart(indexKey) ||
-          (createIndexMethods(
-            key,
-            auto,
-            [
-              ...indices,
-              {
-                kind: "single",
-                path: indexKey,
-                multi: false,
-              },
-            ],
-            pkeyIsInbound,
-            outboundPKey
-          ) as any)
-        );
+        return doIndex(indexKey, false);
       },
-      unique(indexKey) {
-        return (
-          addIfNotDuplicatePart(`&${indexKey}`) ||
-          (createIndexMethods(
-            key,
-            auto,
-            [...indices, { kind: "single", path: indexKey, multi: false }],
-            pkeyIsInbound,
-            outboundPKey
-          ) as any)
-        );
+
+      uniqueIndex(indexKey) {
+        return doIndex(indexKey, true);
       },
       multi(indexKey) {
-        return (
-          addIfNotDuplicatePart(`*${indexKey}`) ||
-          (createIndexMethods(
-            key,
-            auto,
-            [...indices, { kind: "multi", path: indexKey, multi: true }],
-            pkeyIsInbound,
-            outboundPKey
-          ) as any)
-        );
+        return doMulti(indexKey, false);
+      },
+      uniqueMulti(indexKey) {
+        return doMulti(indexKey, true);
       },
       compound(...keys) {
-        if (!isDistinctArray(keys)) {
-          return duplicateKeysErrorInstance;
-        }
-        return (
-          addIfNotDuplicatePart(createCompoundSchemaPart(keys)) ||
-          (createIndexMethods(
-            key,
-            auto,
-            [...indices, { kind: "compound", paths: keys }],
-            pkeyIsInbound,
-            outboundPKey
-          ) as any)
-        );
+        return doCompound(false, ...keys);
+      },
+      uniqueCompound(...keys) {
+        return doCompound(true, ...keys);
       },
       build() {
         const primaryKeyPart =
