@@ -6,6 +6,7 @@ import type { NoExcessDataProperties } from "./utilitytypes";
 export type TableOutboundBase<
   TName extends string,
   TDatabase,
+  TInsert,
   TPKey extends IndexableType,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet,
@@ -15,7 +16,7 @@ export type TableOutboundBase<
   TName,
   TGet,
   TDatabase,
-  TDatabase,
+  TInsert,
   never,
   TIndexPaths,
   TPKey,
@@ -26,8 +27,8 @@ export type TableOutboundBase<
    making the key required, although allowed by the spec to be optional for auto-increment keys
    use add without a key on TableOutboundAuto for that case
    */
-  put<T extends TDatabase>(
-    item: NoExcessDataProperties<T, TDatabase>,
+  put<T extends TInsert>(
+    item: NoExcessDataProperties<T, TInsert>,
     key: TPKey
   ): PromiseExtended<TPKey>;
 };

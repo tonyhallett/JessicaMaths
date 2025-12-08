@@ -25,6 +25,7 @@ export type DBTables<
         ? TableOutboundAuto<
             TName & string,
             TDatabase,
+            TInsert, // to support upgrade
             TOutboundKey,
             TIndexPaths,
             TGet,
@@ -34,6 +35,7 @@ export type DBTables<
         : TableOutbound<
             TName & string,
             TDatabase,
+            TInsert, // to support upgrade
             TOutboundKey,
             TIndexPaths,
             TGet,

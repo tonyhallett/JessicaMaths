@@ -7,6 +7,7 @@ import type { TableOutboundBulkTuple } from "./TableBulkTupleAddOn";
 export type TableOutbound<
   TName extends string,
   TDatabase,
+  TInsert,
   TPKey extends IndexableType,
   TIndexPaths extends DexieIndexPaths<TDatabase>,
   TGet,
@@ -15,24 +16,25 @@ export type TableOutbound<
 > = TableOutboundBase<
   TName,
   TDatabase,
+  TInsert,
   TPKey,
   TIndexPaths,
   TGet,
   TDexie,
   TMaxDepth
 > &
-  TableOutboundBulkTuple<TDatabase, TPKey> & {
-    add<T extends TDatabase>(
-      item: NoExcessDataProperties<T, TDatabase>,
+  TableOutboundBulkTuple<TInsert, TPKey> & {
+    add<T extends TInsert>(
+      item: NoExcessDataProperties<T, TInsert>,
       key: TPKey
     ): PromiseExtended<TPKey>;
     // no need for options overloads here as the keys are always provided
     bulkAdd(
-      items: readonly TDatabase[],
+      items: readonly TInsert[],
       keys: readonly TPKey[]
     ): PromiseExtended<TPKey>;
     bulkPut(
-      items: readonly TDatabase[],
+      items: readonly TInsert[],
       keys: readonly TPKey[]
     ): PromiseExtended<TPKey>;
   };

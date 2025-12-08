@@ -39,34 +39,31 @@ export interface TableInboundAutoBulkTuple<
   ): PromiseExtendedPKeyOrKeys<PrimaryKey<TDatabase, TPKeyPathOrPaths>, B>;
 }
 
-export interface TableOutboundBulkTuple<
-  TDatabase,
-  TPKey extends IndexableType
-> {
+export interface TableOutboundBulkTuple<TInsert, TPKey extends IndexableType> {
   bulkAddTuple<TArr extends readonly [...any[]]>(
-    items: TArr & NoExcessDataPropertiesArray<TArr, TDatabase>,
+    items: TArr & NoExcessDataPropertiesArray<TArr, TInsert>,
     keys: readonly TPKey[]
   ): PromiseExtended<TPKey>;
 
   bulkPutTuple<TArr extends readonly [...any[]]>(
-    items: TArr & NoExcessDataPropertiesArray<TArr, TDatabase>,
+    items: TArr & NoExcessDataPropertiesArray<TArr, TInsert>,
     keys: readonly TPKey[]
   ): PromiseExtended<TPKey>;
 }
 
 export interface TableOutboundAutoBulkTuple<
-  TDatabase,
+  TInsert,
   TPKey extends IndexableType
 > {
   bulkAddTuple<TArr extends readonly [...any[]], B extends boolean = false>(
-    items: TArr & NoExcessDataPropertiesArray<TArr, TDatabase>,
+    items: TArr & NoExcessDataPropertiesArray<TArr, TInsert>,
     options?: {
       allKeys: B;
     }
   ): PromiseExtendedPKeyOrKeys<TPKey, B>;
 
   bulkAddTuple<TArr extends readonly [...any[]], B extends boolean = false>(
-    items: TArr & NoExcessDataPropertiesArray<TArr, TDatabase>,
+    items: TArr & NoExcessDataPropertiesArray<TArr, TInsert>,
     keys: readonly (TPKey | undefined)[],
     options?: {
       allKeys: B;
@@ -74,12 +71,12 @@ export interface TableOutboundAutoBulkTuple<
   ): PromiseExtendedPKeyOrKeys<TPKey, B>;
 
   bulkPutTuple<TArr extends readonly [...any[]]>(
-    items: TArr & NoExcessDataPropertiesArray<TArr, TDatabase>,
+    items: TArr & NoExcessDataPropertiesArray<TArr, TInsert>,
     keys: readonly TPKey[]
   ): PromiseExtended<TPKey>;
 
   bulkPutTuple<TArr extends readonly [...any[]], B extends boolean = false>(
-    items: TArr & NoExcessDataPropertiesArray<TArr, TDatabase>,
+    items: TArr & NoExcessDataPropertiesArray<TArr, TInsert>,
     keys: readonly (TPKey | undefined)[],
     options: { allKeys: B }
   ): PromiseExtendedPKeyOrKeys<TPKey, B>;
