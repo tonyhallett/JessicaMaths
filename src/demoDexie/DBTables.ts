@@ -20,7 +20,7 @@ export type DBTables<
     infer TOutboundKey,
     infer TMaxDepth
   >
-    ? [TPKeyPathOrPaths] extends [never]
+    ? TPKeyPathOrPaths extends null
       ? TAuto extends true
         ? TableOutboundAuto<
             TName & string,

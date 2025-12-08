@@ -1,10 +1,14 @@
 import type { TableConfig } from "./tableBuilder";
 
 export function buildStores(
-  tableConfigs: Record<string, TableConfig<any, any, any, any>>
+  tableConfigs: Record<string, TableConfig<any, any, any, any> | null>
 ) {
-  const stores: Record<string, string> = {};
+  const stores: Record<string, string | null> = {};
   for (const [name, cfg] of Object.entries(tableConfigs)) {
+    if (cfg === null) {
+      stores[name] = null;
+      continue;
+    }
     let indices = cfg.indicesSchema;
     const pk = cfg.pk;
     let pkKey = pk.key === null ? "" : pk.key;

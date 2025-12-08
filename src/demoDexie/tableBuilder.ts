@@ -21,6 +21,11 @@ import type {
 } from "./utilitytypes";
 import type { Level2 } from "./UpdateSpec";
 
+interface PkConfig<TAuto extends boolean> {
+  key: string | null;
+  auto: TAuto;
+}
+
 export interface TableConfig<
   TDatabase,
   TPKeyPathOrPaths,
@@ -31,7 +36,7 @@ export interface TableConfig<
   TOutboundPKey extends IndexableType = never,
   TMaxDepth extends string = NoDescend
 > {
-  readonly pk: { key: string; auto: TAuto };
+  readonly pk: PkConfig<TAuto>;
   readonly indicesSchema: string;
   readonly mapToClass?: ConstructorOf<TDatabase>;
 }
@@ -286,7 +291,7 @@ type InboundAutoIncrementKeyPath<
     : never
   : never;
 
-function creteCompoundSchemaPart(keys: string[]): string {
+function createCompoundSchemaPart(keys: string[]): string {
   return `[${keys.join("+")}]`;
 }
 
@@ -300,7 +305,7 @@ function createTableBuilder<
   const indexParts: string[] = [];
 
   function createIndexMethods<
-    TPKeyPathOrPaths extends string | readonly string[],
+    TPKeyPathOrPaths extends string | readonly string[] | null,
     TAuto extends boolean,
     TIndexPaths extends DexieIndexPaths<TDatabase>,
     TPKeyIsInbound extends boolean,
@@ -378,7 +383,7 @@ function createTableBuilder<
           return duplicateKeysErrorInstance;
         }
         return (
-          addIfNotDuplicatePart(creteCompoundSchemaPart(keys)) ||
+          addIfNotDuplicatePart(createCompoundSchemaPart(keys)) ||
           (createIndexMethods(
             key,
             auto,
@@ -390,9 +395,13 @@ function createTableBuilder<
       },
       build() {
         const primaryKeyPart =
-          typeof key === "string"
+          key === null
+            ? null
+            : typeof key === "string"
             ? key
-            : creteCompoundSchemaPart(key as string[]);
+            : createCompoundSchemaPart(key as string[]);
+        const pk: PkConfig<TAuto> = { key: primaryKeyPart, auto };
+        const indicesSchema = indexParts.join(",");
         if (mapToClass) {
           const mapToClasstableConfig: TableConfig<
             TDatabase,
@@ -401,8 +410,8 @@ function createTableBuilder<
             TIndexPaths,
             TGet
           > = {
-            pk: { key: primaryKeyPart, auto },
-            indicesSchema: indexParts.join(", "),
+            pk,
+            indicesSchema,
             mapToClass,
           };
           return mapToClasstableConfig;
@@ -415,8 +424,8 @@ function createTableBuilder<
           TIndexPaths,
           TGet
         > = {
-          pk: { key: primaryKeyPart, auto },
-          indicesSchema: indexParts.join(", "),
+          pk,
+          indicesSchema,
         };
         return tableConfig;
       },
@@ -477,7 +486,7 @@ function createTableBuilder<
         : []
     ) {
       return createIndexMethods(
-        null as never,
+        null,
         true,
         [] as const,
         false,
@@ -486,7 +495,7 @@ function createTableBuilder<
     },
     hiddenExplicit<PKey extends IndexableType = number>() {
       return createIndexMethods(
-        null as never,
+        null,
         false,
         [] as const,
         false,

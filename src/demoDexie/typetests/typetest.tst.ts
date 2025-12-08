@@ -12,6 +12,7 @@ import type { ChangeCallback } from "../Collection";
 import { add, ObjectPropModification } from "../propmodifications";
 import type { NoDescend } from "../utilitytypes";
 import type { Level2, UpdateSpec } from "../UpdateSpec";
+import { upgrade } from "../upgrade";
 
 describe("tableBuilder", () => {
   describe("primary key selection", () => {
@@ -2317,9 +2318,8 @@ describe("upgrade", () => {
       id: string;
       v2: string;
     }
-    // could clash with table name
-
-    const db2 = db.upgrade(
+    const db2 = upgrade(
+      db,
       {
         tableRemoved: null,
         tableUpdate: tableBuilder<TableUpdate2>()
@@ -2327,6 +2327,7 @@ describe("upgrade", () => {
           .index("v2")
           .build(),
       },
+      2,
       (tx) => {
         expect(tx).type.toHaveProperty("tableRemain");
         expect(tx).type.toHaveProperty("tableRemoved");

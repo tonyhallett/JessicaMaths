@@ -1,10 +1,11 @@
 import { Dexie } from "dexie";
-import { buildStores } from "./buildStores";
+import { configureStores } from "./configureStores";
 import type { TableConfig } from "./tableBuilder";
 import { AddAutoReturnObjectAddon } from "./AddAutoReturnObjectAddOn";
 import { TableBulkTupleAddOn } from "./TableBulkTupleAddOn";
 import { WhereEqualityAddOn } from "./WhereEqualityAddOn";
 import type { TypedDexie } from "./TypedDexie";
+import { mapToClass } from "./mapToClass";
 
 Dexie.addons.push(TableBulkTupleAddOn);
 Dexie.addons.push(AddAutoReturnObjectAddon);
@@ -14,12 +15,7 @@ export function dexieFactory<
   S extends Record<string, TableConfig<any, any, any, any, any, any, any, any>>
 >(version: number, tableConfigs: S, databaseName: string) {
   const db = new Dexie(databaseName) as unknown as TypedDexie<S>;
-
-  db.version(version).stores(buildStores(tableConfigs));
-  for (const [name, cfg] of Object.entries(tableConfigs)) {
-    if (cfg.mapToClass) {
-      db.table(name).mapToClass(cfg.mapToClass);
-    }
-  }
+  configureStores(db, version, tableConfigs);
+  mapToClass(db, tableConfigs);
   return db;
 }
