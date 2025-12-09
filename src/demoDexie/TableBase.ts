@@ -18,7 +18,7 @@ import type {
   PrimaryKeyRegistry,
 } from "./primarykey";
 import type { TableHooks } from "./TableHooks";
-import type { Level2, UpdateSpec } from "./UpdateSpec";
+import type { UpdateSpec } from "./UpdateSpec";
 import type { BulkUpdate } from "./BulkUpdate";
 import type { UpsertSpec } from "./UpsertSpec";
 import type { WherePaths, WhereEquality } from "./where";
