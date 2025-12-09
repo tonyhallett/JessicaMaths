@@ -11,7 +11,7 @@ import { expect, describe, it } from "tstyche";
 import type { ChangeCallback } from "../Collection";
 import { add, ObjectPropModification } from "../propmodifications";
 import type { NoDescend } from "../utilitytypes";
-import type { Level2, UpdateSpec } from "../UpdateSpec";
+import type { Level2 } from "../UpdateSpec";
 import { upgrade } from "../upgrade";
 
 describe("tableBuilder", () => {
