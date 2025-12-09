@@ -103,7 +103,41 @@ type UpgradeFunction<
 > = (
   trans: UpgradeTransaction<GetDexieConfig<TTypedDexie>, TNewConfig>
 ) => PromiseLike<any> | void;
+export function upgrade<
+  TTypedDexie extends TypedDexie<any>,
+  TNewConfig extends Record<string, AnyTableConfig | null>
+>(
+  db: TTypedDexie,
+  tableConfigs: TNewConfig
+): UpgradedDexie<GetDexieConfig<TTypedDexie>, TNewConfig>;
 
+export function upgrade<
+  TTypedDexie extends TypedDexie<any>,
+  TNewConfig extends Record<string, AnyTableConfig | null>
+>(
+  db: TTypedDexie,
+  tableConfigs: TNewConfig,
+  upgradeFunction: UpgradeFunction<TTypedDexie, TNewConfig>
+): UpgradedDexie<GetDexieConfig<TTypedDexie>, TNewConfig>;
+
+export function upgrade<
+  TTypedDexie extends TypedDexie<any>,
+  TNewConfig extends Record<string, AnyTableConfig | null>
+>(
+  db: TTypedDexie,
+  tableConfigs: TNewConfig,
+  version: number
+): UpgradedDexie<GetDexieConfig<TTypedDexie>, TNewConfig>;
+
+export function upgrade<
+  TTypedDexie extends TypedDexie<any>,
+  TNewConfig extends Record<string, AnyTableConfig | null>
+>(
+  db: TTypedDexie,
+  tableConfigs: TNewConfig,
+  version: number,
+  upgradeFunction: UpgradeFunction<TTypedDexie, TNewConfig>
+): UpgradedDexie<GetDexieConfig<TTypedDexie>, TNewConfig>;
 export function upgrade<
   TTypedDexie extends TypedDexie<any>,
   TNewConfig extends Record<string, AnyTableConfig | null>
