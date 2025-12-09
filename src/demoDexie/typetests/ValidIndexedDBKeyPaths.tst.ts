@@ -1,5 +1,6 @@
 import { expect, describe, it } from "tstyche";
 import type { ValidIndexedDBKeyPath } from "../ValidIndexedDBKeyPaths";
+import type { NoDescend } from "../utilitytypes";
 
 describe("ValidIndexedDBKeyPaths type", () => {
   it("should have path for leaf types at the root level", () => {
@@ -13,6 +14,8 @@ describe("ValidIndexedDBKeyPaths type", () => {
         dataViewProp: DataView;
         boolProp: boolean;
       },
+      false,
+      NoDescend,
       false
     >;
     expect<ValidPaths>().type.toBe<
@@ -31,7 +34,9 @@ describe("ValidIndexedDBKeyPaths type", () => {
         {
           strProp: string;
         },
-        true
+        true,
+        NoDescend,
+        false
       >;
       expect<ValidPaths>().type.toBe<"strProp" | "strProp.length">();
     });
@@ -40,7 +45,9 @@ describe("ValidIndexedDBKeyPaths type", () => {
         {
           arrProp: string[];
         },
-        true
+        true,
+        NoDescend,
+        false
       >;
       expect<ValidPaths>().type.toBe<"arrProp" | "arrProp.length">();
     });
@@ -49,7 +56,9 @@ describe("ValidIndexedDBKeyPaths type", () => {
         {
           blobProp: Blob;
         },
-        true
+        true,
+        NoDescend,
+        false
       >;
       expect<ValidPaths>().type.toBe<"blobProp.size" | "blobProp.type">();
     });
@@ -58,7 +67,9 @@ describe("ValidIndexedDBKeyPaths type", () => {
         {
           fileProp: File;
         },
-        true
+        true,
+        NoDescend,
+        false
       >;
       expect<ValidPaths>().type.toBe<
         | "fileProp.size"
@@ -78,7 +89,7 @@ describe("ValidIndexedDBKeyPaths type", () => {
     }
 
     it("should descend into nested objects when max depth is I", () => {
-      type ValidPaths = ValidIndexedDBKeyPath<Nested, false, "I">;
+      type ValidPaths = ValidIndexedDBKeyPath<Nested, false, "I", false>;
       expect<ValidPaths>().type.toBe<"root" | "nested.id">();
     });
 
@@ -86,7 +97,8 @@ describe("ValidIndexedDBKeyPaths type", () => {
       type ValidPathsWithTypeSpecific = ValidIndexedDBKeyPath<
         Nested,
         true,
-        "I"
+        "I",
+        false
       >;
       expect<ValidPathsWithTypeSpecific>().type.toBe<
         "root" | "nested.id" | "nested.id.length"
@@ -94,10 +106,15 @@ describe("ValidIndexedDBKeyPaths type", () => {
     });
 
     it("should not descend into nested objects when max depth is the default", () => {
-      type ValidPathsDefaultExplicit = ValidIndexedDBKeyPath<Nested, false, "">;
+      type ValidPathsDefaultExplicit = ValidIndexedDBKeyPath<
+        Nested,
+        false,
+        "",
+        false
+      >;
       expect<ValidPathsDefaultExplicit>().type.toBe<"root">();
 
-      type ValidPathsDefault = ValidIndexedDBKeyPath<Nested, false, "">;
+      type ValidPathsDefault = ValidIndexedDBKeyPath<Nested, false, "", false>;
       expect<ValidPathsDefault>().type.toBe<"root">();
     });
   });

@@ -16,7 +16,13 @@ export type AllowedKeyLeaf =
   | ArrayBuffer
   | ArrayBufferView
   | DataView;
-type IsAllowedLeaf<T> = [T] extends [AllowedKeyLeaf] ? true : false;
+
+type IsAllowedLeaf<T, TIsIndexPath extends boolean> = [
+  CleanForIndex<T, TIsIndexPath>
+] extends [AllowedKeyLeaf]
+  ? true
+  : false;
+
 type IsArray<T> = T extends readonly (infer E)[] ? true : false;
 type ArrayElement<T> = T extends readonly (infer E)[] ? E : never;
 type IsFile<T> = T extends File ? true : false;
@@ -97,15 +103,21 @@ type FilePathProperties<
 
 export type ValidIndexedDBKeyPath<
   T,
-  TAllowTypeSpecificProperties extends boolean = true,
-  TMaxDepth extends string = NoDescend
+  TAllowTypeSpecificProperties extends boolean,
+  TMaxDepth extends string,
+  TIsIndexPath extends boolean
 > = ValidIndexedDBKeyPathRecursive<
   T,
   NoPrefix,
   TAllowTypeSpecificProperties,
   TMaxDepth,
-  NoDescend
+  NoDescend,
+  TIsIndexPath
 >;
+
+type CleanForIndex<T, TIsIndexPath extends boolean> = TIsIndexPath extends true
+  ? NonNullable<T>
+  : T;
 
 type PropertyKeyPaths<
   T,
@@ -114,12 +126,13 @@ type PropertyKeyPaths<
   TAllowTypeSpecificProperties extends boolean,
   TMaxDepth extends string,
   TCurrDepth extends string,
-  TDescend extends boolean
-> = IsAllowedLeaf<T[TKey]> extends true
+  TDescend extends boolean,
+  TIsIndexPath extends boolean
+> = IsAllowedLeaf<T[TKey], TIsIndexPath> extends true
   ? LeafPath<TPrefix, T[TKey], TKey, TAllowTypeSpecificProperties>
-  : IsFile<T[TKey]> extends true
+  : IsFile<CleanForIndex<T[TKey], TIsIndexPath>> extends true
   ? FilePathProperties<TPrefix, TKey, TAllowTypeSpecificProperties>
-  : IsBlob<T[TKey]> extends true
+  : IsBlob<CleanForIndex<T[TKey], TIsIndexPath>> extends true
   ? BlobPathProperties<TPrefix, TKey, TAllowTypeSpecificProperties>
   : IsArray<T[TKey]> extends true
   ? ArrayElement<T[TKey]> extends infer Elem
@@ -134,14 +147,15 @@ type PropertyKeyPaths<
         : WithSuffix<TPrefix, TKey>
       : never
     : never
-  : T[TKey] extends object
+  : CleanForIndex<T[TKey], TIsIndexPath> extends object
   ? TDescend extends true
     ? ValidIndexedDBKeyPathRecursive<
-        T[TKey],
+        CleanForIndex<T[TKey], TIsIndexPath>,
         WithSuffix<TPrefix, TKey>,
         TAllowTypeSpecificProperties,
         TMaxDepth,
-        NextDepth<TCurrDepth>
+        NextDepth<TCurrDepth>,
+        TIsIndexPath
       >
     : never
   : never;
@@ -151,7 +165,8 @@ type ValidIndexedDBKeyPathRecursive<
   TPrefix extends string,
   TAllowTypeSpecificProperties extends boolean,
   TMaxDepth extends string,
-  TCurrDepth extends string
+  TCurrDepth extends string,
+  TIsIndexPath extends boolean
 > = {
   [P in StringKey<T>]: TCurrDepth extends TMaxDepth
     ? PropertyKeyPaths<
@@ -161,7 +176,8 @@ type ValidIndexedDBKeyPathRecursive<
         TAllowTypeSpecificProperties,
         TMaxDepth,
         TCurrDepth,
-        false
+        false,
+        TIsIndexPath
       >
     : PropertyKeyPaths<
         T,
@@ -170,16 +186,33 @@ type ValidIndexedDBKeyPathRecursive<
         TAllowTypeSpecificProperties,
         TMaxDepth,
         TCurrDepth,
-        true
+        true,
+        TIsIndexPath
       >;
 }[StringKey<T>];
 
 export type CompoundKeyPaths<
   T,
-  TAllowTypeSpecificProperties extends boolean = true,
-  TMaxDepth extends string = NoDescend
+  TAllowTypeSpecificProperties extends boolean,
+  TMaxDepth extends string,
+  TIsIndexPath extends boolean
 > = [
-  ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties, TMaxDepth>,
-  ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties, TMaxDepth>,
-  ...ValidIndexedDBKeyPath<T, TAllowTypeSpecificProperties, TMaxDepth>[]
+  ValidIndexedDBKeyPath<
+    T,
+    TAllowTypeSpecificProperties,
+    TMaxDepth,
+    TIsIndexPath
+  >,
+  ValidIndexedDBKeyPath<
+    T,
+    TAllowTypeSpecificProperties,
+    TMaxDepth,
+    TIsIndexPath
+  >,
+  ...ValidIndexedDBKeyPath<
+    T,
+    TAllowTypeSpecificProperties,
+    TMaxDepth,
+    TIsIndexPath
+  >[]
 ];

@@ -30,6 +30,18 @@ describe("tableBuilder", () => {
       );
     });
 
+    it("should not allow null or optional", () => {
+      const builder = tableBuilder<{
+        id: string;
+        nullable: number | null;
+        optional1?: number;
+        optional2: number | undefined;
+      }>();
+      expect(builder.primaryKey).type.not.toBeCallableWith("nullable");
+      expect(builder.primaryKey).type.not.toBeCallableWith("optional1");
+      expect(builder.primaryKey).type.not.toBeCallableWith("optional2");
+    });
+
     it("should allow primary key to be allowed properties of leaf object when specified", () => {
       interface TableItem {
         stringValue: string;
@@ -114,6 +126,28 @@ describe("tableBuilder", () => {
       );
     });
 
+    it("should not allow null or optional for compound", () => {
+      const builder = tableBuilder<{
+        id: string;
+        index1: number;
+        nullable: number | null;
+        optional1?: number;
+        optional2: number | undefined;
+      }>();
+      expect(builder.compoundKey).type.not.toBeCallableWith(
+        "index1",
+        "nullable"
+      );
+      expect(builder.compoundKey).type.not.toBeCallableWith(
+        "index1",
+        "optional1"
+      );
+      expect(builder.compoundKey).type.not.toBeCallableWith(
+        "index1",
+        "optional2"
+      );
+    });
+
     it("should not be possible to complete the chain when duplicate keys are used", () => {
       const builder = tableBuilder<{ id: string; nested: { id2: number } }>();
       expect(builder.compoundKey("id", "id")).type.toBe<DuplicateKeysError>();
@@ -126,6 +160,19 @@ describe("tableBuilder", () => {
       expect(builder.autoIncrement).type.not.toBeCallableWith(
         "stringValue.length"
       );
+    });
+
+    it("should not allow null or optional properties for autoIncrement", () => {
+      const builder = tableBuilder<{
+        id: number;
+        optional1?: number;
+        optional2: number | undefined;
+        nullable: number | undefined;
+      }>();
+      expect(builder.autoIncrement).type.toBeCallableWith("id");
+      expect(builder.autoIncrement).type.not.toBeCallableWith("optional1");
+      expect(builder.autoIncrement).type.not.toBeCallableWith("optional2");
+      expect(builder.autoIncrement).type.not.toBeCallableWith("nullable");
     });
 
     // otherwise have to supply the key every time as key generator is number
@@ -205,6 +252,10 @@ describe("tableBuilder", () => {
         notAMultiEntryArray: string[][];
         nested: { index: string };
         notAnIndex: { obj: string };
+        optionalIndex1: number | undefined;
+        optionalIndex2?: number;
+        nullable: number | null;
+        nullableObject: { a: number } | null;
       },
       "I",
       "I"
@@ -213,6 +264,13 @@ describe("tableBuilder", () => {
     it("should allow valid index path", () => {
       expect(builder.index).type.toBeCallableWith("index");
       expect(builder.index).type.not.toBeCallableWith("doesnotexist");
+    });
+
+    it("should allow optional and nullable for index", () => {
+      expect(builder.index).type.toBeCallableWith("optionalIndex1");
+      expect(builder.index).type.toBeCallableWith("optionalIndex2");
+      expect(builder.index).type.toBeCallableWith("nullable");
+      expect(builder.index).type.toBeCallableWith("nullableObject.a");
     });
 
     it("should allow nested index path when MaxDepth allows", () => {

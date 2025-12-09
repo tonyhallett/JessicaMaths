@@ -61,7 +61,8 @@ type IsMultiEntryArray<T> = T extends readonly (infer E)[]
 type MultiEntryKeyPath<T, TMaxDepth extends string> = ValidIndexedDBKeyPath<
   T,
   false,
-  TMaxDepth
+  TMaxDepth,
+  true
 > extends infer P
   ? P extends string
     ? IsMultiEntryArray<KeyPathValue<T, P>> extends true
@@ -141,7 +142,8 @@ type SingleIndexKeyPathExcludePrimaryKey<
 > = ValidIndexedDBKeyPath<
   ApplySinglePkRemoval<TDatabase, PkPathOrPaths>,
   TAllowTypeSpecificProperties,
-  TMaxDepth
+  TMaxDepth,
+  true
 >;
 
 type MultiIndexKeyPathExcludePrimaryKey<
@@ -225,7 +227,8 @@ interface IndexMethods<
     const TCompoundIndexPaths extends CompoundKeyPaths<
       TDatabase,
       TAllowTypeSpecificProperties,
-      TKeyMaxDepth
+      TKeyMaxDepth,
+      true
     >
   >(
     ...indexPaths: CompoundMatchesPK<
@@ -274,7 +277,7 @@ const isDistinctArray = (arr: readonly any[]): boolean => {
 type InboundAutoIncrementKeyPath<
   T,
   TMaxDepth extends string
-> = ValidIndexedDBKeyPath<T, false, TMaxDepth> extends infer K
+> = ValidIndexedDBKeyPath<T, false, TMaxDepth, false> extends infer K
   ? K extends string
     ? IncludesNumber<KeyPathValue<T, K>> extends true
       ? K
@@ -378,7 +381,8 @@ function createTableBuilder<
       const TCompoundIndexPaths extends CompoundKeyPaths<
         TDatabase,
         TAllowTypeSpecificProperties,
-        TKeyMaxDepth
+        TKeyMaxDepth,
+        true
       >
     >(unique: boolean, ...keys: TCompoundIndexPaths) {
       if (!isDistinctArray(keys)) {
@@ -465,7 +469,8 @@ function createTableBuilder<
       TPKeyPath extends ValidIndexedDBKeyPath<
         TDatabase,
         TAllowTypeSpecificProperties,
-        TKeyMaxDepth
+        TKeyMaxDepth,
+        false
       > &
         string
     >(key: TPKeyPath) {
@@ -475,7 +480,8 @@ function createTableBuilder<
       const TCompoundKeyPaths extends CompoundKeyPaths<
         TDatabase,
         TAllowTypeSpecificProperties,
-        TKeyMaxDepth
+        TKeyMaxDepth,
+        false
       >
     >(
       ...keys: TCompoundKeyPaths

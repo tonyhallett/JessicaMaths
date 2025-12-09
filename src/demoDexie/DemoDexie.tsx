@@ -10,6 +10,8 @@ interface DexieDataItem {
   indexDate: Date;
   index: number;
   notAnIndex: number;
+  nullableIndex: string | null;
+  optionalIndex?: string;
 }
 
 const db = dexieFactory(
@@ -18,6 +20,8 @@ const db = dexieFactory(
       .compoundKey("pkNumber", "pkString")
       .compound("indexNumber", "indexString", "indexDate")
       .index("index")
+      .index("nullableIndex")
+      .index("optionalIndex")
       .build(),
   },
   "DemoDexieBulkUpdate"
@@ -60,6 +64,7 @@ export const DemoDexie = () => {
             indexDate: new Date(),
             index: 1,
             notAnIndex: 10,
+            nullableIndex: null,
           },
           {
             pkNumber: 2,
@@ -69,6 +74,18 @@ export const DemoDexie = () => {
             indexDate: new Date(),
             index: 2,
             notAnIndex: 20,
+            nullableIndex: null,
+          },
+          {
+            pkNumber: 3,
+            pkString: "3",
+            indexNumber: 2,
+            indexString: "2",
+            indexDate: new Date(),
+            index: 2,
+            notAnIndex: 20,
+            nullableIndex: "1",
+            optionalIndex: "optional",
           },
         ]);
 
