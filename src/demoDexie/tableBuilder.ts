@@ -26,6 +26,17 @@ interface PkConfig<TAuto extends boolean> {
   auto: TAuto;
 }
 
+export type TableConfigAny = TableConfig<
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any
+>;
+
 export interface TableConfig<
   TDatabase,
   TPKeyPathOrPaths,

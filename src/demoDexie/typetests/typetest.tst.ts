@@ -418,7 +418,6 @@ describe("tableBuilder", () => {
 
 describe("database typed transaction", () => {
   const db = dexieFactory(
-    1,
     {
       string: tableBuilder<{ id: string }>().primaryKey("id").build(),
       number: tableBuilder<{ id: number }>().primaryKey("id").build(),
@@ -504,7 +503,6 @@ interface Compound {
 
 describe("table base", () => {
   const db = dexieFactory(
-    1,
     {
       string: tableBuilder<StringId>().primaryKey("id").build(),
       stringMapped: tableClassBuilder(MappedStringId).primaryKey("id").build(),
@@ -573,7 +571,6 @@ describe("table base", () => {
       compound3: Date;
     }
     const db = dexieFactory(
-      1,
       {
         table: tableBuilder<TableItem>()
           .primaryKey("id")
@@ -733,7 +730,6 @@ describe("table base", () => {
 
   it("should have key type the index type when orderBy", () => {
     const db = dexieFactory(
-      1,
       {
         table: tableBuilder<
           {
@@ -772,7 +768,6 @@ describe("table base", () => {
 
   it("shoould have key type the primary key type when orderBy :id", () => {
     const db = dexieFactory(
-      1,
       {
         stringIdTable: tableBuilder<{
           id: string;
@@ -832,7 +827,6 @@ describe("table base", () => {
     }
 
     const db = dexieFactory(
-      1,
       {
         table: tableBuilder<TableItem, "I", "II">()
           .primaryKey("id")
@@ -871,7 +865,6 @@ describe("table base", () => {
 
     it("should accept the pkey", () => {
       const db = dexieFactory(
-        1,
         {
           pkTable: tableBuilder<{ id: number }>().primaryKey("id").build(),
           pkCompoundTable: tableBuilder<{ id1: number; id2: string }>()
@@ -886,7 +879,6 @@ describe("table base", () => {
 
     it("should accept virtual indexes", () => {
       const db = dexieFactory(
-        1,
         {
           table: tableBuilder<{
             id: number;
@@ -926,7 +918,6 @@ describe("table base", () => {
 
     it("should accept virtual compound primary key paths", () => {
       const db = dexieFactory(
-        1,
         {
           table: tableBuilder<{ id1: number; id2: string; id3: Date }>()
             .compoundKey("id1", "id2", "id3")
@@ -1021,7 +1012,6 @@ describe("table base", () => {
 
     it("should have methods typed to the virtual index type when using virtul indexes", () => {
       const db = dexieFactory(
-        1,
         {
           table: tableBuilder<{
             id: number;
@@ -1103,7 +1093,6 @@ describe("table base", () => {
         }
 
         const db = dexieFactory(
-          1,
           {
             table: tableBuilder<TableItem, "I">()
               .primaryKey("id")
@@ -1138,7 +1127,6 @@ describe("table base", () => {
           compound3: Date;
         }
         const db = dexieFactory(
-          1,
           {
             table: tableBuilder<TableItem, "I">()
               .primaryKey("id")
@@ -1328,7 +1316,6 @@ describe("table base", () => {
         id2: number;
       }
       const db = dexieFactory(
-        1,
         {
           compound: tableBuilder<TableItem>().compoundKey("id1", "id2").build(),
           outbound: tableBuilder<TableItem>()
@@ -1406,7 +1393,6 @@ describe("table base", () => {
       multiEntry: string[];
     }
     const db = dexieFactory(
-      1,
       {
         table: tableBuilder<TableItem, "I", "II">()
           .primaryKey("id")
@@ -1426,7 +1412,6 @@ describe("table base", () => {
 
     it("should return the first TGet or undefined", () => {
       const db = dexieFactory(
-        1,
         {
           table: tableClassBuilder(MappedStringId).primaryKey("id").build(),
         },
@@ -1439,7 +1424,6 @@ describe("table base", () => {
 
     it("should return the last TGet or undefined", () => {
       const db = dexieFactory(
-        1,
         {
           table: tableClassBuilder(MappedStringId).primaryKey("id").build(),
         },
@@ -1452,7 +1436,6 @@ describe("table base", () => {
 
     it("should be sortable with property path on TGet, returning TGet[]", async () => {
       const db = dexieFactory(
-        1,
         {
           table: tableClassBuilder(MappedStringId).primaryKey("id").build(),
         },
@@ -1493,7 +1476,6 @@ describe("table base", () => {
 
     describe("filtering", () => {
       const db = dexieFactory(
-        1,
         {
           string: tableBuilder<StringId>().primaryKey("id").build(),
           stringMapped: tableClassBuilder(MappedStringId)
@@ -1601,7 +1583,6 @@ describe("Inbound - non auto", () => {
   }
 
   const db = dexieFactory(
-    1,
     {
       table: tableBuilder<TableItem, Level2>().primaryKey("id").build(),
       mappedTable: tableClassBuilderExcluded(EntityClass)
@@ -1689,7 +1670,6 @@ describe("Inbound - non auto", () => {
 
     it("should not allow adding with excluded keys", () => {
       const dbEntityExclude = dexieFactory(
-        1,
         {
           table: tableClassBuilderExcluded(EntityClass)
             .excludedKeys<"excluded">()
@@ -1783,7 +1763,6 @@ describe("Inbound - non auto", () => {
 
     it("should update using max depth type parameter", () => {
       const noDescend = dexieFactory(
-        1,
         {
           noDescend: tableBuilder<TableItem, "">().primaryKey("id").build(),
         },
@@ -1791,7 +1770,6 @@ describe("Inbound - non auto", () => {
       ).noDescend;
 
       const level1 = dexieFactory(
-        1,
         {
           level1: tableBuilder<TableItem, "I">().primaryKey("id").build(),
         },
@@ -1799,7 +1777,6 @@ describe("Inbound - non auto", () => {
       ).level1;
 
       const level2 = dexieFactory(
-        1,
         {
           level2: tableBuilder<TableItem, "II">().primaryKey("id").build(),
         },
@@ -1829,7 +1806,6 @@ describe("Inbound - non auto", () => {
       });
 
       const allDepths = dexieFactory(
-        1,
         {
           allDepths: tableBuilder<TableItem, "All">().primaryKey("id").build(),
         },
@@ -1919,7 +1895,6 @@ describe("Inbound - non auto", () => {
         other: number;
       }
       const db = dexieFactory(
-        1,
         {
           table: tableBuilder<TableItem, "I", "II">()
             .primaryKey("primaryKeyParent.pkey")
@@ -1949,7 +1924,6 @@ describe("Inbound - non auto", () => {
         optional?: number;
       }
       const db = dexieFactory(
-        1,
         {
           table: tableBuilder<UpsertItem>().primaryKey("id").build(),
           compoundTable: tableBuilder<CompoundUpsertItem>()
@@ -2017,7 +1991,6 @@ describe("Inbound auto", () => {
     numberValue: number;
   }
   const db = dexieFactory(
-    1,
     {
       table: tableBuilder<TableItem>().autoIncrement("id").build(),
     },
@@ -2072,7 +2045,6 @@ describe("Outbound - non auto", () => {
     value: number;
   }
   const db = dexieFactory(
-    1,
     {
       stringPKeyTable: tableBuilder<TableItem>()
         .hiddenExplicit<string>()
@@ -2185,7 +2157,6 @@ describe("Outbound auto", () => {
   }
 
   const db = dexieFactory(
-    1,
     {
       numberPKeyTable: tableBuilder<TableItem>().hiddenAuto().build(),
       unionPKeyTable: tableBuilder<TableItem>()
@@ -2297,7 +2268,6 @@ describe("upgrade", () => {
       v1: string;
     }
     const db = dexieFactory(
-      1,
       {
         tableRemain: tableBuilder<TableRemain>()
           .primaryKey("id")

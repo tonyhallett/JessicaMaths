@@ -13,7 +13,7 @@ Dexie.addons.push(WhereEqualityAddOn);
 
 export function dexieFactory<
   S extends Record<string, TableConfig<any, any, any, any, any, any, any, any>>
->(version: number, tableConfigs: S, databaseName: string) {
+>(tableConfigs: S, databaseName: string, version = 1) {
   const db = new Dexie(databaseName) as unknown as TypedDexie<S>;
   configureStores(db, version, tableConfigs);
   mapToClass(db, tableConfigs);

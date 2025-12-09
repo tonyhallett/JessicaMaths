@@ -97,18 +97,34 @@ type UpgradeTransaction<
 type GetDexieConfig<TTypedDexie extends TypedDexie<any>> =
   TTypedDexie extends TypedDexie<infer TConfig> ? TConfig : never;
 
+type UpgradeFunction<
+  TTypedDexie extends TypedDexie<any>,
+  TNewConfig extends Record<string, AnyTableConfig | null>
+> = (
+  trans: UpgradeTransaction<GetDexieConfig<TTypedDexie>, TNewConfig>
+) => PromiseLike<any> | void;
+
 export function upgrade<
   TTypedDexie extends TypedDexie<any>,
   TNewConfig extends Record<string, AnyTableConfig | null>
 >(
   db: TTypedDexie,
   tableConfigs: TNewConfig,
-  version: number,
-  upgradeFunction?: (
-    trans: UpgradeTransaction<GetDexieConfig<TTypedDexie>, TNewConfig>
-  ) => PromiseLike<any> | void
+  versionOrUpgrade?: number | UpgradeFunction<TTypedDexie, TNewConfig>,
+  upgradeFunction?: UpgradeFunction<TTypedDexie, TNewConfig>
 ): UpgradedDexie<GetDexieConfig<TTypedDexie>, TNewConfig> {
-  configureStores(db, version, tableConfigs, upgradeFunction);
+  const incrementVersion = () => (db.verno || 0) + 1;
+  let version: number;
+  let upgradeFn: any;
+
+  if (typeof versionOrUpgrade === "function") {
+    version = incrementVersion();
+    upgradeFn = versionOrUpgrade;
+  } else {
+    version = versionOrUpgrade ?? incrementVersion();
+    upgradeFn = upgradeFunction;
+  }
+  configureStores(db, version, tableConfigs, upgradeFn);
   mapToClass(db, tableConfigs);
   return db as UpgradedDexie<GetDexieConfig<TTypedDexie>, TNewConfig>;
 }

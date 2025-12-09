@@ -13,7 +13,6 @@ interface DexieDataItem {
 }
 
 const db = dexieFactory(
-  1,
   {
     demo: tableBuilder<DexieDataItem>()
       .compoundKey("pkNumber", "pkString")
@@ -50,6 +49,7 @@ export const DemoDexie = () => {
   return (
     <Button
       onClick={async () => {
+        const v = db.verno;
         await db.demo.clear();
         await db.demo.bulkAdd([
           {
