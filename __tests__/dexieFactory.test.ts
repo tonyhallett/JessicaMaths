@@ -29,7 +29,7 @@ describe("dexieFactory", () => {
         },
       },
     };
-    const db = dexieFactory(1, tableConfigs, "TestDB");
+    const db = dexieFactory(tableConfigs, "TestDB");
     expect(db.name).toBe("TestDB");
     expect(configureStores).toHaveBeenCalledWith(db, 1, tableConfigs);
     expect(mapToClass).toHaveBeenCalledWith(db, tableConfigs);
