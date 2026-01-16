@@ -21,9 +21,6 @@ export function App() {
           <Button onClick={handleMenu} color="inherit">
             Tests
           </Button>
-          <Button color="inherit" component={RouterLink} to="/demodexie">
-            Demo Dexie
-          </Button>
           <TestsMenu anchorElement={anchorEl} handleClose={handleClose} />
         </Toolbar>
       </AppBar>

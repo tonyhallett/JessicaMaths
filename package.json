@@ -1,12 +1,6 @@
 {
   "name": "jessicamaths",
   "version": "1.0.0",
-  "scripts": {
-    "testdexietypings": "tsd -t tsd/testit.d.ts"
-  },
-  "tsd": {
-    "directory": "tsd/tests"
-  },
   "author": "",
   "license": "ISC",
   "description": "",
@@ -36,6 +30,7 @@
     "@types/katex": "^0.16.7",
     "@types/react-latex": "^2.0.3",
     "babel-plugin-react-compiler": "^1.0.0",
+    "dexie-typesafe": "^1.0.0",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
     "parcel": "^2.16.0",

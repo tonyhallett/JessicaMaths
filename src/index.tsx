@@ -5,7 +5,6 @@ import { Route, HashRouter as Router, Routes } from "react-router";
 import "katex/dist/katex.min.css";
 import Home from "./Home";
 import { BookTest } from "./BookTest";
-import { DemoDexie } from "./demoDexie/DemoDexie";
 
 const container = document.getElementById("app");
 const root = createRoot(container!);
@@ -18,7 +17,6 @@ root.render(
           path="booktest/:sectionIndex/:testIndex"
           element={<BookTest />}
         />
-        <Route path="demodexie" element={<DemoDexie />} />
       </Route>
     </Routes>
   </Router>

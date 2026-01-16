@@ -1,1 +1,1 @@
-import Dexie, { type EntityTable } from "dexie";
+import { tableBuilder, dexieFactory } from "dexie-typesafe";
