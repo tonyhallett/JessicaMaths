@@ -7,7 +7,7 @@ import {
   type MultipleQuestionsQATemplate,
   type QuestionAnswerTemplate,
 } from "../questionanswertemplates";
-import { bookTests } from "./booktesttemplates";
+import { bookTestTemplates } from "./booktesttemplates";
 
 export type BookTest = {
   partA: QuestionAnswer[];
@@ -15,7 +15,7 @@ export type BookTest = {
   partC: QuestionAnswer[];
 };
 
-export const bookQATests = bookTests.map((section) => {
+export const bookQATests = bookTestTemplates.map((section) => {
   return section.map((bookTestTest) => {
     return {
       partA: transformABC(bookTestTest.partA),

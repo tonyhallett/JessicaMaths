@@ -37,4 +37,4 @@ const section1Tests: BookTestSectionTemplate = [
   section1Test12,
 ];
 
-export const bookTests: BookTestTemplates = [section1Tests];
+export const bookTestTemplates: BookTestTemplates = [section1Tests];

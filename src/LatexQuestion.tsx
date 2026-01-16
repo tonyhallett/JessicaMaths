@@ -2,7 +2,6 @@ import {
   QuestionAnswerTemplateType,
   type QuestionAnswerTemplate,
 } from "./questions/questionanswertemplates";
-import { bookTests } from "./questions/booktests/booktesttemplates";
 import Latex from "react-latex";
 
 import {
