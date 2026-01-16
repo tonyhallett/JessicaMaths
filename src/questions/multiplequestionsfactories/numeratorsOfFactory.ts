@@ -33,7 +33,7 @@ export const numeratorsOfFactory = (
         {
           type: QuestionAnswerParameterType.Numerator,
           testValue: numerator.toString(),
-          placeholder,
+          placeholderId: placeholder,
         },
       ],
       answer: {
@@ -55,7 +55,7 @@ export const numeratorsOfFactory = (
       {
         type: QuestionAnswerParameterType.Number,
         testValue: of.toString(),
-        placeholder: 1,
+        placeholderId: 1,
       },
     ],
     questionAnswers: [createQuestion(true), createQuestion(false)],

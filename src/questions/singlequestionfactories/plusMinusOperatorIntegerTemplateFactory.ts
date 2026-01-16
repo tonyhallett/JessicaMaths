@@ -20,12 +20,10 @@ export const minusOperator = (number: number): NumberPlusMinus => {
   return { number, operator: minus };
 };
 
-export const plusMinusOperatorIntegerTemplateFactory = (
-  id: string,
+const getParameters = (
   numberOperators: NumberPlusMinus[],
-  lastNumber: number,
-  suffix = ""
-): SingularInputAnswerQATemplate => {
+  lastNumber: number
+): QuestionAnswerParameter[] => {
   const parameters: QuestionAnswerParameter[] = numberOperators.map((no) => {
     return {
       type: QuestionAnswerParameterType.Number,
@@ -36,29 +34,55 @@ export const plusMinusOperatorIntegerTemplateFactory = (
     type: QuestionAnswerParameterType.Number,
     testValue: lastNumber.toString(),
   });
-  let question = "";
+  return parameters;
+};
+
+const getReplaceables = (
+  numberOperators: NumberPlusMinus[],
+  suffix: string
+) => {
+  let questionLHS = "";
   let answerReplacement = "";
   numberOperators.forEach((no, index) => {
     answerReplacement += `{${index + 1}} ${no.operator} `;
-    question += `{${index + 1}}${suffix} ${no.operator} `;
+    questionLHS += `{${index + 1}}${suffix} ${no.operator} `;
   });
   answerReplacement += `{${numberOperators.length + 1}}`;
-  question += `{${numberOperators.length + 1}}${suffix}`;
+  questionLHS += `{${numberOperators.length + 1}}${suffix}`;
+  return { questionLHS: questionLHS, answerReplacement };
+};
+
+/*
+  numberOperators and lastNumber determine the parameters.  
+  the numbers are replaceable ( question and answerReplacement )
+*/
+export const plusMinusOperatorIntegerTemplateFactory = (
+  id: string,
+  numberOperators: NumberPlusMinus[],
+  lastNumber: number,
+  suffix = ""
+): SingularInputAnswerQATemplate => {
+  const { questionLHS, answerReplacement } = getReplaceables(
+    numberOperators,
+    suffix
+  );
+
   const answerInput: AnswerInput = {
     type: AnswerType.Integer,
   };
   if (suffix !== "") {
     answerInput.suffix = suffix;
   }
+
   const questionAnswerTemplate: SingularInputAnswerQATemplate = {
     id,
     type: QuestionAnswerTemplateType.SingularInput,
-    question: question + " =",
+    question: questionLHS + " =",
     answer: {
       input: answerInput,
       answerReplacement,
     },
-    parameters,
+    parameters: getParameters(numberOperators, lastNumber),
   };
   return questionAnswerTemplate;
 };

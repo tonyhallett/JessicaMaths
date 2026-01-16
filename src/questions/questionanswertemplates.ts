@@ -29,7 +29,7 @@ export type QuestionAnswerParameter = {
   questionFormat?: QuestionParameterFormatType;
   answerFormat?: AnswerParameterFormatType;
   testValue: string;
-  placeholder?: number;
+  placeholderId?: number;
 };
 
 export enum AnswerType {
@@ -61,19 +61,20 @@ export type CalculatedQuestion = (parameterValues: string[]) => string;
 
 export type Question = string | CalculatedQuestion;
 
+export interface SingularAnswerTemplate {
+  input: AnswerInput;
+  answerReplacement: string;
+  noCalculation?: true;
+  // this will change as proceed
+  customCalculationFunction?: (input: string) => string;
+}
+
 export type SingularInputAnswerQATemplate = {
   id: string;
   question: Question;
   isTextQuestion?: boolean;
   type: QuestionAnswerTemplateType.SingularInput;
-  answer: {
-    input: AnswerInput;
-    answerReplacement: string;
-    noCalculation?: true;
-    // this will change as proceed
-    customCalculationFunction?: (input: string) => string;
-  };
-
+  answer: SingularAnswerTemplate;
   parameters: QuestionAnswerParameter[];
 };
 
