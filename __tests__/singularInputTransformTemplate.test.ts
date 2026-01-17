@@ -24,7 +24,7 @@ describe("singularInputTransformTemplate", () => {
   const parameters = ["10", "5"];
 
   afterEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   function makeParam(testValue: string): QuestionAnswerParameter {

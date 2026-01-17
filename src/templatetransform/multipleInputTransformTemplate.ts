@@ -5,8 +5,8 @@ import type {
 import { mathjsEvaluate } from "./mathjsEvaluate";
 import { replaceParameters } from "./replaceParameters";
 import {
-  SingleQuestionAnswer,
-  AnswerInputSolution,
+  type SingleQuestionAnswer,
+  type AnswerInputSolution,
   QuestionAnswerType,
 } from "./transformtemplate";
 

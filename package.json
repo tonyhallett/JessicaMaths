@@ -37,5 +37,9 @@
     "ts-jest": "^29.4.5",
     "tstyche": "^5.0.1",
     "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "test": "jest",
+    "test:coverage": "jest --coverage --runInBand"
   }
 }
